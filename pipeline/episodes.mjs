@@ -5,6 +5,7 @@
 import fs from "node:fs";
 import { medianVpd, buildEpisode } from "./lib/episode_calc.mjs";
 import { anotarVideos } from "./lib/niche_map.mjs";
+import { normalizarInventario } from "./lib/inventario.mjs";
 
 const src = process.argv[2];
 const out = process.argv[3] || "episodes.json";
@@ -12,18 +13,12 @@ let data = {};
 try { data = JSON.parse(fs.readFileSync(src, "utf8")); }
 catch (e) { console.error("episodes: no pude leer", src, "-", e.message); process.exit(0); }
 
-// Normaliza el inventario: Data Lens = { longs, shorts }; Oddly = { list }.
-let videos = [];
-if (Array.isArray(data.longs) || Array.isArray(data.shorts)) videos = [...(data.longs || []), ...(data.shorts || [])];
-else if (Array.isArray(data.list)) videos = data.list;
-videos = videos.filter((v) => v && v.video_id);
-
 // Mapa video -> categoria/variante (solo Oddly lo tiene). Sin el, los episodios salen
 // igual que antes pero sin variante: el A/B de formato simplemente no mide, no falla.
 const mapaF = process.argv[4];
 let mapa = {};
 if (mapaF) { try { mapa = JSON.parse(fs.readFileSync(mapaF, "utf8")); } catch { mapa = {}; } }
-videos = anotarVideos(videos, mapa);
+const videos = anotarVideos(normalizarInventario(data), mapa);
 
 const now = Date.now();
 const medVpd = medianVpd(videos, now);
