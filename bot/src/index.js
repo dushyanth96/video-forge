@@ -95,6 +95,14 @@ export default {
     // 1) Verificar que el POST viene de Telegram (header secreto).
     const got = request.headers.get("X-Telegram-Bot-Api-Secret-Token");
     if (!env.TELEGRAM_WEBHOOK_SECRET || !safeEqual(got, env.TELEGRAM_WEBHOOK_SECRET)) {
+      // Diagnostico para `wrangler tail`: nunca loguea el valor del secreto.
+      if (!env.TELEGRAM_WEBHOOK_SECRET) {
+        console.error("webhook 403: el Worker no tiene TELEGRAM_WEBHOOK_SECRET (ejecutar `wrangler secret put TELEGRAM_WEBHOOK_SECRET`)");
+      } else if (got == null) {
+        console.error("webhook 403: Telegram no envio X-Telegram-Bot-Api-Secret-Token; re-registrar el webhook con setWebhook?secret_token=...");
+      } else {
+        console.error("webhook 403: X-Telegram-Bot-Api-Secret-Token no coincide con TELEGRAM_WEBHOOK_SECRET (longitudes header=" + got.length + ", worker=" + String(env.TELEGRAM_WEBHOOK_SECRET).length + ")");
+      }
       return new Response("forbidden", { status: 403 });
     }
 

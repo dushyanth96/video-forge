@@ -28,6 +28,20 @@ jobs:
         with:
           node-version: "22"
 
+      - name: Verificar secretos requeridos
+        env:
+          S_TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          S_TELEGRAM_WEBHOOK_SECRET: ${{ secrets.TELEGRAM_WEBHOOK_SECRET }}
+          S_OWNER_CHAT_ID: ${{ secrets.OWNER_CHAT_ID }}
+          S_GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          fail=0
+          if [ -z "$S_TELEGRAM_BOT_TOKEN" ]; then echo "::error::Falta el GitHub Secret TELEGRAM_BOT_TOKEN"; fail=1; fi
+          if [ -z "$S_TELEGRAM_WEBHOOK_SECRET" ]; then echo "::error::Falta el GitHub Secret TELEGRAM_WEBHOOK_SECRET (sin el, toda entrega del webhook responde 403)"; fail=1; fi
+          if [ -z "$S_OWNER_CHAT_ID" ]; then echo "::error::Falta el GitHub Secret OWNER_CHAT_ID"; fail=1; fi
+          if [ -z "$S_GH_TOKEN" ]; then echo "::error::Falta el GitHub Secret GH_TOKEN"; fail=1; fi
+          exit $fail
+
       - name: Desplegar Worker
         run: |
           for i in 1 2 3; do
@@ -58,6 +72,8 @@ jobs:
           put YT_REFRESH_TOKEN "$S_YT_REFRESH_TOKEN"
 
       - name: Registrar webhook de Telegram
+        env:
+          WEBHOOK_SECRET: ${{ secrets.TELEGRAM_WEBHOOK_SECRET }}
         run: |
           URL=$(grep -oE 'https://[a-zA-Z0-9._-]+\.workers\.dev' deploy.log | head -1)
           if [ -z "$URL" ]; then echo "No pude leer la URL del Worker"; exit 1; fi
@@ -67,6 +83,21 @@ jobs:
             --data-urlencode "secret_token=${{ secrets.TELEGRAM_WEBHOOK_SECRET }}")
           echo "Telegram: $RESP"
           echo "$RESP" | grep -q '"ok":true' || { echo "setWebhook fallo"; exit 1; }
+          # Autoprueba de la puerta del webhook: con el secreto correcto el Worker
+          # debe responder 200 y con uno incorrecto 403. Asi un desajuste (secreto
+          # vacio o distinto en el Worker) se detecta en el deploy, antes de que
+          # Telegram falle con "Wrong response from the webhook: 403 Forbidden".
+          ok_code=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+            -H "X-Telegram-Bot-Api-Secret-Token: $WEBHOOK_SECRET" \
+            -H "Content-Type: application/json" --data '{}' "$URL")
+          bad_code=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+            -H "X-Telegram-Bot-Api-Secret-Token: invalid" \
+            -H "Content-Type: application/json" --data '{}' "$URL")
+          echo "Webhook gate: correcto=$ok_code (esperado 200), incorrecto=$bad_code (esperado 403)"
+          if [ "$ok_code" != "200" ] || [ "$bad_code" != "403" ]; then
+            echo "::error::La puerta del webhook no responde como se espera; verifica que el Worker tenga el mismo TELEGRAM_WEBHOOK_SECRET (wrangler secret list)"
+            exit 1
+          fi
           # Boton de menu del bot -> abre la Mini App (interfaz tipo app).
           MB=$(curl -s "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/setChatMenuButton" \
             --data-urlencode 'menu_button={"type":"web_app","text":"Cerebro","web_app":{"url":"'"$URL"'/os?v='"${GITHUB_SHA::7}"'"}}')
