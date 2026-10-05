@@ -17,10 +17,13 @@ GH_REPO = "juanberrio0399/video-forge"
 crons = ["*/30 * * * *"]
 
 # AI OS en un solo bot: canal interno hacia los paneles de Radar y Viento (misma cuenta; sin URL pública).
-[[services]]
-binding = "RADAR"
-service = "radar-bot"
-entrypoint = "OSGateway"
+# RADAR (radar-bot) comentado: el binding fallaba el deploy (error 10143 de Cloudflare).
+# El panel /p/radar y /v/radar/api/* responden 503 "Panel no conectado" mientras no exista.
+# Para reactivar: descomenta el bloque y confirma que radar-bot esté en la misma cuenta.
+# [[services]]
+# binding = "RADAR"
+# service = "radar-bot"
+# entrypoint = "OSGateway"
 
 [[services]]
 binding = "VIENTO"
