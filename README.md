@@ -102,7 +102,7 @@ aprueba desde la app y ahí sí corren `publish_youtube.yml` (SEO + miniatura) y
 | `shared/` | Componentes de UI compartidos entre los bots del AI OS (shell, tokens, vista unificada). |
 | `channel/` | Semillas del estado de The Data Lens (`*.seed.json`, `direction.json`). El estado vivo está en R2. |
 | `channel/auto2/` | Semillas de Oddly Loop: cadencia, lista blanca de fuentes, nichos, branding. |
-| `tests/` | 30 suites de vitest sobre `pipeline/lib/` y el contrato del OS. |
+| `tests/` | 42 suites de vitest sobre `pipeline/lib/`, el contrato del OS y el pipeline de motion graphics. |
 | `clipper/` | Puente **local** (no nube): recorta videos CC-BY de YouTube para Oddly Loop. Se corre a mano en el PC. |
 | `skills/` | Notas de oficio por área (guion, voz, SEO, shorts, monetización) que alimentan los prompts. |
 | `projects/`, `index.html`, `meta.json`, `hyperframes.json` | Composición HyperFrames del canal principal (HTML → MP4). |
@@ -114,8 +114,8 @@ aprueba desde la app y ahí sí corren `publish_youtube.yml` (SEO + miniatura) y
 Los tests y los chequeos de sintaxis corren en cualquier máquina con Node 22:
 
 ```bash
-npm install          # instala vitest (única dependencia de desarrollo)
-npm test             # las 30 suites de pipeline/lib (tests.yml corre esto en cada PR)
+npm install          # instala vitest y playwright
+npm test             # las 42 suites de pipeline/lib (tests.yml corre esto en cada PR)
 npx vitest run tests/ledger.test.mjs   # una sola suite
 node --check pipeline/brain_live.mjs   # lo que valida build-check.yml
 ```

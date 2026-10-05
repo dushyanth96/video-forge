@@ -1,0 +1,76 @@
+name: Review Discard (Cancel + Cleanup)
+
+# Se dispara SOLO con el botón "🗑️ Discard" en Telegram.
+# Cancela la subida y limpia los assets temporales.
+#
+# ⚠️ Este workflow NO tiene credenciales de YouTube y NO hace
+# NINGUNA llamada a la API de YouTube: descartar no gasta cuota.
+on:
+  workflow_dispatch:
+    inputs:
+      review_id:
+        description: "Review ID (rv-...)"
+        required: true
+
+permissions:
+  contents: read
+
+env:
+  CI: "true"
+  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+  TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+  TELEGRAM_CHAT_ID: ${{ secrets.OWNER_CHAT_ID }}
+
+jobs:
+  discard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Bajar el estado del review
+        run: |
+          ID="${{ github.event.inputs.review_id }}"
+          node pipeline/lib/r2_tool.mjs get motiongfx/reviews/${ID}.json work/review.json
+
+      - name: Validar PENDING + marcar DISCARDED
+        run: |
+          node --input-type=module -e '
+            import fs from "node:fs";
+            import { discard } from "./pipeline/lib/review_queue.mjs";
+            let r = JSON.parse(fs.readFileSync("work/review.json","utf8"));
+            if (r.status !== "pending") {
+              console.log("review ya está " + r.status + " — nada que descartar (idempotente)");
+              process.exit(0);
+            }
+            r = discard(r, "discarded from Telegram review buttons");
+            fs.writeFileSync("work/review.json", JSON.stringify(r, null, 2));
+            console.log("review " + r.id + " -> discarded");
+          '
+
+      - name: Archivar en R2 (pending -> discarded) y limpiar temp
+        if: always()
+        run: |
+          ID="${{ github.event.inputs.review_id }}"
+          # El video NO se sube a YouTube nunca: solo se archiva (o se borra).
+          if node pipeline/lib/r2_tool.mjs head motiongfx/pending/${ID}/video.mp4; then
+            node pipeline/lib/r2_tool.mjs copy motiongfx/pending/${ID}/video.mp4 motiongfx/discarded/${ID}/video.mp4
+            node pipeline/lib/r2_tool.mjs delete motiongfx/pending/${ID}/video.mp4
+          fi
+          node pipeline/lib/r2_tool.mjs put motiongfx/reviews/${{ github.event.inputs.review_id }}.json work/review.json application/json
+
+      - name: Avisar al chat
+        if: always()
+        run: |
+          node pipeline/notify_review.mjs status work/review.json "$(node -e '
+            const r = JSON.parse(require("fs").readFileSync("work/review.json","utf8"));
+            process.stdout.write("🗑️ *Discarded:* " + (r.title||"").replace(/\*/g,"") + "\\nUpload cancelled · temp assets cleaned · YouTube never called (no quota burned)\\nReview `" + r.id + "`");
+          ')"
+
+      - name: Limpiar assets temporales del runner
+        if: always()
+        run: rm -rf work out

@@ -1,0 +1,84 @@
+name: Motion Graphics Daily (English, Review-Before-Upload)
+
+# Fabrica diaria de motion graphics EN INGLES, 100% code-rendered
+# (CSS + Canvas + GSAP, SIN stock footage). El resultado NO se publica
+# solo: va a Telegram con botones y el owner decide (Review-Before-Upload).
+on:
+  schedule:
+    - cron: "0 14 * * *"   # 10:00 ET diario
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CI: "true"
+  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+  GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+  TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+  TELEGRAM_CHAT_ID: ${{ secrets.OWNER_CHAT_ID }}
+
+jobs:
+  produce-and-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: ffmpeg + ffprobe
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+
+      - name: HyperFrames browser (Chrome fijo)
+        run: |
+          npx --yes hyperframes@0.7.68 browser ensure || echo "browser ensure falló, sigo"
+
+      - name: 0) Restaurar past_topics.json desde R2
+        run: |
+          # La rotacion de temas vive en R2 (no en el checkout,
+          # que es fresco cada corrida): asi dos runs paralelos
+          # o consecutivos no repiten tema. 404 = primera vez.
+          node pipeline/lib/r2_tool.mjs get motiongfx/past_topics.json pipeline/data/past_topics.json || echo "primera corrida: sin historial en R2 — rotacion fresca"
+
+      - name: 1) Guion en INGLES
+        run: |
+          node pipeline/motiongfx/generate_script.mjs work/script.json
+
+      - name: 2) Render (code-rendered, sin footage)
+        run: |
+          node pipeline/motiongfx/render.mjs work work/script.json out/motion.mp4
+
+      - name: 3) QA (no video roto/corto/sin audio)
+        run: |
+          QA_MIN_DURATION=45 QA_MIN_SCORE=0 node pipeline/qa_check.mjs out/motion.mp4 0 work/qa.json
+          node -e 'const q=require("./work/qa.json"); if(!q.passed){console.error("QA RECHAZA:",q.reasons);process.exit(1)}'
+
+      - name: 4) Crear item de revision (pending)
+        run: |
+          node pipeline/motiongfx/make_review.mjs work/script.json out/motion.mp4 work/review.json motiongfx/pending
+          ID=$(node -e 'process.stdout.write(JSON.parse(require("fs").readFileSync("work/review.json","utf8")).id)')
+          echo "review_id=$ID" >> "$GITHUB_ENV"
+
+      - name: 5) Guardar video + estado en R2 (pending)
+        run: |
+          node pipeline/lib/r2_tool.mjs put motiongfx/pending/${{ env.review_id }}/video.mp4 out/motion.mp4 video/mp4
+          node pipeline/lib/r2_tool.mjs put motiongfx/reviews/${{ env.review_id }}.json work/review.json application/json
+
+      - name: 6) Mandar a Telegram con botones [🚀 Approve & Publish | 🗑️ Discard]
+        run: |
+          node pipeline/notify_review.mjs send work/review.json out/motion.mp4
+
+      - name: 7) Persistir past_topics.json en R2
+        if: always()
+        run: |
+          # always(): el tema ya se consumio en el paso 1 aunque
+          # el render falle despues — persistir evita repetirlo.
+          if [ -f pipeline/data/past_topics.json ]; then
+            node pipeline/lib/r2_tool.mjs put motiongfx/past_topics.json pipeline/data/past_topics.json application/json
+          else
+            echo "sin past_topics.json — nada que persistir"
+          fi

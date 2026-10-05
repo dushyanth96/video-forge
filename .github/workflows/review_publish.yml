@@ -1,0 +1,122 @@
+name: Review Publish (YouTube + AtoPlay)
+
+# Se dispara SOLO con el approve del owner (botón "🚀 Approve & Publish"
+# en Telegram). Sube a YouTube (Data API v3, OAuth2) y a AtoPlay.
+# Idempotente: si el review ya no está "pending", no sube nada.
+on:
+  workflow_dispatch:
+    inputs:
+      review_id:
+        description: "Review ID (rv-...)"
+        required: true
+
+permissions:
+  contents: read
+
+env:
+  CI: "true"
+  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+  # YouTube (Data API v3, OAuth2 installed-app)
+  YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+  YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+  YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+  YT_PRIVACY: ${{ vars.YT_PRIVACY || 'public' }}
+  TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+  TELEGRAM_CHAT_ID: ${{ secrets.OWNER_CHAT_ID }}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+
+      - name: Bajar review + video de R2
+        run: |
+          ID="${{ github.event.inputs.review_id }}"
+          node pipeline/lib/r2_tool.mjs get motiongfx/reviews/${ID}.json work/review.json
+          node pipeline/lib/r2_tool.mjs get motiongfx/pending/${ID}/video.mp4 work/video.mp4
+
+      - name: Validar que sigue PUBLICABLE (anti-doble-publicacion)
+        run: |
+          node -e '
+            const r = JSON.parse(require("fs").readFileSync("work/review.json","utf8"));
+            // El Worker marca "approved" ANTES de disparar (optimistic lock),
+            // asi que aceptamos pending (dispacho manual) o approved sin publicar.
+            // Ya publicado (status=published o youtube.ok) = NUNCA se re-sube.
+            const yaPub = r.status === "published" || (r.youtube && r.youtube.ok);
+            if (yaPub || (r.status !== "pending" && r.status !== "approved")) {
+              console.error("review ya está " + r.status + " — no se publica");
+              process.exit(1);
+            }
+            console.log("review " + r.id + " (" + r.status + ") OK, publicando…");
+          '
+
+      - name: Publicar en YouTube (Data API v3)
+        id: yt
+        run: |
+          node pipeline/publish_youtube.mjs work/video.mp4 work/review.json work/youtube.json || echo "yt_failed=true" >> "$GITHUB_OUTPUT"
+          cat work/youtube.json
+
+      - name: Instalar Playwright (Chromium) para AtoPlay
+        run: |
+          npm install
+          npx playwright install --with-deps chromium
+
+      - name: Publicar en AtoPlay (Playwright, skip limpio sin creds)
+        env:
+          ATOPLAY_EMAIL: ${{ secrets.ATOPLAY_EMAIL }}
+          ATOPLAY_PASSWORD: ${{ secrets.ATOPLAY_PASSWORD }}
+          ATOPLAY_CHANNEL_NAME: ${{ vars.ATOPLAY_CHANNEL_NAME || 'skillgrox' }}
+        run: |
+          node pipeline/publish_atoplay.mjs work/video.mp4 work/review.json work/atoplay.json || echo "atoplay_failed"
+          cat work/atoplay.json
+
+      - name: Registrar plataformas en el estado del review
+        id: reg
+        if: always()
+        run: |
+          node --input-type=module -e '
+            import fs from "node:fs";
+            import { approve, markPlatform } from "./pipeline/lib/review_queue.mjs";
+            const readJ = (p) => { try { return JSON.parse(fs.readFileSync(p, "utf8")); } catch { return { ok: false, error: "sin resultado" }; } };
+            let r = readJ("work/review.json");
+            if (r.status === "pending") r = approve(r); // dispacho manual: este workflow es la aprobacion
+            const yt = readJ("work/youtube.json");
+            r = markPlatform(r, "youtube", yt.ok
+              ? { ok: true, videoId: yt.videoId, privacy: yt.privacy, detail: yt.url }
+              : { ok: false, detail: yt.error || "fallo" });
+            const at = readJ("work/atoplay.json");
+            r = markPlatform(r, "atoplay", at.skipped
+              ? { ok: false, detail: "skipped (not configured)" }
+              : { ok: !!at.ok, detail: at.error || "ok" });
+            fs.writeFileSync("work/review.json", JSON.stringify(r, null, 2));
+            console.log("estado final:", r.status, "| youtube:", r.youtube ? r.youtube.url : "FAIL");
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, "published=" + (r.status === "published" ? "true" : "false") + "\n");
+          '
+          node pipeline/lib/r2_tool.mjs put motiongfx/reviews/${{ github.event.inputs.review_id }}.json work/review.json application/json
+
+      - name: Mover R2 pending -> published
+        if: always() && steps.reg.outputs.published == 'true'
+        run: |
+          ID="${{ github.event.inputs.review_id }}"
+          node pipeline/lib/r2_tool.mjs copy motiongfx/pending/${ID}/video.mp4 motiongfx/published/${ID}/video.mp4
+          node pipeline/lib/r2_tool.mjs delete motiongfx/pending/${ID}/video.mp4
+
+      - name: Avisar al chat
+        if: always()
+        run: |
+          node pipeline/notify_review.mjs status work/review.json "$(node -e '
+            const r = JSON.parse(require("fs").readFileSync("work/review.json","utf8"));
+            const yt = r.youtube ? "✅ " + r.youtube.url : "❌ YouTube falló";
+            process.stdout.write("🎬 *" + r.title.replace(/\*/g, "") + "*\\n" + yt + "\\nReview `" + r.id + "` — estado: *" + r.status + "*");
+          ')"
+
+      - name: Limpiar assets temporales del runner
+        if: always()
+        run: rm -rf work out

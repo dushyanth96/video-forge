@@ -9,6 +9,9 @@
     "publish": "npx --yes hyperframes@0.7.68 publish",
     "test": "vitest run"
   },
+  "dependencies": {
+    "playwright": "^1.48.0"
+  },
   "devDependencies": {
     "vitest": "^5.0.2"
   }

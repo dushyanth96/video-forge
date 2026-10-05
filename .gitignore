@@ -20,6 +20,14 @@ _*/
 _*.mp3
 _*.mp4
 
+# Scratch de los workflows (se crea y se borra en cada corrida)
+work/
+
+# Stubs de audio CC0 regenerables (assets/audio/make_fallback_audio.mjs,
+# deterministico: render.mjs los sintetiza solos si faltan)
+assets/audio/bgm/
+assets/audio/sfx/
+
 .wrangler/
 
 # === Oddly Clipper (corre LOCAL en el PC) — no subir credenciales, venv ni videos de trabajo ===

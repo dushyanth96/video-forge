@@ -14,6 +14,7 @@ import { WorkerEntrypoint } from "cloudflare:workers";
 import { APP_HTML } from "./miniapp.js";
 import { APP2_HTML } from "./miniapp_v2.js";
 import { osStateFrom, applyStaleness } from "../../pipeline/lib/os_contract.mjs";
+import { approve as reviewApprove, discard as reviewDiscard } from "../../pipeline/lib/review_queue.mjs";
 import { osUnifiedHtml, withOsBar } from "../../shared/os-unified.mjs";
 import { osShellHtml } from "../../shared/os-shell.mjs";
 
@@ -227,7 +228,70 @@ const APP_WORKFLOWS = new Set([
   "schedule_youtube.yml", "daily_video.yml", "photo_edit.yml", "niche_radar.yml",
   "report_auto2.yml", "produce_oddly.yml", "publish_oddly.yml", "build_asmr_library.yml", "daily_oddly.yml", "set_oddly_branding.yml", "clip_pd.yml", "clip_nasa.yml", "clip_wikimedia.yml", "clip_pixabay.yml", "clip_pexels.yml", "clip_archive_cc.yml", "subir_manual.yml",
   "history_short.yml",
+  "motiongfx_daily.yml", "review_publish.yml", "review_discard.yml",
 ]);
+
+// ---- Review-Before-Upload (motion graphics) ----
+// El video vive en R2 (motiongfx/pending/<id>/video.mp4) y su estado en
+// motiongfx/reviews/<id>.json. Aprobar dispara review_publish.yml (YouTube +
+// AtoPlay); descartar dispara review_discard.yml (limpieza, SIN YouTube).
+const REVIEW_KEY = (id) => `motiongfx/reviews/${id}.json`;
+async function reviewMsg(env, cb, text) {
+  const chatId = cb.message?.chat?.id;
+  const mid = cb.message?.message_id;
+  const payload = { chat_id: chatId, message_id: mid, text, parse_mode: "Markdown" };
+  // Si el mensaje original es un video, la edicion va por caption.
+  const method = cb.message?.video ? "editMessageCaption" : "editMessageText";
+  try {
+    await tg(env, method, payload);
+  } catch {
+    await tg(env, "sendMessage", { chat_id: chatId, text, parse_mode: "Markdown" });
+  }
+}
+async function handleReviewAction(env, cb, action) {
+  const [verb, id] = (action || "").split(":");
+  if (!id || !id.startsWith("rv-")) {
+    return tg(env, "answerCallbackQuery", { callback_query_id: cb.id, text: "Review invalida" });
+  }
+  const key = REVIEW_KEY(id);
+  const obj = env.R2 ? await env.R2.get(key) : null;
+  if (!obj) {
+    return reviewMsg(env, cb, `❌ Review \`${id}\` no encontrada (¿ya se decidió o expiró?).`);
+  }
+  let review;
+  try { review = JSON.parse(await obj.text()); } catch { return reviewMsg(env, cb, `❌ Review \`${id}\` corrupta en R2.`); }
+  if (review.status !== "pending") {
+    // Idempotencia: un boton duplicado NO re-publica ni gasta cuota.
+    return reviewMsg(env, cb, `ℹ️ Review \`${id}\` ya está *${review.status}* (${review.decidedAt ? new Date(review.decidedAt).toISOString().slice(0, 16).replace("T", " ") + " UTC" : ""}).`);
+  }
+  if (verb === "approve") {
+    try {
+      const next = reviewApprove(review);
+      await env.R2.put(key, JSON.stringify(next), { httpMetadata: { contentType: "application/json" } });
+      const r = await ghDispatch(env, "review_publish.yml", { review_id: id });
+      return reviewMsg(env, cb, r.ok
+        ? `🚀 *Approved!* Publishing to YouTube + AtoPlay…\nTe aviso cuando esté en vivo.\nID \`${id}\``
+        : `🚀 *Approved!* Pero no pude disparar review_publish.yml (${r.status}). Revisa los secrets del Worker.`);
+    } catch (e) {
+      console.error("[review] approve error", e);
+      return reviewMsg(env, cb, `❌ No pude aprobar: ${String(e && e.message).slice(0, 120)}`);
+    }
+  }
+  if (verb === "discard") {
+    try {
+      const next = reviewDiscard(review);
+      await env.R2.put(key, JSON.stringify(next), { httpMetadata: { contentType: "application/json" } });
+      const r = await ghDispatch(env, "review_discard.yml", { review_id: id });
+      return reviewMsg(env, cb, r.ok
+        ? `🗑️ *Discarded.* Upload cancelled — temp assets cleaning up.\nYouTube was never called (no quota burned).\nID \`${id}\``
+        : `🗑️ *Discarded.* Pero no pude disparar review_discard.yml (${r.status}).`);
+    } catch (e) {
+      console.error("[review] discard error", e);
+      return reviewMsg(env, cb, `❌ No pude descartar: ${String(e && e.message).slice(0, 120)}`);
+    }
+  }
+  return tg(env, "answerCallbackQuery", { callback_query_id: cb.id, text: "Acción desconocida" });
+}
 
 // Voces disponibles para el canal (con su ejemplo en R2). engine/kvoice se usan en la voz.
 const VOICE_OPTIONS = [
@@ -1446,6 +1510,10 @@ async function handleCallback(cb, env) {
   // Navegacion de menus/submenus (cambia el mismo mensaje).
   if (data.startsWith("menu:")) return showMenu(env, cb, data.slice(5));
   if (data === "voces:list") return listVoices(env, cb);
+  // ---- Review-Before-Upload: botones del motion graphics (vf:review:...) ----
+  // approve -> review_publish.yml (YouTube + AtoPlay) · discard -> review_discard.yml
+  // (el discard NUNCA toca YouTube: cero cuota gastada).
+  if (data.startsWith("vf:review:")) return handleReviewAction(env, cb, data.slice("vf:review:".length));
 
   switch (data) {
     case "voz": {
