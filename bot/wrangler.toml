@@ -16,19 +16,21 @@ GH_REPO = "juanberrio0399/video-forge"
 [triggers]
 crons = ["*/30 * * * *"]
 
-# AI OS en un solo bot: canal interno hacia los paneles de Radar y Viento (misma cuenta; sin URL pública).
-# RADAR (radar-bot) comentado: el binding fallaba el deploy (error 10143 de Cloudflare).
-# El panel /p/radar y /v/radar/api/* responden 503 "Panel no conectado" mientras no exista.
-# Para reactivar: descomenta el bloque y confirma que radar-bot esté en la misma cuenta.
+# AI OS: canales internos hacia los paneles de Radar y Viento (misma cuenta; sin URL pública).
+# TODOS los [[services]] estan comentados: el deploy fallaba (error 10143 de Cloudflare)
+# porque los Workers de destino no existen en esta cuenta.
+# /p/radar, /p/viento y /v/*/api/* responden 503 "Panel no conectado" mientras no existan;
+# bot/src/index.js protege cada uso de env.RADAR/env.VIENTO (if (!svc) y && env.VIENTO).
+# Para reactivar uno: descomenta su bloque y confirma que el Worker este en la misma cuenta.
 # [[services]]
 # binding = "RADAR"
 # service = "radar-bot"
 # entrypoint = "OSGateway"
 
-[[services]]
-binding = "VIENTO"
-service = "tienda"
-entrypoint = "OSGateway"
+# [[services]]
+# binding = "VIENTO"
+# service = "tienda"
+# entrypoint = "OSGateway"
 
 [[r2_buckets]]
 binding = "R2"
