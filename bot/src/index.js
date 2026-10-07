@@ -1380,13 +1380,13 @@ async function handleMessage(message, env) {
   }
 
   // Phase 8 — RECIPE MODE: if collecting a recipe, EVERYTHING (photos/videos/text) goes to
-  // the RECIPE (in order), NOT to the retouch. Exit with /listo (builds the reel) or /cancelar.
+  // the RECIPE (in order), NOT to the retouch. Exit with /done (builds the reel) or /cancel.
   {
     const rs = await getRecipeState(env, chatId);
     if (rs && rs.active) {
       const t = (message.text || "").trim();
-      if (t === "/cancelar") return recipeCancel(env, chatId);
-      if (t === "/listo") return recipeBuild(env, chatId, rs);
+      if (t === "/cancelar" || t === "/cancel") return recipeCancel(env, chatId);
+      if (t === "/listo" || t === "/done") return recipeBuild(env, chatId, rs);
       if (Array.isArray(message.photo) && message.photo.length) return recipeAddMedia(message, env, chatId, rs, "photo");
       if (message.video) return recipeAddMedia(message, env, chatId, rs, "video");
       if (t && !t.startsWith("/")) return recipeAddText(env, chatId, rs, t);
@@ -1468,7 +1468,7 @@ async function handleMessage(message, env) {
     case "/estado":
       return sendStatus(env, chatId);
 
-    case "/receta":
+    case "/recipe":
       return recipeStart(env, chatId);
 
     case "/panel":
@@ -1498,7 +1498,7 @@ async function handleMessage(message, env) {
 
     case "/listo":
       // Only makes sense in recipe mode; if it arrives here there was no active recipe.
-      return tg(env, "sendMessage", { chat_id: chatId, text: "No active recipe. Start with /receta.    "});
+      return tg(env, "sendMessage", { chat_id: chatId, text: "No active recipe. Start with /recipe.    "});
 
     default:
       return sendMenu(env, chatId);
@@ -1546,7 +1546,7 @@ async function handleCallback(cb, env) {
     }
     case "estado":
       return sendStatus(env, chatId);
-    case "receta":
+    case "recipe":
       return recipeStart(env, chatId);
     case "panel":
       return sendPanel(env, chatId);
@@ -1736,7 +1736,7 @@ async function sendMenu(env, chatId) {
       { command: "radar", description: "📡 Repos and PRs    "},
       { command: "voz", description: "🎙️ Generate the narration    "},
       { command: "render", description: "🎬 Render the video (by phases)    "},
-      { command: "receta", description: "🍳 Build a recipe reel    "},
+      { command: "recipe", description: "🍳 Build a recipe reel    "},
       { command: "panel", description: "📊 Channel panel (schedule)    "},
       { command: "reporte", description: "🔄 Channel metrics report    "},
       { command: "shorts", description: "🎬 Suggest Shorts from the latest video    "},
@@ -2123,7 +2123,7 @@ async function recipeCancel(env, chatId) {
 
 async function recipeBuild(env, chatId, rs) {
   if (!rs.n) {
-    return tg(env, "sendMessage", { chat_id: chatId, text: "I didn't receive photos/videos. Send at least one and then /listo.    "});
+    return tg(env, "sendMessage", { chat_id: chatId, text: "I didn't receive photos/videos. Send at least one and then /done.    "});
   }
   await setRecipeState(env, chatId, { active: false, n: rs.n });
   const r = await ghDispatch(env, "recipe_reel.yml", { chat_id: String(chatId), count: String(rs.n) });

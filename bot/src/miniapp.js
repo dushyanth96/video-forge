@@ -285,7 +285,7 @@ export const APP_HTML = `<!doctype html>
         +'<div class="muted" style="margin:4px 0">Failed at: '+esc(x.step||"?")+'</div>'
         +'<div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn mini" onclick="retry(\\''+esc(x.workflow)+'\\')">🔁 Retry</button>'
         +'<button class="btn mini ghost" onclick="showError('+(x.run_id||0)+')">📋 View the error</button>'
-        +(x.url?'<a class="btn mini ghost" href="'+esc(x.url)+'" target="_blank">↗ Log completo</a>':'')+'</div>'
+        +(x.url?'<a class="btn mini ghost" href="'+esc(x.url)+'" target="_blank">↗ Full log</a>':'')+'</div>'
         +'<div id="err'+(x.run_id||0)+'" style="margin-top:6px"></div></div>';
     }).join("");
   }
@@ -344,7 +344,7 @@ export const APP_HTML = `<!doctype html>
     }
     // VALUES = FULL channel (not 28 days): subscribers, total views, watch minutes, videos.
     h+='<div class="card"><div class="muted" style="font-size:12px;margin-bottom:8px">Your full channel</div><div class="row">'
-      +'<div class="kpi"><div class="n">'+num(tot.subs||0)+'</div><div class="l">Suscriptores</div></div>'
+      +'<div class="kpi"><div class="n">'+num(tot.subs||0)+'</div><div class="l">Subscribers</div></div>'
       +'<div class="kpi"><div class="n">'+num(tot.views||0)+'</div><div class="l">Views</div></div>'
       +'<div class="kpi"><div class="n">'+num(tot.watch_min||0)+'</div><div class="l">Min vistos</div></div>'
       +'<div class="kpi"><div class="n">'+num(tot.videos||0)+'</div><div class="l">Videos</div></div>'
@@ -1044,11 +1044,11 @@ export const APP_HTML = `<!doctype html>
         +(msg?'<div class="muted" style="font-size:12px;margin-bottom:8px">'+esc(msg)+'</div>':'')
         +'<button class="btn'+(pend>0?'':' ghost')+'" onclick="setChannel(\\''+goCh+'\\')">'+'Entrar a '+title+' →'+'</button></div>';
     }
-    var kO=kpi(a2.subs||od.subs,"Subs")+kpi(a2.total_views||od.views,"Vistas")+kpi(a2.videos||od.videos,"Videos");
+    var kO=kpi(a2.subs||od.subs,"Subs")+kpi(a2.total_views||od.views,"Views")+kpi(a2.videos||od.videos,"Videos");
     var dlSubs=(ST.channel_stats&&ST.channel_stats.subs)||dl.subs||0;
     var dlViews=(ST.totals&&ST.totals.views)||(ST.channel_stats&&ST.channel_stats.total_views)||0;
     var dlVids=dl.videos||(ST.totals&&ST.totals.videos)||0;
-    var kD=kpi(dlSubs,"Subs")+kpi(dlViews,"Vistas")+kpi(dlVids,"Videos");
+    var kD=kpi(dlSubs,"Subs")+kpi(dlViews,"Views")+kpi(dlVids,"Videos");
     var totPend=(pa.total!=null?pa.total:((pa.oddly||0)+(pa.data_lens||0)));
     var topBanner=totPend>0?'<div class="card" style="background:rgba(34,211,238,.14);border:1px solid var(--cy)"><div style="font-weight:800;font-size:15px;color:var(--cy)">⏳ '+totPend+' video(s) in progress</div><div class="muted" style="font-size:12px">They schedule and publish themselves; you do not have to do anything.</div></div>':'';
     var when=b.at?'<div class="muted" style="font-size:11px;margin:-2px 2px 8px">🧠 Brain diagnosis: '+esc(String(b.at).slice(5,16).replace("T"," "))+'</div>':'<div class="muted" style="font-size:11px;margin:-2px 2px 8px">🧠 The brain runs every day at 8am and warns you by chat.</div>';
@@ -1172,7 +1172,7 @@ export const APP_HTML = `<!doctype html>
       // PRODUCE: their videos WITH actions (publish/schedule) + produce + note
       el("s-producir").innerHTML = statusA + auto2VideosHtml(!MONITOR) + (MONITOR?'':auto2ProduceCard())
         + (MONITOR?'<div class="card muted" style="font-size:12px">🤖 <b>Automatic:</b> the Brain produces, schedules and publishes on its own. Here you only watch the status. Below you can upload your own video if you want.</div>':'')
-        + '<div class="card"><div style="font-weight:800;margin-bottom:4px">🎬 Mis Clips (subir uno tuyo)</div>'
+        + '<div class="card"><div style="font-weight:800;margin-bottom:4px">🎬 My Clips (upload yours)</div>'
         + '<div class="muted" style="font-size:12px;margin-bottom:6px">Upload an AI-generated video: I set title, description and #, schedule it at the best free hour and add it to the <b>My Clips</b> playlist.</div>'      +'<label class="file" for="fClip">🎬 Choose video (max ~100MB)</label><input id="fClip" type="file" accept="video/*" class="hide">'
         + '<input id="clipCap" type="text" placeholder="Optional: what it is about (helps the title)"></div>'
         + '<div class="card muted" style="font-size:12px">Oddly Loop is <b>full-auto</b>: when we turn on the cron, it produces and schedules 3/day on its own. Here you review/publish theirs and fire off manual ones.</div>';
@@ -1268,10 +1268,10 @@ export const APP_HTML = `<!doctype html>
     if(skip.length) shb+='<div class="muted" style="font-size:12px;margin:6px 2px">Saltados: '+skip.length+'.</div>';
     if(shortsTargetVid){
       // Juan tapped ＋Do on a SPECIFIC video -> we generate the shorts of THAT video.
-      shb+='<div class="card" style="border:1px solid var(--cy)"><div style="font-weight:700;font-size:13px;margin-bottom:4px">🎬 Generar shorts de:</div>'
+      shb+='<div class="card" style="border:1px solid var(--cy)"><div style="font-weight:700;font-size:13px;margin-bottom:4px">🎬 Generate shorts from:</div>'
         +'<div style="font-size:13px;margin-bottom:2px">'+esc(vidTitle(shortsTargetVid).slice(0,44))+'</div>'
         +'<div class="muted" style="font-size:12px;margin:4px 0 8px">The AI analyzes THIS video: how many shorts, from what moments and how long, and proposes them for you to approve.</div>'
-        +'<button class="btn" onclick="suggestShorts()">🤖 Sugerir shorts de este video</button> '
+        +'<button class="btn" onclick="suggestShorts()">🤖 Suggest shorts from this video</button> '
         +'<button class="btn ghost mini" onclick="clearShortsTarget()">Cancel</button></div>';
     } else if(sst.can_suggest){
       shb+='<div class="card" style="border:1px solid var(--cy)"><div style="font-weight:700;font-size:13px;margin-bottom:4px">🎬 Generate this video's shorts</div>'
@@ -1314,7 +1314,7 @@ export const APP_HTML = `<!doctype html>
     }
     var totalRow='<tr style="font-weight:900;border-top:2px solid rgba(255,255,255,.28)"><td>Total</td><td style="text-align:right">'+num(gV)+'</td><td style="text-align:right">'+(aok?num(gW):"—")+'</td></tr>';
     var videosCard='<h2>Tus videos</h2>'
-      +'<div class="card" style="padding:8px"><table style="font-size:13px;width:100%"><tr><th style="text-align:left">Video</th><th style="text-align:right">Vistas</th><th style="text-align:right">Min. vistos</th></tr>'
+      +'<div class="card" style="padding:8px"><table style="font-size:13px;width:100%"><tr><th style="text-align:left">Video</th><th style="text-align:right">Views</th><th style="text-align:right">Watch min</th></tr>'
       +(rowsHtml||'<tr><td colspan="3" class="muted">No videos yet.</td></tr>')+(rowsHtml?totalRow:'')+'</table></div>'
       +(aok?'':'<div class="muted" style="font-size:11px">⚠️ "Watch minutes" need the YouTube Analytics permission (re-authorize the OAuth with the yt-analytics scope).</div>')
       +'<button class="btn" onclick="showInsights()">🧠 Analyze what to replicate (AI)</button>'
@@ -1405,13 +1405,13 @@ export const APP_HTML = `<!doctype html>
   function dispatch(workflow, label){
     if(tg&&tg.HapticFeedback)tg.HapticFeedback.impactOccurred("light");
     api("/api/dispatch",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({workflow:workflow})})
-      .then(function(r){return r.json();}).then(function(j){toast(j.ok?("✅ "+label+" — in progress, watch ⚡ above for progress"):("❌ "+(j.error||"no pude")));if(j.ok){setTimeout(load,3000);startWatch(workflow,label,label+" done — review it in the app.",label+" failed.");}})
+      .then(function(r){return r.json();}).then(function(j){toast(j.ok?("✅ "+label+" — in progress, watch ⚡ above for progress"):("❌ "+(j.error||"could not")));if(j.ok){setTimeout(load,3000);startWatch(workflow,label,label+" done — review it in the app.",label+" failed.");}})
       .catch(function(){toast("❌ Network error");});
   }
   function dispatchTopic(workflow, topic, label){
     if(tg&&tg.HapticFeedback)tg.HapticFeedback.impactOccurred("light");
     api("/api/dispatch",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({workflow:workflow,inputs:{topic:topic}})})
-      .then(function(r){return r.json();}).then(function(j){toast(j.ok?("✅ "+label+" — in progress, watch ⚡ above"):("❌ "+(j.error||"no pude")));if(j.ok){setTimeout(load,3000);startWatch(workflow,label,label+" ready — review it in the app.",label+" failed.");}})
+      .then(function(r){return r.json();}).then(function(j){toast(j.ok?("✅ "+label+" — in progress, watch ⚡ above"):("❌ "+(j.error||"could not")));if(j.ok){setTimeout(load,3000);startWatch(workflow,label,label+" ready — review it in the app.",label+" failed.");}})
       .catch(function(){toast("❌ Network error");});
   }
   function retry(wf){
@@ -1420,7 +1420,7 @@ export const APP_HTML = `<!doctype html>
     // The rest is retried directly. (set_privacy is harmless without inputs: empty default + save.)
     if(!wf){ toast("❌ I don't know which workflow to retry."); return; }
     api("/api/dispatch",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({workflow:wf})})
-      .then(function(r){return r.json();}).then(function(j){toast(j.ok?"🔁 Retrying… watch ⚡ above":"❌ "+(j.error||"no pude"));setTimeout(load,2000);if(j.ok)startWatch(wf,"Retry","The retry finished well — review it in the app.","The retry failed again. Check ⚙️ More ▸ Problems.");})
+      .then(function(r){return r.json();}).then(function(j){toast(j.ok?"🔁 Retrying… watch ⚡ above":"❌ "+(j.error||"could not"));setTimeout(load,2000);if(j.ok)startWatch(wf,"Retry","The retry finished well — review it in the app.","The retry failed again. Check ⚙️ More ▸ Problems.");})
       .catch(function(){toast("❌ Network error");});
   }
   function produceVideo(n){
@@ -1514,22 +1514,22 @@ export const APP_HTML = `<!doctype html>
     var notes=(el("seoNotes")&&el("seoNotes").value)||"";
     if(tg&&tg.HapticFeedback)tg.HapticFeedback.impactOccurred("light");
     api("/api/dispatch",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({workflow:"seo_regen.yml",inputs:{notes:notes}})})
-      .then(function(r){return r.json();}).then(function(j){toast(j.ok?"🔁 Regenerating the SEO — I'll show the new one here and on chat":"❌ "+(j.error||"no pude"));setTimeout(load,2500);if(j.ok)startWatch("seo_regen.yml","Regenerate SEO","The new SEO is ready — review it in Produce and approve it or regenerate it again.","SEO regeneration failed.");});
+      .then(function(r){return r.json();}).then(function(j){toast(j.ok?"🔁 Regenerating the SEO — I'll show the new one here and on chat":"❌ "+(j.error||"could not"));setTimeout(load,2500);if(j.ok)startWatch("seo_regen.yml","Regenerate SEO","The new SEO is ready — review it in Produce and approve it or regenerate it again.","SEO regeneration failed.");});
   }
   function approveRender(){
     if(tg&&tg.HapticFeedback)tg.HapticFeedback.impactOccurred("medium");
     api("/api/dispatch",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({workflow:"publish_youtube.yml"})})
-      .then(function(r){return r.json();}).then(function(j){toast(j.ok?"✅ Approved. Uploading and preparing the SEO…":"❌ "+(j.error||"no pude"));setTimeout(load,2500);if(j.ok)startWatch("publish_youtube.yml","Upload and prepare SEO","Video uploaded and SEO prepared — review the SEO in Produce and approve it to schedule.","YouTube upload failed.");});
+      .then(function(r){return r.json();}).then(function(j){toast(j.ok?"✅ Approved. Uploading and preparing the SEO…":"❌ "+(j.error||"could not"));setTimeout(load,2500);if(j.ok)startWatch("publish_youtube.yml","Upload and prepare SEO","Video uploaded and SEO prepared — review the SEO in Produce and approve it to schedule.","YouTube upload failed.");});
   }
   function regenRender(){
     var go=function(){ api("/api/dispatch",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({workflow:"render_phased.yml"})})
-      .then(function(r){return r.json();}).then(function(j){toast(j.ok?"🔁 Regenerating the video…":"❌ "+(j.error||"no pude"));setTimeout(load,2500);if(j.ok)startWatch("render_phased.yml","Regenerate video","The regenerated video is ready — review it and approve in Produce.","Video re-render failed.");}); };
+      .then(function(r){return r.json();}).then(function(j){toast(j.ok?"🔁 Regenerating the video…":"❌ "+(j.error||"could not"));setTimeout(load,2500);if(j.ok)startWatch("render_phased.yml","Regenerate video","The regenerated video is ready — review it and approve in Produce.","Video re-render failed.");}); };
     if(tg&&tg.showConfirm){ tg.showConfirm("Regenerate the video (it renders again)?",function(ok){if(ok)go();}); } else if(confirm("Regenerate the video?")){ go(); }
   }
   function approveSeo(){
     if(tg&&tg.HapticFeedback)tg.HapticFeedback.impactOccurred("medium");
     api("/api/approve",{method:"POST"}).then(function(r){return r.json();}).then(function(j){
-      var msg="❌ no pude";
+      var msg="❌ could not";
       if(j.ok && j.scheduled) msg="✅ Approved and scheduled"+(j.publish_at?" · "+fmtSlot(j.publish_at):"")+". Watch it in 📅 Agenda.";
       else if(j.ok) msg="✅ Approved. I didn't find a free hour — use 📅 Schedule. ("+(j.schedule_error||"")+")";
       toast(msg);setTimeout(load,900);
@@ -1538,7 +1538,7 @@ export const APP_HTML = `<!doctype html>
   function publishVideo(){
     var p=ST.production||{}; if(!p.video_id){toast("No video uploaded yet");return;}
     var go=function(){ api("/api/dispatch",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({workflow:"set_privacy.yml",inputs:{video_id:p.video_id,privacy:"public"}})})
-      .then(function(r){return r.json();}).then(function(j){toast(j.ok?"🌍 Publishing the video as public. When you want, go to Shorts and tap Sugerir.":"❌ "+(j.error||"no pude"));setTimeout(load,1800);if(j.ok)startWatch("set_privacy.yml","Publish video","The video is now public.","Could not publish the video.");}); };
+      .then(function(r){return r.json();}).then(function(j){toast(j.ok?"🌍 Publishing the video as public. When you want, go to Shorts and tap Suggest.":"❌ "+(j.error||"could not"));setTimeout(load,1800);if(j.ok)startWatch("set_privacy.yml","Publish video","The video is now public.","Could not publish the video.");}); };
     if(tg&&tg.showConfirm){ tg.showConfirm("Publish the video as PUBLIC NOW (without waiting for the best hour)?",function(ok){if(ok)go();}); }
     else if(confirm("Publish the video as PUBLIC now?")){ go(); }
   }
@@ -1548,7 +1548,7 @@ export const APP_HTML = `<!doctype html>
     api("/api/schedule",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({})})
       .then(function(r){return r.json();}).then(function(j){
         if(j.ok){ toast("📅 Scheduled for "+fmtSlot(j.publish_at)); setTimeout(load,1800); }
-        else toast("❌ "+(j.error||"no pude programar"));
+        else toast("❌ "+(j.error||"could not schedule"));
       }).catch(function(){toast("❌ Error de red");});
   }
   function scheduleShort(id){
@@ -1557,13 +1557,13 @@ export const APP_HTML = `<!doctype html>
     api("/api/schedule",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({video_id:id})})
       .then(function(r){return r.json();}).then(function(j){
         if(j.ok){ toast("📅 Short scheduled for "+fmtSlot(j.publish_at)); setTimeout(load,1800); }
-        else toast("❌ "+(j.error||"no pude programar"));
+        else toast("❌ "+(j.error||"could not schedule"));
       }).catch(function(){toast("❌ Error de red");});
   }
   function shortApprove(n, ok){
     if(tg&&tg.HapticFeedback)tg.HapticFeedback.impactOccurred("light");
     api("/api/short",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({n:n,action:ok?"approve":"skip"})})
-      .then(function(r){return r.json();}).then(function(j){toast(j.ok?(ok?"✅ Short aprobado":"❌ Short saltado"):"❌ no pude");setTimeout(load,500);});
+      .then(function(r){return r.json();}).then(function(j){toast(j.ok?(ok?"✅ Short approved":"❌ Short skipped"):"❌ could not");setTimeout(load,500);});
   }
   function produceOddly(niche,kind,variant){
     kind=kind||"video"; variant=variant||"puro";
@@ -1589,7 +1589,7 @@ export const APP_HTML = `<!doctype html>
           // If the workflow FAILS, clear the durable marker -> the video goes back to "to review" (it does not stay "scheduling" forever).
           var clearMark=function(){ delete localSched[vid]; api("/api/oddly-publish",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({video_id:vid,clear:true})}).then(function(){setTimeout(load,600);}); };
           startWatch("publish_oddly.yml",(mode==="public"?"Publish":"Schedule")+" in Oddly Loop",(mode==="public"?"The Oddly Loop video is now public.":"The Oddly Loop video is scheduled — watch it in 📅 Agenda."),(mode==="public"?"The publish":"The schedule")+" in Oddly Loop failed. Go back to «to review».",clearMark); }
-        else toast("❌ "+(j.error||"no pude"));
+        else toast("❌ "+(j.error||"could not"));
       }).catch(function(){toast("❌ Error de red");}); };
     if(mode==="public"&&tg&&tg.showConfirm){ tg.showConfirm("Publish this Oddly Loop video NOW (public)?",function(ok){if(ok)go();}); } else go();
   }
@@ -1599,7 +1599,7 @@ export const APP_HTML = `<!doctype html>
     if(!vid){toast("no video");return;}
     if(tg&&tg.HapticFeedback)tg.HapticFeedback.impactOccurred("light");
     api("/api/oddly-manual",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({video_id:vid})})
-      .then(function(r){return r.json();}).then(function(j){ if(j.ok){ toast(j.manual?"🟣 Marked as yours":"Removed from «mine»"); load(); } else toast("❌ "+(j.error||"no pude")); }).catch(function(){toast("❌ Network error");});
+      .then(function(r){return r.json();}).then(function(j){ if(j.ok){ toast(j.manual?"🟣 Marked as yours":"Removed from «mine»"); load(); } else toast("❌ "+(j.error||"could not")); }).catch(function(){toast("❌ Network error");});
   }
   window.oddlyManual=oddlyManual;
   function dlPublish(vid,mode){
@@ -1611,7 +1611,7 @@ export const APP_HTML = `<!doctype html>
       if(tg&&tg.HapticFeedback)tg.HapticFeedback.impactOccurred("medium");
       if(mode==="public"){
         api("/api/dispatch",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({workflow:"set_privacy.yml",inputs:{video_id:vid,privacy:"public"}})})
-        .then(function(r){return r.json();}).then(function(j){ if(j.ok){ localSched[vid]="public"; render(); toast("🌍 Publishing in The Data Lens… I'll notify you on chat"); setTimeout(load,4000); startWatch("set_privacy.yml","Publish in The Data Lens","The video is now public in The Data Lens.","Publishing in The Data Lens failed."); } else toast("❌ "+(j.error||"no pude")); }).catch(function(){toast("❌ Network error");});
+        .then(function(r){return r.json();}).then(function(j){ if(j.ok){ localSched[vid]="public"; render(); toast("🌍 Publishing in The Data Lens… I'll notify you on chat"); setTimeout(load,4000); startWatch("set_privacy.yml","Publish in The Data Lens","The video is now public in The Data Lens.","Publishing in The Data Lens failed."); } else toast("❌ "+(j.error||"could not")); }).catch(function(){toast("❌ Network error");});
       } else {
         api("/api/schedule",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({video_id:vid})})
         .then(function(r){return r.json();}).then(function(j){ if(j.ok){ localSched[vid]="schedule"; render(); toast("📅 Scheduled for "+fmtSlot(j.publish_at)+" — see 📅 Agenda"); setTimeout(load,4000); } else toast("❌ "+(j.error||"could not schedule")); }).catch(function(){toast("❌ Network error");});
@@ -1627,19 +1627,19 @@ export const APP_HTML = `<!doctype html>
     var inputs={}; if(vid)inputs.video_id=vid; if(notes)inputs.notes=notes;
     if(tg&&tg.HapticFeedback)tg.HapticFeedback.impactOccurred("medium");
     api("/api/dispatch",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({workflow:"shorts_plan.yml",inputs:inputs})})
-      .then(function(r){return r.json();}).then(function(j){ shortsTargetVid=""; toast(j.ok?("🤖 Analyzing the video to suggest shorts…"):("❌ "+(j.error||"no pude")));setTimeout(load,2500);if(j.ok)startWatch("shorts_plan.yml","Sugerir shorts","There are already shorts suggestions — approve them or skip them in ✂️ Shorts.","The shorts analysis failed.");});
+      .then(function(r){return r.json();}).then(function(j){ shortsTargetVid=""; toast(j.ok?("🤖 Analyzing the video to suggest shorts…"):("❌ "+(j.error||"could not")));setTimeout(load,2500);if(j.ok)startWatch("shorts_plan.yml","Suggest shorts","There are already shorts suggestions — approve them or skip them in ✂️ Shorts.","The shorts analysis failed.");});
   }
   function suggestShorts(){ runShortsPlan(""); }
   function regenShorts(){ runShortsPlan((el("shNotes")&&el("shNotes").value)||""); }
   function publishRow(vid){
     var go=function(){ api("/api/dispatch",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({workflow:"set_privacy.yml",inputs:{video_id:vid,privacy:"public"}})})
-      .then(function(r){return r.json();}).then(function(j){toast(j.ok?"🌍 Publishing the video…":"❌ "+(j.error||"no pude"));setTimeout(load,1800);if(j.ok)startWatch("set_privacy.yml","Publish video","The video is now public.","Could not publish the video.");}); };
+      .then(function(r){return r.json();}).then(function(j){toast(j.ok?"🌍 Publishing the video…":"❌ "+(j.error||"could not"));setTimeout(load,1800);if(j.ok)startWatch("set_privacy.yml","Publish video","The video is now public.","Could not publish the video.");}); };
     if(tg&&tg.showConfirm){ tg.showConfirm("Publish this video as PUBLIC?",function(ok){if(ok)go();}); } else if(confirm("Publish public?")){ go(); }
   }
   function thumbRow(vid){
     if(tg&&tg.HapticFeedback)tg.HapticFeedback.impactOccurred("light");
     api("/api/dispatch",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({workflow:"thumbnail_only.yml",inputs:{video_id:vid,mode:"generate"}})})
-      .then(function(r){return r.json();}).then(function(j){toast(j.ok?"🖼️ Generating the thumbnail — in a moment you'll see it here to approve":"❌ "+(j.error||"no pude"));setTimeout(load,4000);if(j.ok)startWatch("thumbnail_only.yml","Thumbnail","The thumbnail is ready — look above in Produce and give it ✅ Approve (or 🔁 redo).","The thumbnail failed.");});
+      .then(function(r){return r.json();}).then(function(j){toast(j.ok?"🖼️ Generating the thumbnail — in a moment you'll see it here to approve":"❌ "+(j.error||"could not"));setTimeout(load,4000);if(j.ok)startWatch("thumbnail_only.yml","Thumbnail","The thumbnail is ready — look above in Produce and give it ✅ Approve (or 🔁 redo).","The thumbnail failed.");});
   }
   function thumbApprove(vid){
     if(tg&&tg.HapticFeedback)tg.HapticFeedback.impactOccurred("light");
@@ -1649,7 +1649,7 @@ export const APP_HTML = `<!doctype html>
   function thumbPublish(vid){
     if(tg&&tg.HapticFeedback)tg.HapticFeedback.impactOccurred("medium");
     api("/api/dispatch",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({workflow:"thumbnail_only.yml",inputs:{video_id:vid,mode:"apply"}})})
-      .then(function(r){return r.json();}).then(function(j){toast(j.ok?"🌍 Publishing the thumbnail on YouTube…":"❌ "+(j.error||"no pude"));setTimeout(load,3000);if(j.ok)startWatch("thumbnail_only.yml","Publish thumbnail","The thumbnail is now set on YouTube.","Could not set the thumbnail on YouTube.");});
+      .then(function(r){return r.json();}).then(function(j){toast(j.ok?"🌍 Publishing the thumbnail on YouTube…":"❌ "+(j.error||"could not"));setTimeout(load,3000);if(j.ok)startWatch("thumbnail_only.yml","Publish thumbnail","The thumbnail is now set on YouTube.","Could not set the thumbnail on YouTube.");});
   }
   function pickVoice(id){
     if(tg&&tg.HapticFeedback)tg.HapticFeedback.impactOccurred("medium");
@@ -1658,7 +1658,7 @@ export const APP_HTML = `<!doctype html>
   }
   function pubShort(id){
     api("/api/dispatch",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({workflow:"set_privacy.yml",inputs:{video_id:id,privacy:"public"}})})
-      .then(function(r){return r.json();}).then(function(j){toast(j.ok?"✅ Publishing the short":"❌ no pude");setTimeout(load,1500);if(j.ok)startWatch("set_privacy.yml","Publish short","The short is now public.","Could not publish the short.");});
+      .then(function(r){return r.json();}).then(function(j){toast(j.ok?"✅ Publishing the short":"❌ could not");setTimeout(load,1500);if(j.ok)startWatch("set_privacy.yml","Publish short","The short is now public.","Could not publish the short.");});
   }
   function uploadPhoto(f){ if(!f)return; var fd=new FormData(); fd.append("kind","photo"); fd.append("prompt",el("pPrompt").value||""); fd.append("file",f);
     toast("Uploading photo…"); api("/api/upload",{method:"POST",body:fd}).then(function(r){return r.json();}).then(function(j){toast(j.ok?"✅ Retouching the photo, it'll arrive on chat":"❌ "+(j.error||"failed"));}); }
