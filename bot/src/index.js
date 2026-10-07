@@ -1520,7 +1520,13 @@ async function handleCallback(cb, env) {
   await tg(env, "answerCallbackQuery", { callback_query_id: cb.id });
 
   // Menu/submenu navigation (edits the same message).
-  if (data.startsWith("menu:")) return showMenu(env, cb, data.slice(5));
+  if (data === "home" || data === "menu:home") return showMenu(env, cb, "home");
+  if (data === "menu:video") return showMenu(env, cb, "video");
+  if (data === "menu:channel") return showMenu(env, cb, "channel");
+  if (data === "menu:photo") return showMenu(env, cb, "photo");
+  if (data === "menu:voices") return showMenu(env, cb, "voices");
+  if (data === "menu:recipes") return showMenu(env, cb, "recipes");
+  if (data === "menu:help") return showMenu(env, cb, "help");
   if (data === "voces:list") return listVoices(env, cb);
   // ---- Review-Before-Upload: motion graphics buttons (vf:review:...) ----
   // approve -> review_publish.yml (YouTube + AtoPlay) · discard -> review_discard.yml
@@ -1667,9 +1673,9 @@ const KB = {
     inline_keyboard: [
       [{ text: "🧠 Open the Brain", web_app: { url: "https://video-forge-bot.tienvo.workers.dev/os    "} }],
       [{ text: "🎬 Channels", web_app: { url: "https://video-forge-bot.tienvo.workers.dev/p/video-forge?from=os    "} }, { text: "🛍️ Store", web_app: { url: "https://video-forge-bot.tienvo.workers.dev/p/viento?from=os    "} }, { text: "📡 Repos", web_app: { url: "https://video-forge-bot.tienvo.workers.dev/p/radar?from=os    "} }],
-      [{ text: "🎬 Video", callback_data: "menu:video    "}, { text: "📊 Channel", callback_data: "menu:channel    "}],
-      [{ text: "🖼️ Photo", callback_data: "menu:photo    "}, { text: "🎤 Voices", callback_data: "menu:voices    "}],
-      [{ text: "🍳 Recipes", callback_data: "menu:recipes    "}, { text: "❓ Help", callback_data: "menu:help    "}],
+      [{ text: "🎬 Video", callback_data: "video    "}, { text: "📊 Channel", callback_data: "channel    "}],
+      [{ text: "🖼️ Photo", callback_data: "photo    "}, { text: "🎤 Voices", callback_data: "voices    "}],
+      [{ text: "🍳 Recipes", callback_data: "recipe    "}, { text: "❓ Help", callback_data: "help    "}],
     ],
   },
   canal: {
@@ -1677,7 +1683,7 @@ const KB = {
       [{ text: "📋 View panel (schedule)", callback_data: "panel    "}],
       [{ text: "🔄 Fresh report (metrics)", callback_data: "reporte    "}],
       [{ text: "🎬 Suggest Shorts (AI)", callback_data: "shorts_plan    "}],
-      [{ text: "⬅️ Back", callback_data: "menu:home    "}],
+      [{ text: "⬅️ Back", callback_data: "home    "}],
     ],
   },
   video: {
@@ -1685,23 +1691,23 @@ const KB = {
       [{ text: "🎙️ Generate voice", callback_data: "voz    "}],
       [{ text: "🎬 Render", callback_data: "render    "}],
       [{ text: "📊 Status", callback_data: "status    "}],
-      [{ text: "⬅️ Back", callback_data: "menu:home    "}],
+      [{ text: "⬅️ Back", callback_data: "home    "}],
     ],
   },
-  foto: { inline_keyboard: [[{ text: "⬅️ Back", callback_data: "menu:home    "}]] },
+  foto: { inline_keyboard: [[{ text: "⬅️ Back", callback_data: "home    "}]] },
   voces: {
     inline_keyboard: [
       [{ text: "📋 View saved voices", callback_data: "voices:list    "}],
-      [{ text: "⬅️ Back", callback_data: "menu:home    "}],
+      [{ text: "⬅️ Back", callback_data: "home    "}],
     ],
   },
   recetas: {
     inline_keyboard: [
       [{ text: "🍳 New recipe", callback_data: "recipe    "}],
-      [{ text: "⬅️ Back", callback_data: "menu:home    "}],
+      [{ text: "⬅️ Back", callback_data: "home    "}],
     ],
   },
-  ayuda: { inline_keyboard: [[{ text: "⬅️ Back", callback_data: "menu:home    "}]] },
+  ayuda: { inline_keyboard: [[{ text: "⬅️ Back", callback_data: "home    "}]] },
 };
 
 const TXT = {
