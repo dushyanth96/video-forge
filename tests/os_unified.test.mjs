@@ -15,7 +15,7 @@ describe("AI OS en un solo bot", () => {
     expect(html).toContain('"api":"/api/os"');
     expect(html).toContain('"method":"POST"');
     expect(OS_UNIFIED_JS).toContain('var V={tab:"cerebro",sys:null};');
-    for (const t of ["Cerebro", "Decisiones", "Sistemas", "Actividad"]) expect(OS_UNIFIED_JS).toContain(t);
+    for (const t of ["Brain", "Decisions", "Systems", "Activity"]) expect(OS_UNIFIED_JS).toContain(t);
     for (const p of ["/p/video-forge?from=os", "/p/radar?from=os", "/p/viento?from=os"]) expect(OS_UNIFIED_JS).toContain(p);
   });
   it("la configuración no inyecta HTML", () => {

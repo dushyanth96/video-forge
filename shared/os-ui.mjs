@@ -1,11 +1,11 @@
-// os-ui.mjs — DESIGN SYSTEM del AI OS (Video Forge · Viento · Radar). Una sola fuente para las tres Mini Apps.
-// Exporta cadenas para incrustar en el HTML de cada Worker: OS_HEAD (fuentes), OS_CSS (tokens + componentes),
-// OS_ICONS (sprite SVG) y OS_JS (utilidades del cliente). Reglas: sin backticks ni "${" dentro de las cadenas
-// (van dentro de template literals de los Workers), eventos por data-* y ES5 en el cliente.
-// Dirección: quiet luxury de centro de control. Oscuro como experiencia principal; claro heredado de Telegram.
-// Versión: subir OS_UI_VERSION en cada cambio (la copia de Viento se valida contra este número y su hash).
+// os-ui.mjs — AI OS DESIGN SYSTEM (Video Forge · Viento · Radar). One source of truth for the three Mini Apps.
+// Exports strings to embed in each Worker's HTML: OS_HEAD (fonts), OS_CSS (tokens + components),
+// OS_ICONS (SVG sprite) and OS_JS (client utilities). Rules: no backticks nor "${" inside the strings
+// (they go inside the Workers' template literals), data-* events and ES5 in the client.
+// Direction: quiet-luxury control room. Dark as the main experience; light inherited from Telegram.
+// Version: bump OS_UI_VERSION on every change (Viento's copy is validated against this number and its hash).
 
-export const OS_UI_VERSION = "1.0.0";
+export const OS_UI_VERSION = "1.1.0";
 
 export const OS_HEAD = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">';
 
@@ -39,7 +39,7 @@ body{font-family:var(--os-sans);font-size:15.5px;line-height:1.5;-webkit-font-sm
 .os-mono{font-family:var(--os-mono)}
 .os-num{font-variant-numeric:tabular-nums}
 .os-t2{color:var(--os-t2)}.os-t3{color:var(--os-t3)}
-/* Encabezado del sistema */
+/* System header */
 .os-top{position:sticky;top:0;z-index:10;background:var(--os-bg);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0 10px}
 .os-id{display:flex;align-items:center;gap:10px;min-width:0}
 .os-mark{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;background:var(--os-acc-soft);color:var(--os-acc);flex-shrink:0}
@@ -49,7 +49,7 @@ body{font-family:var(--os-sans);font-size:15.5px;line-height:1.5;-webkit-font-sm
 .os-iconbtn{width:36px;height:36px;border-radius:10px;border:1px solid var(--os-border);background:var(--os-surface);color:var(--os-t2);display:flex;align-items:center;justify-content:center;cursor:pointer}
 .os-iconbtn svg{width:18px;height:18px}
 .os-iconbtn:active{transform:scale(.94)}
-/* Pulse del sistema */
+/* System pulse */
 .os-pulse{padding:18px 0 6px}
 .os-greet{font-family:var(--os-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--os-t3)}
 .os-headline{font-size:28px;font-weight:650;letter-spacing:-.025em;line-height:1.15;margin-top:6px;text-wrap:balance}
@@ -69,7 +69,7 @@ body{font-family:var(--os-sans);font-size:15.5px;line-height:1.5;-webkit-font-sm
 .os-dot[data-s="thinking"]::after{border-color:var(--os-acc)}.os-dot[data-s="executing"]::after{border-color:var(--os-warn)}
 .os-dot[data-s="researching"]::after{border-color:var(--os-acc)}.os-dot[data-s="observing"]::after{border-color:var(--os-info);animation-duration:3s}
 @keyframes os-ring{0%{opacity:.7;transform:scale(.6)}100%{opacity:0;transform:scale(1.6)}}
-/* Secciones y filas: divisores antes que tarjetas */
+/* Sections and rows: dividers before cards */
 .os-sec{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-family:var(--os-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--os-t3);margin:26px 0 8px}
 .os-sec a,.os-sec button{font-family:var(--os-sans);text-transform:none;letter-spacing:0;font-size:12.5px;color:var(--os-acc);background:none;border:0;padding:0;cursor:pointer}
 .os-list{border-top:1px solid var(--os-hair)}
@@ -94,7 +94,7 @@ body{font-family:var(--os-sans);font-size:15.5px;line-height:1.5;-webkit-font-sm
 .os-act .tm{font-family:var(--os-mono);font-size:11.5px;color:var(--os-t3);padding-top:1px}
 .os-act .ag{font-size:12px;color:var(--os-t2)}
 .os-act.new{animation:os-in var(--os-base) var(--os-ease)}
-/* Métrica con interpretación */
+/* Metric with interpretation */
 .os-metric{padding:12px 0;border-bottom:1px solid var(--os-hair)}
 .os-metric .k{font-family:var(--os-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--os-t3)}
 .os-metric .v{display:flex;align-items:baseline;gap:10px;margin-top:4px}
@@ -104,13 +104,13 @@ body{font-family:var(--os-sans);font-size:15.5px;line-height:1.5;-webkit-font-sm
 .os-metric .ctx{font-size:12.5px;color:var(--os-t3);margin-top:2px}
 .os-metric .ai{font-size:13px;color:var(--os-t2);margin-top:6px}
 .os-metric .ai b{color:var(--os-acc);font-weight:500}
-/* Insight: qué, por qué, impacto, acción */
+/* Insight: what, why, impact, action */
 .os-insight{border-left:2px solid var(--os-acc-line);padding:2px 0 2px 12px;margin:12px 0}
 .os-insight .what{font-weight:600;font-size:14.5px}
 .os-insight .why{font-size:13px;color:var(--os-t2);margin-top:3px}
 .os-insight .do{font-size:13px;margin-top:6px;color:var(--os-t1)}
 .os-insight .conf{font-family:var(--os-mono);font-size:11px;color:var(--os-t3);margin-top:6px}
-/* Chips, barras, gráficos */
+/* Chips, bars, charts */
 .os-chip{display:inline-flex;align-items:center;gap:6px;font-family:var(--os-mono);font-size:11px;padding:3px 8px;border-radius:999px;border:1px solid var(--os-border);color:var(--os-t2);white-space:nowrap}
 .os-chip.acc{border-color:var(--os-acc-line);color:var(--os-acc)}
 .os-chip.ok{color:var(--os-ok)}.os-chip.warn{color:var(--os-warn)}.os-chip.bad{color:var(--os-bad)}
@@ -128,7 +128,7 @@ body{font-family:var(--os-sans);font-size:15.5px;line-height:1.5;-webkit-font-sm
 .os-btn.danger{color:var(--os-bad);border-color:rgba(240,112,112,.4)}
 .os-btn.sm{height:34px;padding:0 12px;font-size:13px;border-radius:10px}
 .os-btn.block{width:100%}
-/* Navegación inferior con comando central */
+/* Bottom navigation with central command */
 .os-nav{position:fixed;left:0;right:0;bottom:0;z-index:20;background:rgba(10,13,18,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--os-hair);padding:6px 10px calc(8px + var(--os-safe-b));display:flex;justify-content:space-around;align-items:center}
 html[data-theme="light"] .os-nav{background:rgba(255,255,255,.92)}
 .os-nav button{flex:1;background:none;border:0;color:var(--os-t3);font-family:var(--os-sans);font-size:10.5px;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;cursor:pointer;position:relative}
@@ -147,7 +147,7 @@ html[data-theme="light"] .os-nav{background:rgba(255,255,255,.92)}
 .os-chain{display:grid;gap:10px}
 .os-chain div{display:grid;grid-template-columns:96px 1fr;gap:12px;font-size:14px}
 .os-chain .k{font-family:var(--os-mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--os-t3);padding-top:2px}
-/* Vacíos, errores, carga, toast */
+/* Empties, errors, loading, toast */
 .os-empty{padding:18px 0;color:var(--os-t2);font-size:14px}
 .os-empty b{display:block;color:var(--os-t1);font-weight:600;margin-bottom:2px}
 .os-error{border:1px solid rgba(240,112,112,.35);border-radius:var(--os-r-row);padding:12px 14px;margin:10px 0}
@@ -188,18 +188,18 @@ export const OS_ICONS = '<svg width="0" height="0" style="position:absolute" ari
   '<symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 10-2.3 5.7"/><path d="M20 5v6h-6"/></symbol>' +
   '</defs></svg>';
 
-// Utilidades del cliente (ES5, sin backticks). Se exponen en window.OS.
+// Client utilities (ES5, no backticks). Exposed on window.OS.
 export const OS_JS = `
 (function(){
   var tg=window.Telegram&&window.Telegram.WebApp;
   var OS={tg:tg};
   OS.el=function(id){return document.getElementById(id);};
   OS.esc=function(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");};
-  OS.num=function(n){if(n==null||!isFinite(+n))return "—";n=+n;var a=Math.abs(n);if(a>=1e6)return (n/1e6).toFixed(a>=1e7?0:1)+" M";if(a>=1e4)return Math.round(n/1e3)+" mil";return Math.round(n).toLocaleString("es");};
+  OS.num=function(n){if(n==null||!isFinite(+n))return "—";n=+n;var a=Math.abs(n);if(a>=1e6)return (n/1e6).toFixed(a>=1e7?0:1)+" M";if(a>=1e4)return Math.round(n/1e3)+"K";return Math.round(n).toLocaleString("en");};
   OS.pct=function(n){if(n==null||!isFinite(+n))return "—";return (n>0?"+":"")+(Math.round(n*10)/10)+"%";};
-  OS.ago=function(iso){var t=Date.parse(iso);if(!isFinite(t))return "—";var m=Math.round((Date.now()-t)/60000);if(m<1)return "ahora";if(m<60)return "hace "+m+" min";var h=Math.round(m/60);if(h<48)return "hace "+h+" h";return "hace "+Math.round(h/24)+" d";};
+  OS.ago=function(iso){var t=Date.parse(iso);if(!isFinite(t))return "—";var m=Math.round((Date.now()-t)/60000);if(m<1)return "just now";if(m<60)return m+" min ago";var h=Math.round(m/60);if(h<48)return h+" h ago";return Math.round(h/24)+" d ago";};
   OS.hhmm=function(iso){var d=new Date(iso);if(isNaN(d))return "—";return ("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2);};
-  OS.greet=function(){var h=new Date().getHours();return h<12?"Buenos días":h<19?"Buenas tardes":"Buenas noches";};
+  OS.greet=function(){var h=new Date().getHours();return h<12?"Good morning":h<19?"Good afternoon":"Good evening";};
   OS.icon=function(name,cls){return '<svg class="'+(cls||"")+'" aria-hidden="true"><use href="#i-'+name+'"/></svg>';};
   OS.dot=function(state){return '<span class="os-dot" data-s="'+OS.esc(state||"idle")+'"></span>';};
   OS.haptic=function(t){try{var H=tg&&tg.HapticFeedback;if(!H)return;if(t==="sel")H.selectionChanged();else if(t==="ok")H.notificationOccurred("success");else if(t==="err")H.notificationOccurred("error");else if(t==="warn")H.notificationOccurred("warning");else H.impactOccurred(t||"light");}catch(e){}};
@@ -210,7 +210,7 @@ export const OS_JS = `
     var area=d+" L"+pts[pts.length-1][0].toFixed(1)+" "+(H-p)+" L"+pts[0][0].toFixed(1)+" "+(H-p)+" Z";
     var ref="";if(opts.ref!=null&&isFinite(+opts.ref)){var ry=H-p-((+opts.ref-mn)/rg)*(H-2*p);if(ry>=0&&ry<=H)ref='<line class="ref" x1="0" x2="'+W+'" y1="'+ry.toFixed(1)+'" y2="'+ry.toFixed(1)+'"/>';}
     var last=pts[pts.length-1];
-    return '<svg class="os-spark" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" role="img" aria-label="'+OS.esc(opts.label||"tendencia")+'">'+ref+'<path class="a" d="'+area+'"/><path class="l" d="'+d+'"/><circle cx="'+last[0].toFixed(1)+'" cy="'+last[1].toFixed(1)+'" r="2.5"/></svg>';};
+    return '<svg class="os-spark" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" role="img" aria-label="'+OS.esc(opts.label||"trend")+'">'+ref+'<path class="a" d="'+area+'"/><path class="l" d="'+d+'"/><circle cx="'+last[0].toFixed(1)+'" cy="'+last[1].toFixed(1)+'" r="2.5"/></svg>';};
   OS.openSheet=function(html){var sh=OS.el("osSheet"),sd=OS.el("osShade");if(!sh){sd=document.createElement("div");sd.id="osShade";sd.className="os-shade";sh=document.createElement("div");sh.id="osSheet";sh.className="os-sheet";document.body.appendChild(sd);document.body.appendChild(sh);sd.addEventListener("click",OS.closeSheet);}
     sh.innerHTML='<div class="os-grip"></div>'+html;sd.classList.add("on");sh.classList.add("on");OS.sheetOpen=true;OS.haptic("light");OS.backSync&&OS.backSync();};
   OS.closeSheet=function(){var sh=OS.el("osSheet"),sd=OS.el("osShade");if(sh)sh.classList.remove("on");if(sd)sd.classList.remove("on");OS.sheetOpen=false;OS.backSync&&OS.backSync();};

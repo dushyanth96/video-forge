@@ -1,18 +1,18 @@
-// os-shell.mjs — APP COMÚN del AI OS. La misma pantalla en Video Forge, Viento y Radar (cambia el acento y el
-// panel propio). Lee /api/os (estado global unido al leer + pulse del sistema) y muestra:
-//   Pulse      qué está pasando ahora, prioridad del día, los tres sistemas, lo que te necesita, agentes,
-//              métricas con interpretación, insights con su confianza y la actividad real de la IA.
-//   Trabajo    tareas del sistema (en curso primero) y su bitácora completa.
-//   Decisiones todo lo que espera a Juan en los tres sistemas, con la cadena qué/por qué/evidencia/autonomía.
-//   Panel      el panel detallado que ya existe en cada bot (ahí se aprueba: el OS no inventa aprobaciones).
-// Reglas: el HTML se arma por concatenación (sin backticks ni "${" en las cadenas), cliente ES5, eventos data-*.
+// os-shell.mjs — SHARED app of the AI OS. The same screen on Video Forge, Viento and Radar (the accent and the
+// own panel change). It reads /api/os (global state merged on read + system pulse) and shows:
+//   Pulse      what is happening now, priority of the day, the three systems, what needs you, agents,
+//              metrics with interpretation, insights with their confidence and the AI's real activity.
+//   Work       system tasks (in progress first) and its full log.
+//   Decisions  everything waiting for Juan across the three systems, with the what/why/evidence/autonomy chain.
+//   Panel      the detailed panel that already exists in each bot (approval happens there: the OS does not invent approvals).
+// Rules: HTML is built by concatenation (no backticks nor "${" inside strings), ES5 client, data-* events.
 import { OS_HEAD, OS_CSS, OS_ICONS, OS_JS, OS_UI_VERSION } from "./os-ui.mjs";
 
-export const OS_SHELL_VERSION = "1.0.0";
+export const OS_SHELL_VERSION = "1.1.0";
 
 export const OS_SYSTEMS_UI = {
-  "video-forge": { name: "Video Forge", role: "Create", icon: "play", panel: "/app2", panelLabel: "Canales", method: "POST" },
-  viento: { name: "Viento", role: "Grow", icon: "growth", panel: "/app", panelLabel: "Tienda", method: "GET" },
+  "video-forge": { name: "Video Forge", role: "Create", icon: "play", panel: "/app2", panelLabel: "Channels", method: "POST" },
+  viento: { name: "Viento", role: "Grow", icon: "growth", panel: "/app", panelLabel: "Store", method: "GET" },
   radar: { name: "Radar", role: "Improve", icon: "radar", panel: "/app", panelLabel: "Repos", method: "POST" },
 };
 
@@ -50,30 +50,30 @@ export const OS_APP_JS = `
   var C=window.OS_CFG,OS=window.OS,tg=OS.tg,E=OS.esc;
   var ST=null,ERR=null,TAB="pulse",LOADING=false,LAST=0,ANIM=true;
   var SYSN={"video-forge":"Video Forge",viento:"Viento",radar:"Radar"};
-  var STATUS_TXT={normal:"En orden",attention:"Requiere atención",degraded:"Sin señal",critical:"Crítico"};
-  var STATE_TXT={idle:"En espera",observing:"Observando",thinking:"Pensando",researching:"Investigando",analyzing:"Analizando",executing:"Ejecutando",waiting:"Esperando",asking:"Te pregunta",completed:"Terminó",warning:"Con avisos",failed:"Falló",paused:"En pausa"};
-  var TASK_TXT={QUEUED:"En cola",RUNNING:"Corriendo",THINKING:"Pensando",WAITING:"Esperando",APPROVAL:"Espera tu OK",COMPLETED:"Terminada",FAILED:"Falló",CANCELLED:"Cancelada"};
+  var STATUS_TXT={normal:"In order",attention:"Needs attention",degraded:"No signal",critical:"Critical"};
+  var STATE_TXT={idle:"Idle",observing:"Observing",thinking:"Thinking",researching:"Researching",analyzing:"Analyzing",executing:"Executing",waiting:"Waiting",asking:"Asking you",completed:"Done",warning:"With warnings",failed:"Failed",paused:"Paused"};
+  var TASK_TXT={QUEUED:"Queued",RUNNING:"Running",THINKING:"Thinking",WAITING:"Waiting",APPROVAL:"Waiting for your OK",COMPLETED:"Done",FAILED:"Failed",CANCELLED:"Cancelled"};
   var TASK_DOT={QUEUED:"idle",RUNNING:"executing",THINKING:"thinking",WAITING:"idle",APPROVAL:"asking",COMPLETED:"completed",FAILED:"failed",CANCELLED:"degraded"};
-  var AUT_TXT={AUTO:"Automática",REVIEW:"Para revisar",APPROVAL:"Necesita tu aprobación",CRITICAL:"Crítica"};
-  var TRUST_TXT={suggested:"sugerido",prepared:"preparado",executed:"hecho",approved:"aprobado por ti"};
-  var RISK_TXT={low:"Bajo",medium:"Medio",high:"Alto"};
+  var AUT_TXT={AUTO:"Automatic",REVIEW:"To review",APPROVAL:"Needs your approval",CRITICAL:"Critical"};
+  var TRUST_TXT={suggested:"suggested",prepared:"prepared",executed:"done",approved:"approved by you"};
+  var RISK_TXT={low:"Low",medium:"Medium",high:"High"};
   var ACTIVE=["observing","thinking","researching","analyzing","executing","waiting","asking"];
 
   function plural(n,one,many){return n+" "+(n===1?one:many);}
   function chipSys(s){return '<span class="os-chip sys" data-c="'+E(s)+'">'+E(SYSN[s]||s)+'</span>';}
-  function conf(c){return c&&c.basis?"Confianza "+Math.round(c.value*100)+"% · "+c.basis:"Confianza: datos insuficientes";}
+  function conf(c){return c&&c.basis?"Confidence "+Math.round(c.value*100)+"% · "+c.basis:"Confidence: not enough data";}
   function needs(){return (ST&&ST.global&&ST.global.needs)||[];}
   function mine(){return ST&&ST.pulse;}
   function leadState(p){var s=(p.agents||[]).map(function(a){return a.state;});var order=["executing","thinking","researching","analyzing","asking","observing"];for(var i=0;i<order.length;i++)if(s.indexOf(order[i])>=0)return order[i];return p.status;}
 
   function topHtml(){
     var p=mine(),line,state;
-    if(!ST){line=ERR?"Sin conexión":"Conectando…";state="idle";}
-    else if(!p){line="Sin señal de "+C.name;state="degraded";}
-    else if(p.stale){line="Sin señal "+OS.ago(p.at);state="degraded";}
-    else{var act=(p.agents||[]).filter(function(a){return ACTIVE.indexOf(a.state)>=0;}).length;line=(act?plural(act,"agente trabajando","agentes trabajando"):"Agentes al día")+" · "+OS.ago(p.at);state=leadState(p);}
+    if(!ST){line=ERR?"No connection":"Connecting…";state="idle";}
+    else if(!p){line="No signal from "+C.name;state="degraded";}
+    else if(p.stale){line="No signal "+OS.ago(p.at);state="degraded";}
+    else{var act=(p.agents||[]).filter(function(a){return ACTIVE.indexOf(a.state)>=0;}).length;line=(act?plural(act,"agent working","agents working"):"Agents up to date")+" · "+OS.ago(p.at);state=leadState(p);}
     return '<div class="os-id"><div class="os-mark">'+OS.icon(C.icon)+'</div><div style="min-width:0"><div class="os-name">'+E(C.name)+'</div><div class="os-ai">'+OS.dot(state)+'<span>'+E(line)+'</span></div></div></div>'
-      +'<button class="os-iconbtn" data-act="refresh" aria-label="Actualizar">'+OS.icon("refresh")+'</button>';
+      +'<button class="os-iconbtn" data-act="refresh" aria-label="Refresh">'+OS.icon("refresh")+'</button>';
   }
 
   function needHtml(n){
@@ -108,30 +108,30 @@ export const OS_APP_JS = `
     var run=p?(p.tasks||[]).filter(function(t){return t.status==="RUNNING"||t.status==="THINKING";}).length:0;
     var myN=needs().filter(function(n){return n.system===C.system;}).length;
     h+='<section class="os-pulse"><div class="os-greet">'+E(OS.greet())+" · "+E(C.role)+'</div>';
-    h+='<div class="os-headline">'+E(p?p.headline:"Sin señal de "+C.name)+'</div>';
+    h+='<div class="os-headline">'+E(p?p.headline:"No signal from "+C.name)+'</div>';
     if(p&&p.sub)h+='<div class="os-sub">'+E(p.sub)+'</div>';
-    h+='<div class="os-counts"><span>'+OS.dot(p?p.status:"degraded")+E(STATUS_TXT[p?p.status:"degraded"])+'</span><span>'+E(plural(run,"en curso","en curso"))+'</span><span>'+E(plural(myN,"decisión","decisiones"))+'</span></div></section>';
+    h+='<div class="os-counts"><span>'+OS.dot(p?p.status:"degraded")+E(STATUS_TXT[p?p.status:"degraded"])+'</span><span>'+E(plural(run,"in progress","in progress"))+'</span><span>'+E(plural(myN,"decision","decisions"))+'</span></div></section>';
     if(g.priority){
-      h+='<button class="os-prio" data-act="prio"><div class="k">Prioridad de hoy · '+E(SYSN[g.priority.system]||"")+'</div><div class="t">'+E(g.priority.title)+'</div>'+(g.priority.why?'<div class="w">'+E(g.priority.why)+'</div>':"")+'</button>';
+      h+='<button class="os-prio" data-act="prio"><div class="k">Today&rsquo;s priority · '+E(SYSN[g.priority.system]||"")+'</div><div class="t">'+E(g.priority.title)+'</div>'+(g.priority.why?'<div class="w">'+E(g.priority.why)+'</div>':"")+'</button>';
     }
-    h+='<div class="os-sec"><span>Tu equipo de IA</span></div><div class="os-list">';
+    h+='<div class="os-sec"><span>Your AI team</span></div><div class="os-list">';
     (g.systems||[]).forEach(function(s){
       h+='<div class="os-row'+(s.system===C.system?" me":"")+'"><span class="os-sysbar" data-c="'+E(s.system)+'"></span>'+OS.dot(s.status)+'<div class="main"><div class="title">'+E(s.name)+'<span class="os-role">'+E(s.role)+'</span></div><div class="meta">'+E(s.headline)+'</div></div><div class="end">'+(s.at?E(OS.ago(s.at)):"—")+'</div></div>';
     });
     h+='</div>';
     var nd=needs();
-    h+='<div class="os-sec"><span>Te necesita</span>'+(nd.length>3?'<button data-tab="needs">Ver las '+nd.length+'</button>':"")+'</div>';
-    h+=nd.length?nd.slice(0,3).map(needHtml).join(""):OS.empty("Nada pendiente","Ningún sistema espera una decisión tuya ahora.");
+    h+='<div class="os-sec"><span>Needs you</span>'+(nd.length>3?'<button data-tab="needs">See all '+nd.length+'</button>':"")+'</div>';
+    h+=nd.length?nd.slice(0,3).map(needHtml).join(""):OS.empty("Nothing pending","No system is waiting for a decision of yours right now.");
     if(p&&(p.agents||[]).length){
       h+='<div class="os-sec"><span>Agentes de '+E(C.name)+'</span></div><div class="os-list">'+p.agents.map(function(a){
         return '<div class="os-row">'+OS.dot(a.state)+'<div class="main"><div class="title">'+E(a.name)+'</div><div class="meta">'+E(a.detail||"")+'</div></div><div class="end">'+E(STATE_TXT[a.state]||a.state)+'</div></div>';
       }).join("")+'</div>';
     }
-    if(p&&(p.metrics||[]).length)h+='<div class="os-sec"><span>Métricas</span></div><div class="os-list">'+p.metrics.map(metricHtml).join("")+'</div>';
-    if(p&&(p.insights||[]).length)h+='<div class="os-sec"><span>Lo que la IA ve</span></div>'+p.insights.map(insightHtml).join("");
+    if(p&&(p.metrics||[]).length)h+='<div class="os-sec"><span>Metrics</span></div><div class="os-list">'+p.metrics.map(metricHtml).join("")+'</div>';
+    if(p&&(p.insights||[]).length)h+='<div class="os-sec"><span>What the AI sees</span></div>'+p.insights.map(insightHtml).join("");
     var acts=(g.activity||[]).slice(0,10);
-    h+='<div class="os-sec"><span>Actividad</span><button data-tab="work">Todo</button></div>';
-    h+=acts.length?'<div>'+acts.map(function(a){return actHtml(a,true);}).join("")+'</div>':OS.empty("Sin actividad todavía","Cuando un agente haga algo, aparece aquí con su hora.");
+    h+='<div class="os-sec"><span>Activity</span><button data-tab="work">Todo</button></div>';
+    h+=acts.length?'<div>'+acts.map(function(a){return actHtml(a,true);}).join("")+'</div>':OS.empty("No activity yet","When an agent does something, it appears here with its time.");
     return h;
   }
 
@@ -141,49 +141,49 @@ export const OS_APP_JS = `
     var order={RUNNING:0,THINKING:0,APPROVAL:1,WAITING:2,QUEUED:2,FAILED:3,COMPLETED:4,CANCELLED:5};
     tasks.sort(function(a,b){return (order[a.status]-order[b.status])||(Date.parse(b.started||0)-Date.parse(a.started||0));});
     var run=tasks.filter(function(t){return t.status==="RUNNING"||t.status==="THINKING";}).length;
-    h+='<section class="os-pulse"><div class="os-greet">Trabajo · '+E(C.name)+'</div><div class="os-headline">'+E(run?plural(run,"tarea en curso","tareas en curso"):"Nada corriendo ahora")+'</div>';
-    h+='<div class="os-sub">'+E(tasks.length?"Lo último que hicieron los agentes, con su resultado.":"Este sistema todavía no reporta tareas.")+'</div></section>';
+    h+='<section class="os-pulse"><div class="os-greet">Work · '+E(C.name)+'</div><div class="os-headline">'+E(run?plural(run,"task in progress","tasks in progress"):"Nothing running now")+'</div>';
+    h+='<div class="os-sub">'+E(tasks.length?"The latest the agents did, with their result.":"This system does not report tasks yet.")+'</div></section>';
     if(tasks.length)h+='<div class="os-sec"><span>Tareas</span></div><div class="os-list">'+tasks.map(taskHtml).join("")+'</div>';
     var acts=p?(p.activity||[]):[];
-    h+='<div class="os-sec"><span>Bitácora</span></div>';
-    h+=acts.length?'<div>'+acts.map(function(a){return actHtml(a,false);}).join("")+'</div>':OS.empty("Bitácora vacía","Sin eventos reportados en este sistema.");
+    h+='<div class="os-sec"><span>Log</span></div>';
+    h+=acts.length?'<div>'+acts.map(function(a){return actHtml(a,false);}).join("")+'</div>':OS.empty("Empty log","No events reported in this system.");
     return h;
   }
 
   function needsView(){
     var nd=needs(),h="";
     var own=nd.filter(function(n){return n.system===C.system;}),other=nd.filter(function(n){return n.system!==C.system;});
-    h+='<section class="os-pulse"><div class="os-greet">Decisiones</div><div class="os-headline">'+E(nd.length?plural(nd.length,"decisión te espera","decisiones te esperan"):"Todo decidido")+'</div>';
-    h+='<div class="os-sub">'+E(nd.length?"Toca una para ver por qué, la evidencia y qué pasa si la apruebas.":"Los agentes siguen trabajando; te aviso cuando algo necesite tu criterio.")+'</div></section>';
-    if(own.length)h+='<div class="os-sec"><span>En '+E(C.name)+'</span></div>'+own.map(needHtml).join("");
-    if(other.length)h+='<div class="os-sec"><span>En los otros sistemas</span></div>'+other.map(needHtml).join("");
+    h+='<section class="os-pulse"><div class="os-greet">Decisions</div><div class="os-headline">'+E(nd.length?plural(nd.length,"decision is waiting","decisions are waiting"):"All decided")+'</div>';
+    h+='<div class="os-sub">'+E(nd.length?"Tap one to see why, the evidence and what happens if you approve it.":"The agents keep working; I will tell you when something needs your judgment.")+'</div></section>';
+    if(own.length)h+='<div class="os-sec"><span>In '+E(C.name)+'</span></div>'+own.map(needHtml).join("");
+    if(other.length)h+='<div class="os-sec"><span>In the other systems</span></div>'+other.map(needHtml).join("");
     return h;
   }
 
   function needSheet(n){
     var own=n.system===C.system,first=(n.actions||[])[0];
-    var rows=[["Sistema",SYSN[n.system]],["Qué",n.title],["Por qué",n.why],["Evidencia",n.evidence],["Impacto",n.impact],["Riesgo",RISK_TXT[n.risk]],["Autonomía",AUT_TXT[n.autonomy]],["Confianza",conf(n.confidence)],["Desde",OS.ago(n.created_at)]];
+    var rows=[["System",SYSN[n.system]],["What",n.title],["Why",n.why],["Evidence",n.evidence],["Impact",n.impact],["Risk",RISK_TXT[n.risk]],["Autonomy",AUT_TXT[n.autonomy]],["Confidence",conf(n.confidence)],["Since",OS.ago(n.created_at)]];
     var btn="";
-    if(n.url)btn+='<button class="os-btn primary block" data-open="'+E(n.url)+'">'+E((first&&first.label)||"Abrir")+'</button>';
-    if(own)btn+='<button class="os-btn block'+(n.url?"":" primary")+'" data-act="panel">'+E(n.url?"Ir a "+C.panelLabel:((first&&first.label)||"Ir a "+C.panelLabel))+'</button>';
-    var note=own?"La decisión se toma en el panel de "+C.panelLabel+": el OS te muestra el contexto, no aprueba por ti.":"Esta decisión se toma en la app de "+(SYSN[n.system]||"ese sistema")+".";
-    OS.openSheet('<button class="os-iconbtn os-sheet-close" data-act="close" aria-label="Cerrar">'+OS.icon("x")+'</button><div class="os-title">'+E(n.title)+'</div>'+OS.chain(rows)+'<div class="os-actions">'+btn+'</div><div class="os-note">'+E(note)+'</div>');
+    if(n.url)btn+='<button class="os-btn primary block" data-open="'+E(n.url)+'">'+E((first&&first.label)||"Open")+'</button>';
+    if(own)btn+='<button class="os-btn block'+(n.url?"":" primary")+'" data-act="panel">'+E(n.url?"Go to "+C.panelLabel:((first&&first.label)||"Go to "+C.panelLabel))+'</button>';
+    var note=own?"The decision is made in the "+C.panelLabel+" panel: the OS shows you the context, it does not approve for you.":"This decision is made in the "+(SYSN[n.system]||"that system")+" app.";
+    OS.openSheet('<button class="os-iconbtn os-sheet-close" data-act="close" aria-label="Close">'+OS.icon("x")+'</button><div class="os-title">'+E(n.title)+'</div>'+OS.chain(rows)+'<div class="os-actions">'+btn+'</div><div class="os-note">'+E(note)+'</div>');
   }
 
   function navHtml(){
     var nd=needs().length;
     function b(id,ic,l,badge){return '<button data-tab="'+id+'" class="'+(TAB===id?"on":"")+'" aria-label="'+E(l)+'">'+OS.icon(ic)+'<span>'+E(l)+'</span>'+(badge?'<span class="os-badge">'+badge+'</span>':"")+'</button>';}
-    return b("pulse","pulse","Pulse")+b("work","pipeline","Trabajo")+b("needs","needs","Decisiones",nd||"")+'<button data-act="panel" aria-label="'+E(C.panelLabel)+'">'+OS.icon(C.icon)+'<span>'+E(C.panelLabel)+'</span></button>';
+    return b("pulse","pulse","Pulse")+b("work","pipeline","Work")+b("needs","needs","Decisions",nd||"")+'<button data-act="panel" aria-label="'+E(C.panelLabel)+'">'+OS.icon(C.icon)+'<span>'+E(C.panelLabel)+'</span></button>';
   }
-  function errText(e){return /autoriz/i.test(String(e))?"Ábrelo desde el bot en Telegram.":String(e||"Error desconocido");}
+  function errText(e){return /autoriz/i.test(String(e))?"Open it from the bot in Telegram.":String(e||"Unknown error");}
 
   function render(){
     OS.el("top").innerHTML=topHtml();
     OS.el("nav").innerHTML=navHtml();
     var v=OS.el("view");
-    if(!ST){v.innerHTML=ERR?'<div class="os-error" style="margin-top:24px"><b>No pude cargar el estado del OS.</b><div class="os-t2" style="margin-top:4px">'+E(errText(ERR))+'</div><button class="os-btn sm" style="margin-top:10px" data-act="refresh">Reintentar</button></div>':'<section class="os-pulse">'+OS.skeleton(5)+'</section>';OS.backSync();return;}
+    if(!ST){v.innerHTML=ERR?'<div class="os-error" style="margin-top:24px"><b>Could not load the OS state.</b><div class="os-t2" style="margin-top:4px">'+E(errText(ERR))+'</div><button class="os-btn sm" style="margin-top:10px" data-act="refresh">Retry</button></div>':'<section class="os-pulse">'+OS.skeleton(5)+'</section>';OS.backSync();return;}
     var body=TAB==="work"?workView():TAB==="needs"?needsView():pulseView();
-    if(ERR)body+='<div class="os-error"><b>No pude actualizar.</b> Muestro lo último que llegó '+E(OS.ago(new Date(LAST).toISOString()))+'. '+E(errText(ERR))+'</div>';
+    if(ERR)body+='<div class="os-error"><b>Could not refresh.</b> Showing the latest that arrived '+E(OS.ago(new Date(LAST).toISOString()))+'. '+E(errText(ERR))+'</div>';
     body+='<div class="os-foot">AI OS · '+E(C.name)+' · build '+E(C.build)+'</div>';
     v.innerHTML='<div class="'+(ANIM?"os-view":"")+'">'+body+'</div>';
     ANIM=false;
@@ -194,10 +194,10 @@ export const OS_APP_JS = `
     if(LOADING)return;LOADING=true;
     OS.api(C.api,{method:C.method}).then(function(j){
       LOADING=false;
-      if(!j||j.error||!j.global){ERR=(j&&j.error)||"Respuesta vacía";if(manual)OS.haptic("err");}
-      else{ST=j;ERR=null;LAST=Date.now();if(manual){OS.haptic("ok");OS.toast("Actualizado");}}
+      if(!j||j.error||!j.global){ERR=(j&&j.error)||"Empty response";if(manual)OS.haptic("err");}
+      else{ST=j;ERR=null;LAST=Date.now();if(manual){OS.haptic("ok");OS.toast("Updated");}}
       render();
-    })["catch"](function(){LOADING=false;ERR="Sin conexión";if(manual)OS.haptic("err");render();});
+    })["catch"](function(){LOADING=false;ERR="No connection";if(manual)OS.haptic("err");render();});
   }
 
   OS.backSync=function(){try{if(!tg||!tg.BackButton)return;if(OS.sheetOpen||TAB!=="pulse")tg.BackButton.show();else tg.BackButton.hide();}catch(e){}};
@@ -222,7 +222,7 @@ export const OS_APP_JS = `
 })();
 `;
 
-// HTML completo de la app del OS para un sistema. build: versión del deploy (se muestra y sirve para cache).
+// Full HTML of the OS app for a system. build: deploy version (shown and used for the cache).
 export function osShellHtml(system, opts = {}) {
   const s = OS_SYSTEMS_UI[system];
   if (!s) throw new Error(`sistema desconocido: ${system}`);
@@ -231,7 +231,7 @@ export function osShellHtml(system, opts = {}) {
     api: opts.api || "/api/os", method: opts.method || s.method, build: String(opts.build || "dev").slice(0, 12), ui: OS_UI_VERSION, shell: OS_SHELL_VERSION,
   };
   const safeCfg = JSON.stringify(cfg).replace(/</g, "\\u003c");
-  return '<!doctype html><html lang="es" data-theme="dark"><head><meta charset="utf-8">' +
+  return '<!doctype html><html lang="en" data-theme="dark"><head><meta charset="utf-8">' +
     '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">' +
     '<title>' + s.name + '</title>' + OS_HEAD +
     '<script src="https://telegram.org/js/telegram-web-app.js"></script>' +

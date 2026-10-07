@@ -16,7 +16,7 @@ describe("design system del AI OS", () => {
     expect(typeof win.OS.sparkline).toBe("function");
     expect(win.OS.sparkline([1, 3, 2, 5], { ref: 2 })).toMatch(/<svg class="os-spark"/);
     expect(win.OS.sparkline([1])).toBe("");
-    expect(win.OS.num(60337)).toBe("60 mil");
+    expect(win.OS.num(60337)).toBe("60K");
     expect(win.OS.esc('<a href="x">')).toBe("&lt;a href=&quot;x&quot;&gt;");
   });
   it("define los tres acentos y los estados de la IA", () => {
