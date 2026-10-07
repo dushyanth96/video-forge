@@ -1,10 +1,10 @@
-// miniapp_v2.js — Video Forge: el CEREBRO EN VIVO (rediseño tras la auditoría del Brain OS). Servida en /app2.
-// La app deja de ser un monitor de lo que pasó: muestra lo que el cerebro está pensando y haciendo ahora, el
-// PLAN de hoy y de mañana (cada pieza como decisión auditable), la meta REAL del YouTube Partner Program por
-// ventana con su viabilidad honesta, y su propia autocrítica (ledger de decisiones con aciertos y fallos).
-// Monitor puro: nada se aprueba aquí. El JS del cliente NO usa template-literals ni onclick inline.
+// miniapp_v2.js — Video Forge: the LIVE BRAIN (redesign after the Brain OS audit). Served at /app2.
+// The app is no longer a monitor of what happened: it shows what the brain is thinking and doing right now, the
+// plan for TODAY and TOMORROW (each piece as an auditable decision), the REAL YouTube Partner Program goal per
+// window with its honest viability, and its own self-critique (decision ledger with hits and misses).
+// Pure monitor: nothing is approved here. The client JS uses NO template-literals and NO inline onclick.
 export const APP2_HTML = `<!doctype html>
-<html lang="es"><head>
+<html lang="en"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Video Forge</title>
@@ -107,7 +107,7 @@ export const APP2_HTML = `<!doctype html>
   .btn.mini{display:inline-block;width:auto;padding:7px 12px;font-size:12px;margin:0}
   input[type=text]{width:100%;background:var(--bg);color:var(--txt);border:1px solid var(--line);border-radius:11px;padding:11px;font-size:15px;font-family:inherit}
   .file{display:flex;align-items:center;gap:10px;background:var(--bg);border:1px dashed var(--line);border-radius:12px;padding:13px;justify-content:center;color:var(--hint);cursor:pointer;margin:8px 0;font-weight:600}
-  .vrow{display:flex;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+  .vrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
   .vrow:first-child{border-top:0}
   .vrow img{width:44px;height:78px;object-fit:cover;border-radius:8px;background:var(--soft);flex-shrink:0}
   .vrow .vt{font-size:13px;font-weight:700;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -133,9 +133,9 @@ export const APP2_HTML = `<!doctype html>
   <div class="hdrow">
     <div class="hd-l">
       <span class="logo" id="logoBox"></span>
-      <div style="min-width:0"><h1 id="chTitle">Oddly Loop</h1><div class="sub" id="hd"><span class="dot live"></span>Conectando con el cerebro…</div></div>
+      <div style="min-width:0"><h1 id="chTitle">Oddly Loop</h1><div class="sub" id="hd"><span class="dot live"></span>Connecting to the brain…</div></div>
     </div>
-    <button class="icon" id="btnRefresh" aria-label="Actualizar">⟳</button>
+    <button class="icon" id="btnRefresh" aria-label="Refresh">⟳</button>
   </div>
   <div class="seg" id="chSel">
     <button data-ch="auto2" class="on">Oddly Loop</button>
@@ -151,10 +151,10 @@ export const APP2_HTML = `<!doctype html>
 <div id="toast"></div>
 <div id="shade"></div><div id="sheet"><div class="grip"></div><div id="sheetBody"></div></div>
 <div class="nav">
-  <button data-t="vivo" class="on"><span class="ic">🧠</span>En vivo</button>
+  <button data-t="vivo" class="on"><span class="ic">🧠</span>Live</button>
   <button data-t="plan"><span class="ic">🗓️</span>Plan</button>
-  <button data-t="meta"><span class="ic">🎯</span>Meta</button>
-  <button data-t="mas"><span class="ic">⚙️</span>Más</button>
+  <button data-t="meta"><span class="ic">🎯</span>Goal</button>
+  <button data-t="mas"><span class="ic">⚙️</span>More</button>
 </div>
 <script>
   var tg=window.Telegram&&window.Telegram.WebApp;
@@ -163,13 +163,13 @@ export const APP2_HTML = `<!doctype html>
   var ST={}, BR=null, curTab="vivo", curCh="auto2", planDay="tomorrow", refT=null, BUILD="__BUILD__";
   function el(id){return document.getElementById(id);}
   function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
-  function num(n){ if(n==null||!isFinite(+n)) return "—"; n=+n; if(Math.abs(n)>=1e6) return (n/1e6).toFixed(Math.abs(n)>=1e7?0:1)+" M"; if(Math.abs(n)>=1e4) return Math.round(n/1e3)+" mil"; return Math.round(n).toLocaleString("es"); }
+  function num(n){ if(n==null||!isFinite(+n)) return "—"; n=+n; if(Math.abs(n)>=1e6) return (n/1e6).toFixed(Math.abs(n)>=1e7?0:1)+" M"; if(Math.abs(n)>=1e4) return Math.round(n/1e3)+" K"; return Math.round(n).toLocaleString("en"); }
   function api(path,opts){opts=opts||{};opts.headers=opts.headers||{};opts.headers["X-Init-Data"]=INIT;return fetch(path,opts);}
   function h(t){try{var H=tg&&tg.HapticFeedback;if(!H)return;if(t==="sel")H.selectionChanged();else if(t==="ok")H.notificationOccurred("success");else if(t==="err")H.notificationOccurred("error");else H.impactOccurred(t||"light");}catch(e){}}
   function toast(m){var t=el("toast");t.textContent=m;t.classList.add("show");setTimeout(function(){t.classList.remove("show");},2600);}
-  function ago(iso){ var t=Date.parse(iso); if(!isFinite(t)) return "—"; var m=Math.round((Date.now()-t)/60000); if(m<1) return "ahora"; if(m<60) return "hace "+m+" min"; var hh=Math.round(m/60); if(hh<48) return "hace "+hh+" h"; return "hace "+Math.round(hh/24)+" días"; }
-  function inTime(iso){ var t=Date.parse(iso); if(!isFinite(t)) return "—"; var m=Math.round((t-Date.now())/60000); if(m<=0) return "en curso"; if(m<60) return "en "+m+" min"; return "en "+Math.round(m/60)+" h"; }
-  function dayName(dateStr){ var d=new Date(dateStr+"T12:00:00Z"); return d.toLocaleDateString("es",{weekday:"long",day:"numeric",month:"short",timeZone:"UTC"}); }
+  function ago(iso){ var t=Date.parse(iso); if(!isFinite(t)) return "—"; var m=Math.round((Date.now()-t)/60000); if(m<1) return "now"; if(m<60) return m+" min ago"; var hh=Math.round(m/60); if(hh<48) return hh+" h ago"; return Math.round(hh/24)+" d ago"; }
+  function inTime(iso){ var t=Date.parse(iso); if(!isFinite(t)) return "—"; var m=Math.round((t-Date.now())/60000); if(m<=0) return "now"; if(m<60) return "in "+m+" min"; return "in "+Math.round(m/60)+" h"; }
+  function dayName(dateStr){ var d=new Date(dateStr+"T12:00:00Z"); return d.toLocaleDateString("en",{weekday:"long",day:"numeric",month:"short",timeZone:"UTC"}); }
 
   var CH={ "auto2":{name:"Oddly Loop"}, "data-lens":{name:"The Data Lens"} };
   var LOGOS={
@@ -179,56 +179,56 @@ export const APP2_HTML = `<!doctype html>
   function applyChannelTheme(ch){ document.body.setAttribute("data-ch",ch); el("logoBox").innerHTML=LOGOS[ch]; el("chTitle").textContent=CH[ch].name; }
 
   var STATUS={
-    planeado:["p-plan","Planeado"], produciendo:["p-prod","Produciendo"], programado:["p-prog","Listo · sale solo"],
-    publicado:["p-pub","Publicado"], sin_tiempo:["p-late","Sin margen"], vencido:["p-miss","Vencido"]
+    planeado:["p-plan","Planned"], produciendo:["p-prod","Producing"], programado:["p-prog","Ready · auto-publishes"],
+    publicado:["p-pub","Published"], sin_tiempo:["p-late","No time"], vencido:["p-miss","Expired"]
   };
   function stPill(s){ var x=STATUS[s]||["p-none",s]; return '<span class="pill '+x[0]+'">'+(s==="produciendo"?'<span class="dot live" style="width:6px;height:6px;background:var(--am)"></span>':'')+x[1]+'</span>'; }
-  var FEAS={ cumplido:["ok","p-ok","Cumplido"], en_camino:["ok","p-ok","En camino"], midiendo:["warn","p-warn","Midiendo el ritmo"], en_riesgo:["warn","p-warn","En riesgo"], improbable:["bad","p-bad","Improbable al ritmo actual"], sin_dato:["warn","p-none","Sin dato"] };
+  var FEAS={ cumplido:["ok","p-ok","Met"], en_camino:["ok","p-ok","On track"], midiendo:["warn","p-warn","Measuring pace"], en_riesgo:["warn","p-warn","At risk"], improbable:["bad","p-bad","Unlikely at current pace"], sin_dato:["warn","p-none","No data"] };
   function feasPill(s){ var x=FEAS[s]||FEAS.sin_dato; return '<span class="pill '+x[1]+'">'+x[2]+'</span>'; }
-  var VERD={ ACERTO:["p-ok","Acertó"], FALLO:["p-bad","Falló"], INCONCLUSO:["p-warn","Inconcluso"], PENDIENTE:["p-plan","Por revisar"] };
+  var VERD={ ACERTO:["p-ok","Hit"], FALLO:["p-bad","Miss"], INCONCLUSO:["p-warn","Inconclusive"], PENDIENTE:["p-plan","Pending review"] };
   function verdPill(s){ var x=VERD[s]||["p-none",s]; return '<span class="pill '+x[0]+'">'+x[1]+'</span>'; }
 
   function live(){ return (BR&&BR.live)||null; }
   function ypp(ch){ var m=BR&&BR.monetization&&BR.monetization.channels&&BR.monetization.channels[ch]; return m?m.ypp:null; }
   function skeleton(){ return '<div class="card"><div class="sk" style="width:60%"></div><div class="sk" style="width:85%"></div><div class="sk" style="width:40%"></div></div>'; }
 
-  // ============ EN VIVO ============
+  // ============ LIVE ============
   function mindCard(L){
-    var cyc=L?('<span>Último ciclo '+ago(L.at)+'</span><span>Próximo '+inTime(L.next_cycle_at)+'</span>'):'<span>Aún sin ciclo</span>';
-    var t=L?(L.producing_now&&L.producing_now.length?"Estoy produciendo "+L.producing_now.length+" pieza"+(L.producing_now.length>1?"s":"")+" para mañana":"Plan de mañana listo, reviso cada 2 horas"):"Esperando el primer ciclo del cerebro";
-    return '<div class="mind"><div class="row" style="justify-content:flex-start;gap:8px"><span class="dot live"></span><span class="muted" style="font-weight:700">Cerebro activo 24/7</span></div><div class="t" style="margin-top:8px">'+esc(t)+'</div><div class="meta">'+cyc+'</div></div>';
+    var cyc=L?('<span>Last cycle '+ago(L.at)+'</span><span>Next '+inTime(L.next_cycle_at)+'</span>'):'<span>No cycle yet</span>';
+    var t=L?(L.producing_now&&L.producing_now.length?"Producing "+L.producing_now.length+" piece"+(L.producing_now.length>1?"s":"")+" for tomorrow":"Tomorrow's plan ready, reviewed every 2 hours"):"Waiting for the brain's first cycle";
+    return '<div class="mind"><div class="row" style="justify-content:flex-start;gap:8px"><span class="dot live"></span><span class="muted" style="font-weight:700">Brain active 24/7</span></div><div class="t" style="margin-top:8px">'+esc(t)+'</div><div class="meta">'+cyc+'</div></div>';
   }
   function nowCard(L){
     var p=(L&&L.producing_now)||[];
-    if(!p.length) return '<h2>Ahora mismo</h2><div class="card muted">Nada en producción en este ciclo. Solo se fabrica con al menos 3 horas de margen antes de su franja.</div>';
-    return '<h2>Ahora mismo <span class="cnt">'+p.length+'</span></h2><div class="card">'+p.map(function(x,i){
-      return '<div class="row" style="align-items:flex-start;'+(i?'border-top:1px solid var(--line);padding-top:10px;margin-top:10px':'')+'"><div style="min-width:0"><b>'+esc(x.niche_label)+'</b><div class="muted">Para las '+esc(x.slot_et)+' ET · '+(x.idea?esc(x.idea.text):'patrón vigente del nicho')+'</div>'+(x.experiment?'<div style="margin-top:5px"><span class="pill p-plan">Experimento · brazo '+esc(x.experiment.arm==="question"?"pregunta":"afirmación")+'</span></div>':'')+'</div>'+stPill("produciendo")+'</div>';
+    if(!p.length) return '<h2>Right now</h2><div class="card muted">Nothing in production this cycle. Pieces are only made with at least 3 hours of margin before their slot.</div>';
+    return '<h2>Right now <span class="cnt">'+p.length+'</span></h2><div class="card">'+p.map(function(x,i){
+      return '<div class="row" style="align-items:flex-start;'+(i?'border-top:1px solid var(--line);padding-top:10px;margin-top:10px':'')+'"><div style="min-width:0"><b>'+esc(x.niche_label)+'</b><div class="muted">At '+esc(x.slot_et)+' ET · '+(x.idea?esc(x.idea.text):'current niche pattern')+'</div>'+(x.experiment?'<div style="margin-top:5px"><span class="pill p-plan">Experiment · '+esc(x.experiment.arm==="question"?"question":"assertion")+' arm</span></div>':'')+'</div>'+stPill("produciendo")+'</div>';
     }).join("")+'</div>';
   }
   function tomorrowPreview(L){
     if(!L||!L.tomorrow) return "";
     var T=L.tomorrow, s=T.summary||{};
     var items=(T.items||[]).slice(0,5);
-    return '<h2>Mañana · '+esc(dayName(T.date))+' <span class="cnt">'+(T.items||[]).length+'</span></h2><div class="card tap" data-go="plan"><div class="counts">'+
+    return '<h2>Tomorrow · '+esc(dayName(T.date))+' <span class="cnt">'+(T.items||[]).length+'</span></h2><div class="card tap" data-go="plan"><div class="counts">' +
       (s.programado?stPill("programado")+' <b class="num">'+s.programado+'</b>':'')+(s.produciendo?' '+stPill("produciendo")+' <b class="num">'+s.produciendo+'</b>':'')+(s.planeado?' '+stPill("planeado")+' <b class="num">'+s.planeado+'</b>':'')+
-      '</div><div class="tl">'+items.map(function(i){ return '<div class="tli s-'+i.status+'"><div class="row"><span class="when">'+esc(i.slot_et)+' ET</span>'+stPill(i.status)+'</div><div class="what">'+esc(i.niche_label)+(i.experiment?' · <span class="muted">experimento</span>':'')+'</div></div>'; }).join("")+
-      '</div><div class="muted" style="margin-top:8px">Ver el plan completo y el porqué de cada pieza ›</div></div>';
+      '</div><div class="tl">'+items.map(function(i){ return '<div class="tli s-'+i.status+'"><div class="row"><span class="when">'+esc(i.slot_et)+' ET</span>'+stPill(i.status)+'</div><div class="what">'+esc(i.niche_label)+(i.experiment?' · <span class="muted">experiment</span>':'')+'</div></div>'; }).join("")+
+      '</div><div class="muted" style="margin-top:8px">See the full plan and the why behind each piece ›</div></div>';
   }
-  var KIND={ autocritica:"🔍", plan:"🗺️", produccion:"⚙️", ciclo:"⏱️" };
+  var KIND={ selfReview:"🔍", plan:"🗺️", production:"⚙️", cycle:"⏱️" };
   function feedCard(){
     var j=((BR&&BR.journal)||[]).slice().reverse().slice(0,10);
-    if(!j.length) return '<h2>Lo que pensé</h2><div class="card muted">La bitácora empieza con el primer ciclo.</div>';
-    return '<h2>Lo que pensé</h2><div class="card feed">'+j.map(function(x){ return '<div class="fi"><div class="ic">'+(KIND[x.kind]||"•")+'</div><div><div class="tx">'+esc(x.text)+'</div><div class="ts">'+ago(x.at)+'</div></div></div>'; }).join("")+'</div>';
+    if(!j.length) return '<h2>What I thought</h2><div class="card muted">The journal starts with the first cycle.</div>';
+    return '<h2>What I thought</h2><div class="card feed">'+j.map(function(x){ return '<div class="fi"><div class="ic">'+(KIND[x.kind]||"•")+'</div><div><div class="tx">'+esc(x.text)+'</div><div class="ts">'+ago(x.at)+'</div></div></div>'; }).join("")+'</div>';
   }
   function knowCard(L){
     var k=L&&L.tomorrow&&L.tomorrow.knowledge; if(!k) return "";
     function box(cls,title,arr,empty){ return '<div class="kb '+cls+'"><b>'+title+'</b>'+(arr&&arr.length?'<ul>'+arr.slice(0,4).map(function(x){return '<li>'+esc(x)+'</li>';}).join("")+'</ul>':'<div class="muted">'+empty+'</div>')+'</div>'; }
-    return '<h2>Con qué certeza decide</h2><div class="know">'+box("sabe","Sabe",k.sabe,"Nada confirmado aún")+box("cree","Cree",k.cree,"Sin creencias fuertes")+box("desc","Desconoce",k.desconoce,"—")+box("comp","Comprobando",k.comprobando,"Sin experimento activo")+'</div>';
+    return '<h2>How confidently it decides</h2><div class="know">'+box("sabe","Knows",k.sabe,"Nothing confirmed yet")+box("cree","Believes",k.cree,"No strong beliefs")+box("desc","Unknown",k.desconoce,"—")+box("comp","Testing",k.comprobando,"No active experiment")+'</div>';
   }
   function goalStrip(ch){
     var y=ypp(ch); if(!y) return "";
     var f=FEAS[y.feasibility]||FEAS.sin_dato;
-    return '<div class="card tap" data-go="meta"><div class="row"><div><b>Meta del año: '+(y.goal_tier==="expanded"?"nivel intermedio":"monetización completa")+'</b><div class="muted">Quedan '+y.days_left+' días'+(y.goal_tier==="expanded"?' · el ritmo se revisa a los 28 días':'')+'</div></div>'+feasPill(y.feasibility)+'</div></div>';
+    return '<div class="card tap" data-go="meta"><div class="row"><div><b>Year goal: '+(y.goal_tier==="expanded"?"intermediate tier":"full monetization")+'</b><div class="muted">'+y.days_left+' days left'+(y.goal_tier==="expanded"?' · pace reviewed at 28 days':'')+'</div></div>'+feasPill(y.feasibility)+'</div></div>';
   }
   function vivoDataLens(){
     var D=live()&&live().data_lens;
@@ -236,19 +236,19 @@ export const APP2_HTML = `<!doctype html>
       var since=String(D.since||"").slice(0,10), rev=String(D.review_at||"").slice(0,10);
       var best=D.best_views_so_far, tgt=D.target_views_7d||500;
       var pct=best!=null?Math.min(100,Math.round(best/tgt*100)):0;
-      var st=D.status==="PENDIENTE"?'<span class="pill p-plan">Se revisa el '+esc(rev)+'</span>':verdPill(D.status);
-      return '<div class="banner warn"><div class="row"><div class="bt">En pausa desde el '+esc(since)+'</div>'+st+'</div><div class="muted" style="margin-top:6px">Decisión tuya, registrada en el cerebro. La producción diaria está apagada; solo corre '+esc(D.experiment)+'.</div></div>'+
-        '<h2>Experimento de reactivación</h2><div class="card"><div class="row"><b>Mejor resultado desde la pausa</b><span class="muted num">'+(D.inventory_loaded?(best!=null?num(best)+" / "+num(tgt)+" vistas":"sin experimentos aún"):"inventario sin cargar")+'</span></div><div class="bar"><i style="width:'+Math.max(1,pct)+'%"></i></div>'+
-        '<div class="chain" style="margin-top:12px"><div><span class="k">Criterio</span><span>'+esc(D.criterion)+'</span></div><div><span class="k">Revisión</span><span>'+esc(rev)+'</span></div><div><span class="k">Si cumple</span><span>Se reanuda ese formato</span></div><div><span class="k">Si no</span><span>Se evalúa cerrar el canal</span></div></div>'+
+      var st=D.status==="PENDIENTE"?'<span class="pill p-plan">Review on '+esc(rev)+'</span>':verdPill(D.status);
+      return '<div class="banner warn"><div class="row"><div class="bt">Paused since '+esc(since)+'</div>'+st+'</div><div class="muted" style="margin-top:6px">Your decision, recorded in the brain. Daily production is off; only '+esc(D.experiment)+' runs.</div></div>'+
+        '<h2>Reactivation experiment</h2><div class="card"><div class="row"><b>Best result since the pause</b><span class="muted num">'+(D.inventory_loaded?(best!=null?num(best)+" / "+num(tgt)+" views":"no experiments yet"):"inventory not loaded")+'</span></div><div class="bar"><i style="width:'+Math.max(1,pct)+'%"></i></div>'+
+        '<div class="chain" style="margin-top:12px"><div><span class="k">Criterion</span><span>'+esc(D.criterion)+'</span></div><div><span class="k">Review</span><span>'+esc(rev)+'</span></div><div><span class="k">If met</span><span>That format resumes</span></div><div><span class="k">If not</span><span>Closing the channel is evaluated</span></div></div>'+
         (D.verdict_note?'<div class="muted" style="margin-top:8px">'+esc(D.verdict_note)+'</div>':'')+'</div>'+goalStrip("data-lens");
     }
     var y=ypp("data-lens");
-    return '<div class="banner warn"><div class="bt">Sin plan en vivo para este canal</div><div class="muted" style="margin-top:6px">The Data Lens no tiene tracción: 0 suscriptores y alrededor de 100 vistas por semana tras 10 semanas. El cerebro no arma plan diario aquí para no gastar producción sin señal.</div></div>'+
-      '<h2>Decisión pendiente tuya</h2><div class="card"><div class="chain">'+
-      '<div><span class="k">Decisión</span><span>Pausar la producción diaria y dejar 1 experimento por semana</span></div>'+
-      '<div><span class="k">Razón</span><span>10 semanas sin suscriptores; los recursos rinden más en Oddly</span></div>'+
-      '<div><span class="k">Criterio</span><span>Si un experimento supera 500 vistas en 7 días, se reanuda el formato ganador</span></div>'+
-      '<div><span class="k">Plazo</span><span>21 días</span></div></div></div>'+goalStrip("data-lens");
+    return '<div class="banner warn"><div class="bt">No live plan for this channel</div><div class="muted" style="margin-top:6px">The Data Lens has no traction: 0 subscribers and around 100 views per week after 10 weeks. The brain builds no daily plan here to avoid spending production without signal.</div></div>'+
+      '<h2>Decision pending from you</h2><div class="card"><div class="chain">'+
+      '<div><span class="k">Decision</span><span>Pause daily production and keep 1 experiment per week</span></div>'+
+      '<div><span class="k">Reason</span><span>10 weeks without subscribers; resources pay off more on Oddly</span></div>'+
+      '<div><span class="k">Criterion</span><span>If an experiment beats 500 views in 7 days, the winning format resumes</span></div>'+
+      '<div><span class="k">Deadline</span><span>21 days</span></div></div></div>'+goalStrip("data-lens");
   }
   function vivoHtml(){
     if(curCh==="data-lens") return vivoDataLens();
@@ -259,127 +259,127 @@ export const APP2_HTML = `<!doctype html>
 
   // ============ PLAN ============
   function planHtml(){
-    if(curCh==="data-lens") return '<div class="card muted" style="margin-top:14px">The Data Lens está en pausa: no hay plan diario. Solo corre 1 experimento por semana; su avance está en En vivo.</div>';
+    if(curCh==="data-lens") return '<div class="card muted" style="margin-top:14px">The Data Lens is paused: there is no daily plan. Only 1 experiment per week runs; its progress is under Live.</div>';
     if(!BR) return skeleton();
-    var L=live(); if(!L) return '<div class="card muted" style="margin-top:14px">El primer plan aparece tras el primer ciclo del cerebro (cada 2 horas).</div>';
+    var L=live(); if(!L) return '<div class="card muted" style="margin-top:14px">The first plan appears after the brain\'s first cycle (every 2 hours).</div>';
     var P=L[planDay]||{items:[]}, s=P.summary||{};
-    var sw='<div class="daysw"><button data-day="today" class="'+(planDay==="today"?"on":"")+'">Hoy</button><button data-day="tomorrow" class="'+(planDay==="tomorrow"?"on":"")+'">Mañana</button></div>';
-    var head='<div class="card"><div class="row"><div><b style="text-transform:capitalize">'+esc(dayName(P.date||""))+'</b><div class="muted">'+(P.items||[]).length+' Shorts · '+(P.per_slot||1)+' por franja'+(P.trimmed?' · recorté '+P.trimmed+' que no caben':'')+'</div></div></div><div class="counts">'+
+    var sw='<div class="daysw"><button data-day="today" class="'+(planDay==="today"?"on":"")+'">Today</button><button data-day="tomorrow" class="'+(planDay==="tomorrow"?"on":"")+'">Tomorrow</button></div>';
+    var head='<div class="card"><div class="row"><div><b style="text-transform:capitalize">'+esc(dayName(P.date||""))+'</b><div class="muted">'+(P.items||[]).length+' Shorts · '+(P.per_slot||1)+' per slot'+(P.trimmed?' · trimmed '+P.trimmed+' that don\'t fit':'')+'</div></div></div><div class="counts">'+
       ["publicado","programado","produciendo","planeado","sin_tiempo","vencido"].filter(function(k){return s[k];}).map(function(k){return stPill(k)+' <b class="num">'+s[k]+'</b>';}).join(" ")+'</div></div>';
-    if(!(P.items||[]).length) return sw+head+'<div class="card muted">Sin piezas en el plan de este día.</div>';
+    if(!(P.items||[]).length) return sw+head+'<div class="card muted">No pieces in this day\'s plan.</div>';
     var list=P.items.map(function(i,idx){
       return '<div class="card tap" data-item="'+idx+'"><div class="plan-item"><div class="hh">'+esc(i.slot_et)+'<small>ET</small></div><div style="min-width:0"><div class="row"><b>'+esc(i.niche_label)+'</b>'+stPill(i.status)+'</div>'+
         (i.title?'<div class="muted" style="margin-top:3px">'+esc(i.title)+'</div>':'')+
         (i.idea?'<div class="muted" style="margin-top:3px">💡 '+esc(i.idea.text)+'</div>':'')+
-        '<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">'+(i.experiment?'<span class="pill p-plan">Experimento · '+esc(i.experiment.arm==="question"?"pregunta":"afirmación")+'</span>':'')+'<span class="pill">Confianza '+esc(i.confidence)+'</span></div></div></div></div>';
+        '<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">'+(i.experiment?'<span class="pill p-plan">Experiment · '+esc(i.experiment.arm==="question"?"question":"assertion")+'</span>':'')+'<span class="pill">Confidence '+esc(i.confidence)+'</span></div></div></div></div>';
     }).join("");
     var expLabel=""; if(P.experiment){ (P.items||[]).forEach(function(i){ if(!expLabel&&i.niche===P.experiment.niche) expLabel=i.niche_label; }); }
-    var exp=P.experiment?'<h2>Experimento del día</h2><div class="card"><b>Gancho: pregunta vs afirmación</b><div class="muted" style="margin-top:4px">'+esc(P.experiment.hypothesis||"")+'</div><div class="muted" style="margin-top:6px">Solo cambia el gancho, y solo en '+esc(expLabel||P.experiment.niche)+'. Todo lo demás queda igual para poder atribuir el resultado.</div></div>':'';
-    return sw+head+exp+'<h2>Piezas</h2>'+list;
+    var exp=P.experiment?'<h2>Experiment of the day</h2><div class="card"><b>Hook: question vs assertion</b><div class="muted" style="margin-top:4px">'+esc(P.experiment.hypothesis||"")+'</div><div class="muted" style="margin-top:6px">Only the hook changes, and only in '+esc(expLabel||P.experiment.niche)+'. Everything else stays the same so the result can be attributed.</div></div>':'';
+    return sw+head+exp+'<h2>Pieces</h2>'+list;
   }
   function itemSheet(idx){
     var L=live(); if(!L) return; var i=(L[planDay].items||[])[idx]; if(!i) return;
     var r=i.record||{};
-    var rows=[["Decisión",r.decision],["Razón",r.reason],["Evidencia",r.evidence],["Acción",r.action],["Métrica",r.metric],["Plazo",r.deadline],["Criterio de éxito",r.criterion],["Siguiente",r.next]];
+    var rows=[["Decision",r.decision],["Reason",r.reason],["Evidence",r.evidence],["Action",r.action],["Metric",r.metric],["Deadline",r.deadline],["Success criterion",r.criterion],["Next",r.next]];
     var html='<div class="row"><b style="font-size:17px">'+esc(i.slot_et)+' ET · '+esc(i.niche_label)+'</b>'+stPill(i.status)+'</div>'+
-      (i.video_id?'<div class="muted" style="margin-top:6px">'+esc(i.title||"")+' · <a href="https://youtu.be/'+esc(i.video_id)+'" target="_blank" style="color:var(--acc)">abrir</a></div>':'')+
-      '<h2 style="margin-top:16px">Por qué esta pieza</h2><div class="chain">'+rows.map(function(x){return '<div><span class="k">'+x[0]+'</span><span>'+esc(x[1]||"—")+'</span></div>';}).join("")+'</div>'+
-      '<button class="btn ghost" data-close="1" style="margin-top:16px">Cerrar</button>';
+      (i.video_id?'<div class="muted" style="margin-top:6px">'+esc(i.title||"")+' · <a href="https://youtu.be/'+esc(i.video_id)+'" target="_blank" style="color:var(--acc)">open</a></div>':'')+
+      '<h2 style="margin-top:16px">Why this piece</h2><div class="chain">'+rows.map(function(x){return '<div><span class="k">'+x[0]+'</span><span>'+esc(x[1]||"—")+'</span></div>';}).join("")+'</div>'+
+      '<button class="btn ghost" data-close="1" style="margin-top:16px">Close</button>';
     openSheet(html);
   }
 
-  // ============ META ============
+  // ============ GOAL ============
   function reqRow(r){
     var hasPace=r.status!=="cumplido"&&r.per_day_actual!=null&&r.per_day_needed!=null;
     return '<div class="req"><div class="row"><span style="font-size:13.5px;font-weight:700">'+esc(r.label)+'</span>'+feasPill(r.status)+'</div>'+
-      (r.cur==null?'<div class="muted" style="margin-top:4px">La API de YouTube no entregó este dato. No se sustituye por totales.</div>':
+      (r.cur==null?'<div class="muted" style="margin-top:4px">The YouTube API did not deliver this data. It is not substituted with totals.</div>':
       '<div class="row" style="margin-top:4px"><span class="num" style="font-weight:800">'+num(r.cur)+' <span class="muted">/ '+num(r.target)+'</span></span><span class="muted num">'+(r.pct!=null?r.pct+" %":"")+'</span></div><div class="bar"><i style="width:'+Math.max(1,Math.min(100,r.pct||0))+'%"></i></div>'+
-      (hasPace?'<div class="pace"><div><div class="k">Ritmo real'+(r.pace_source==="28d"?' (28 días)':'')+'</div><div class="v num">'+num(r.per_day_actual)+'/día</div></div><div><div class="k">Necesario</div><div class="v num">'+num(r.per_day_needed)+'/día</div></div></div>':''))+
-      (r.window?'<div class="muted" style="margin-top:5px">Ventana móvil de '+r.window+' días</div>':'')+'</div>';
+      (hasPace?'<div class="pace"><div><div class="k">Actual pace'+(r.pace_source==="28d"?' (28 days)':'')+'</div><div class="v num">'+num(r.per_day_actual)+'/day</div></div><div><div class="k">Needed</div><div class="v num">'+num(r.per_day_needed)+'/day</div></div></div>':''))+
+      (r.window?'<div class="muted" style="margin-top:5px">Rolling '+r.window+'-day window</div>':'')+'</div>';
   }
   function tierCard(t,title){
     if(!t) return "";
     var best=(t.options||[]).filter(function(o){return o.key===t.best_option;})[0];
     return '<div class="card"><div class="row"><b>'+title+'</b>'+feasPill(t.status)+'</div>'+(t.reqs||[]).map(reqRow).join("")+(best?reqRow(best):"")+
-      ((t.options||[]).length>1?'<div class="muted" style="margin-top:8px">Basta con una opción: vistas de Shorts o horas sin Shorts. Se muestra la más cercana.</div>':'')+'</div>';
+      ((t.options||[]).length>1?'<div class="muted" style="margin-top:8px">Only one option is enough: Shorts views or watch hours without Shorts. The closest one is shown.</div>':'')+'</div>';
   }
   function ledgerCard(){
     var led=(BR&&BR.ledger)||[]; var hr=live()&&live().ledger&&live().ledger.hit_rate;
     var judged=led.filter(function(e){return e.status==="ACERTO"||e.status==="FALLO";});
-    var head='<div class="row"><b>Autocrítica</b><span class="muted num">'+(hr&&hr.rate!=null?Math.round(hr.rate*100)+" % de acierto en "+hr.judged:"sin decisiones juzgadas aún")+'</span></div><div class="muted" style="margin-top:4px">Cada decisión guarda su predicción y se juzga en su fecha contra su propio criterio. Dos fallos seguidos revierten la regla.</div>';
-    if(!led.length) return '<h2>Decisiones</h2><div class="card">'+head+'</div>';
-    return '<h2>Decisiones <span class="cnt">'+led.length+'</span></h2><div class="card">'+head+led.slice().reverse().slice(0,8).map(function(e){
-      return '<div class="req"><div class="row" style="align-items:flex-start"><span style="font-size:13px;font-weight:700">'+esc(e.decision)+'</span>'+verdPill(e.status)+'</div><div class="muted" style="margin-top:3px">'+(e.status==="PENDIENTE"?"Se revisa "+esc(String(e.review_at||"").slice(0,10))+" · criterio "+esc(e.metric)+" "+esc(e.criterion&&e.criterion.op)+" "+esc(e.criterion&&e.criterion.value):esc(e.verdict_note||""))+'</div></div>';
+    var head='<div class="row"><b>Self-critique</b><span class="muted num">'+(hr&&hr.rate!=null?Math.round(hr.rate*100)+"% hit rate over "+hr.judged:"no judged decisions yet")+'</span></div><div class="muted" style="margin-top:4px">Every decision stores its prediction and is judged on its date against its own criterion. Two misses in a row revert the rule.</div>';
+    if(!led.length) return '<h2>Decisions</h2><div class="card">'+head+'</div>';
+    return '<h2>Decisions <span class="cnt">'+led.length+'</span></h2><div class="card">'+head+led.slice().reverse().slice(0,8).map(function(e){
+      return '<div class="req"><div class="row" style="align-items:flex-start"><span style="font-size:13px;font-weight:700">'+esc(e.decision)+'</span>'+verdPill(e.status)+'</div><div class="muted" style="margin-top:3px">'+(e.status==="PENDIENTE"?"Review on "+esc(String(e.review_at||"").slice(0,10))+" · criterion "+esc(e.metric)+" "+esc(e.criterion&&e.criterion.op)+" "+esc(e.criterion&&e.criterion.value):esc(e.verdict_note||""))+'</div></div>';
     }).join("")+'</div>';
   }
   function allocCard(){
     var d=BR&&BR.decision; if(!d||!d.candidates) return "";
     var g=d.scale_gate||{};
-    return '<h2>Reparto que se ejecuta <span class="cnt">'+esc(d.total||"")+'/día</span></h2><div class="card"><table><tr><th>Nicho</th><th class="num" style="text-align:right">Cupos</th><th>Por qué</th></tr>'+
+    return '<h2>Allocation being executed <span class="cnt">'+esc(d.total||"")+'/day</span></h2><div class="card"><table><tr><th>Niche</th><th class="num" style="text-align:right">Slots</th><th>Why</th></tr>'+
       d.candidates.map(function(c){return '<tr><td><b>'+esc(c.label)+'</b></td><td class="num" style="text-align:right"><b>'+c.slots+'</b></td><td class="muted">'+esc(c.why)+'</td></tr>';}).join("")+'</table>'+
-      '<div class="muted" style="margin-top:10px">Subir volumen: '+(g.status==="permitido"?'<span class="pill p-ok">permitido</span>':g.status==="bloqueado"?'<span class="pill p-bad">bloqueado</span>':'<span class="pill p-warn">sin dato</span>')+' '+esc(g.reason||"")+'</div></div>';
+      '<div class="muted" style="margin-top:10px">Scale up: '+(g.status==="permitido"?'<span class="pill p-ok">allowed</span>':g.status==="bloqueado"?'<span class="pill p-bad">blocked</span>':'<span class="pill p-warn">no data</span>')+' '+esc(g.reason||"")+'</div></div>';
   }
   function qualityCard(ch){
     var m=BR&&BR.monetization&&BR.monetization.channels&&BR.monetization.channels[ch]; var q=m&&m.data_quality; if(!q) return "";
-    var av=q.availability||{}; var names={shorts_views_90d:"Vistas de Shorts 90 días",watch_hours_365d:"Horas 365 días",subs:"Suscriptores",traffic_28d:"Fuentes de tráfico",impressions_28d:"Impresiones y CTR"};
-    var rows=Object.keys(names).map(function(k){ var ok=av[k]; return '<div class="row" style="padding:5px 0"><span style="font-size:13px">'+names[k]+'</span>'+(ok===true?'<span class="pill p-ok">medido</span>':ok===false?'<span class="pill p-bad">no disponible</span>':'<span class="pill p-none">sin medir</span>')+'</div>'; }).join("");
-    return '<h2>Calidad de los datos</h2><div class="card">'+rows+(q.snapshot_at?'<div class="muted" style="margin-top:6px">Medido '+ago(q.snapshot_at)+' · Analytics va unos 3 días atrás</div>':'')+'</div>';
+    var av=q.availability||{}; var names={shorts_views_90d:"Shorts views 90 days",watch_hours_365d:"Watch hours 365 days",subs:"Subscribers",traffic_28d:"Traffic sources",impressions_28d:"Impressions & CTR"};
+    var rows=Object.keys(names).map(function(k){ var ok=av[k]; return '<div class="row" style="padding:5px 0"><span style="font-size:13px">'+names[k]+'</span>'+(ok===true?'<span class="pill p-ok">measured</span>':ok===false?'<span class="pill p-bad">unavailable</span>':'<span class="pill p-none">unmeasured</span>')+'</div>'; }).join("");
+    return '<h2>Data quality</h2><div class="card">'+rows+(q.snapshot_at?'<div class="muted" style="margin-top:6px">Measured '+ago(q.snapshot_at)+' · Analytics runs about 3 days behind</div>':'')+'</div>';
   }
   function goalPlanCard(){
     var G=live()&&live().oddly_goal; if(!G) return "";
     var rv=G.review, hx=G.hook_experiments||[];
-    var h='<div class="row"><b>Estrategia del hito</b><span class="pill p-plan">Decidida el '+esc(G.decided_at)+'</span></div>';
-    h+='<div class="muted" style="margin-top:6px">Mayoría de cupos para el nicho líder y un par de ganchos distinto cada semana, juzgado con las vistas al día 7.</div>';
-    if(rv) h+='<div class="req"><div class="row" style="align-items:flex-start"><span style="font-size:13px;font-weight:700">Duplicar el ritmo de Shorts en 28 días</span>'+verdPill(rv.status)+'</div><div class="muted num" style="margin-top:3px">De '+num(rv.baseline)+' a '+num(rv.target_pace)+' vistas al día · se revisa el '+esc(String(rv.review_at).slice(0,10))+'</div></div>';
+    var h='<div class="row"><b>Milestone strategy</b><span class="pill p-plan">Decided on '+esc(G.decided_at)+'</span></div>';
+    h+='<div class="muted" style="margin-top:6px">Most slots for the leading niche and a different hook pair each week, judged with views at day 7.</div>';
+    if(rv) h+='<div class="req"><div class="row" style="align-items:flex-start"><span style="font-size:13px;font-weight:700">Double the Shorts pace in 28 days</span>'+verdPill(rv.status)+'</div><div class="muted num" style="margin-top:3px">From '+num(rv.baseline)+' to '+num(rv.target_pace)+' views per day · reviewed on '+esc(String(rv.review_at).slice(0,10))+'</div></div>';
     hx.slice().reverse().forEach(function(x){
       var v=x.videos||{}, arms=x.arms||[], lb=x.labels||[];
-      h+='<div class="req"><div class="row" style="align-items:flex-start"><span style="font-size:13px;font-weight:700">Ganchos '+esc(x.week||"")+'</span>'+verdPill(x.status)+'</div><div class="muted num" style="margin-top:3px">'+arms.map(function(a,i){return esc(lb[i]||a)+': '+(v[a]||0)+' videos';}).join(" · ")+(x.winner?' · ganó '+esc(lb[arms.indexOf(x.winner)]||x.winner):'')+'</div></div>';
+      h+='<div class="req"><div class="row" style="align-items:flex-start"><span style="font-size:13px;font-weight:700">Hooks '+esc(x.week||"")+'</span>'+verdPill(x.status)+'</div><div class="muted num" style="margin-top:3px">'+arms.map(function(a,i){return esc(lb[i]||a)+': '+(v[a]||0)+' videos';}).join(" · ")+(x.winner?' · won '+esc(lb[arms.indexOf(x.winner)]||x.winner):'')+'</div></div>';
     });
     return '<div class="card">'+h+'</div>';
   }
   function metaHtml(){
     if(!BR) return skeleton()+skeleton();
     var y=ypp(curCh);
-    if(!y) return '<div class="card muted" style="margin-top:14px">La medición de los requisitos por ventana corre a diario a las 15:30 UTC.</div>';
+    if(!y) return '<div class="card muted" style="margin-top:14px">Per-window requirement measurement runs daily at 15:30 UTC.</div>';
     var f=FEAS[y.feasibility]||FEAS.sin_dato;
-    var msg={improbable:"Al ritmo actual no se llega antes del "+y.deadline+". "+(y.goal_tier==="expanded"?"Estrategia en marcha: mayoría de cupos al nicho líder y un par de ganchos distinto cada semana.":"Hace falta cambiar de estrategia, no solo producir más."),en_riesgo:"Se puede llegar, pero el ritmo actual no alcanza con margen.",en_camino:"El ritmo actual alcanza antes del plazo.",cumplido:"Requisitos cumplidos: falta la revisión de YouTube.",sin_dato:"Faltan datos para juzgar la viabilidad.",midiendo:"Aún no hay suficientes días de historia para medir el ritmo."}[y.feasibility]||"";
-    var out='<div class="banner '+f[0]+'"><div class="row"><div class="bt">'+f[2]+'</div><span class="muted">'+y.days_left+' días</span></div><div class="muted" style="margin-top:6px">'+esc(msg)+'</div></div>';
-    if(y.goal_tier==="expanded") out+=goalPlanCard()+tierCard(y.tiers&&y.tiers.expanded,"Meta del año · Nivel intermedio")+tierCard(y.tiers&&y.tiers.full,"Largo plazo · Monetización completa");
-    else out+=tierCard(y.tiers&&y.tiers.expanded,"Nivel intermedio")+tierCard(y.tiers&&y.tiers.full,"Monetización completa");
+    var msg={improbable:"At the current pace, it is not reached before "+y.deadline+". "+(y.goal_tier==="expanded"?"Strategy underway: most slots to the leading niche and a different hook pair each week.":"The strategy needs to change, not just produce more."),en_riesgo:"It can be reached, but the current pace leaves no margin.",en_camino:"The current pace gets there before the deadline.",cumplido:"Requirements met: only the YouTube review is left.",sin_dato:"Not enough data to judge viability.",midiendo:"Not enough history yet to measure the pace."}[y.feasibility]||"";
+    var out='<div class="banner '+f[0]+'"><div class="row"><div class="bt">'+f[2]+'</div><span class="muted">'+y.days_left+' days left</span></div><div class="muted" style="margin-top:6px">'+esc(msg)+'</div></div>';
+    if(y.goal_tier==="expanded") out+=goalPlanCard()+tierCard(y.tiers&&y.tiers.expanded,"Year goal · Intermediate tier")+tierCard(y.tiers&&y.tiers.full,"Long term · Full monetization");
+    else out+=tierCard(y.tiers&&y.tiers.expanded,"Intermediate tier")+tierCard(y.tiers&&y.tiers.full,"Full monetization");
     if(curCh==="auto2") out+=allocCard()+ledgerCard();
     out+=qualityCard(curCh);
-    out+='<div class="muted" style="margin:10px 2px">Umbrales públicos del programa. Confírmalos en YouTube Studio para tu país.</div>';
+    out+='<div class="muted" style="margin:10px 2px">Public program thresholds. Confirm them in YouTube Studio for your country.</div>';
     return out;
   }
 
-  // ============ MÁS ============
+  // ============ MORE ============
   function videosCard(){
     var list=curCh==="auto2"?((ST.auto2&&ST.auto2.list)||[]):(ST.all_videos||[]);
     var pub=list.filter(function(v){return v.privacy==="public";}).slice(0,8);
-    if(!pub.length) return '<h2>Últimos publicados</h2><div class="card muted">Sin publicados en el inventario cargado.</div>';
-    return '<h2>Últimos publicados</h2><div class="card">'+pub.map(function(v){ return '<div class="vrow"><img loading="lazy" alt="" src="https://i.ytimg.com/vi/'+esc(v.video_id)+'/mqdefault.jpg"><div style="min-width:0"><div class="vt">'+esc(v.title||"")+'</div><div class="muted num">'+num(v.views)+' vistas'+(v.niche_label?' · '+esc(v.niche_label):'')+'</div></div></div>'; }).join("")+'</div>';
+    if(!pub.length) return '<h2>Recently published</h2><div class="card muted">No published videos in the loaded inventory.</div>';
+    return '<h2>Recently published</h2><div class="card">'+pub.map(function(v){ return '<div class="vrow"><img loading="lazy" alt="" src="https://i.ytimg.com/vi/'+esc(v.video_id)+'/mqdefault.jpg"><div style="min-width:0"><div class="vt">'+esc(v.title||"")+'</div><div class="muted num">'+num(v.views)+' views'+(v.niche_label?' · '+esc(v.niche_label):'')+'</div></div></div>'; }).join("")+'</div>';
   }
   function masHtml(){
     var t=ST.tools_health||{}, prob=(ST.problems||[]).length;
     return videosCard()+
-      '<h2>Salud</h2><div class="card"><div class="row"><span>Herramientas</span><span class="pill '+(t.down>0?"p-warn":"p-ok")+'">'+(t.tools&&t.tools.length?(t.ok+"/"+t.total+" OK"):"OK")+'</span></div><div class="row" style="margin-top:8px"><span>Problemas</span><span class="pill '+(prob?"p-bad":"p-ok")+'">'+prob+'</span></div></div>'+
-      '<h2>Herramientas</h2><div class="card"><div class="muted" style="margin-bottom:8px">Despublicar un video (queda privado y oculto, reversible).</div><input type="text" id="unpubId" placeholder="ID del video de YouTube"><div class="row" style="margin-top:8px;gap:8px;justify-content:flex-start"><button class="btn mini ghost" data-unpub="data-lens">Data Lens</button><button class="btn mini ghost" data-unpub="auto2">Oddly</button></div></div>'+
-      '<div class="card"><b>Mis Clips</b><div class="muted" style="margin:3px 0 8px">Sube un clip tuyo (máx. ~100 MB). La IA arma el SEO y sale solo en Oddly a su mejor hora.</div><input type="text" id="clipCap" placeholder="Pista opcional para el título (máx. 300)"><label class="file" for="fClip">🎬 Elegir video</label><input id="fClip" type="file" accept="video/*" class="hide"></div>'+
+      '<h2>Health</h2><div class="card"><div class="row"><span>Tools</span><span class="pill '+(t.down>0?"p-warn":"p-ok")+'">'+(t.tools&&t.tools.length?(t.ok+"/"+t.total+" OK"):"OK")+'</span></div><div class="row" style="margin-top:8px"><span>Problems</span><span class="pill '+(prob?"p-bad":"p-ok")+'">'+prob+'</span></div></div>'+
+      '<h2>Tools</h2><div class="card"><div class="muted" style="margin-bottom:8px">Unpublish a video (becomes private and hidden, reversible).</div><input type="text" id="unpubId" placeholder="YouTube video ID"><div class="row" style="margin-top:8px;gap:8px;justify-content:flex-start"><button class="btn mini ghost" data-unpub="data-lens">Data Lens</button><button class="btn mini ghost" data-unpub="auto2">Oddly</button></div></div>'+
+      '<div class="card"><b>My Clips</b><div class="muted" style="margin:3px 0 8px">Upload your clip (max ~100 MB). AI handles the SEO and it goes out on Oddly at its best time.</div><input type="text" id="clipCap" placeholder="Optional title hint (max 300)"><label class="file" for="fClip">🎬 Choose video</label><input id="fClip" type="file" accept="video/*" class="hide"></div>'+
       '<div class="muted" style="text-align:center;margin:12px 0">Video Forge · build '+esc(BUILD)+'</div>';
   }
 
-  // ============ Render / navegación ============
+  // ============ Render / navigation ============
   function headerLine(){
     var hd=el("hd"); if(!hd) return;
     if(ST.error){ hd.innerHTML=esc(ST.error); return; }
     var L=live();
-    hd.innerHTML='<span class="dot live"></span>'+(curCh==="auto2"?(L?"Pensó "+ago(L.at)+" · próximo ciclo "+inTime(L.next_cycle_at):"Cerebro en vivo"):"Sin plan en vivo · decisión pendiente");
+    hd.innerHTML='<span class="dot live"></span>'+(curCh==="auto2"?(L?"Thought "+ago(L.at)+" · next cycle "+inTime(L.next_cycle_at):"Live brain"):"No live plan · decision pending");
   }
   function render(){
     headerLine();
     var map={vivo:vivoHtml,plan:planHtml,meta:metaHtml,mas:masHtml};
     var sec=el("s-"+curTab); if(!sec) return;
-    try{ sec.innerHTML=map[curTab](); }catch(e){ sec.innerHTML='<div class="card muted">No pude pintar esta vista.</div>'; }
+    try{ sec.innerHTML=map[curTab](); }catch(e){ sec.innerHTML='<div class="card muted">Could not render this view.</div>'; }
     sec.classList.remove("fadein"); void sec.offsetWidth; sec.classList.add("fadein");
     try{ if(tg&&tg.MainButton){ tg.MainButton.hide(); } }catch(e){}
   }
@@ -407,33 +407,33 @@ export const APP2_HTML = `<!doctype html>
     if(ev.target.closest("#btnRefresh")){ h("light"); load(true); }
   });
   function uploadClip(f){ if(!f) return;
-    if(f.size>100*1024*1024){ h("err"); toast("Ese clip pesa "+Math.round(f.size/1048576)+" MB. Máximo ~100 MB."); return; }
+    if(f.size>100*1024*1024){ h("err"); toast("That clip is "+Math.round(f.size/1048576)+" MB. Max ~100 MB."); return; }
     var cap=encodeURIComponent(((el("clipCap")&&el("clipCap").value)||"").slice(0,300));
-    h("medium"); toast("Subiendo clip ("+Math.round(f.size/1048576)+" MB)…");
+    h("medium"); toast("Uploading clip ("+Math.round(f.size/1048576)+" MB)…");
     api("/api/upload-clip?caption="+cap,{method:"POST",headers:{"content-type":f.type||"video/mp4"},body:f})
-      .then(function(r){return r.json();}).then(function(j){ if(j.ok){ h("ok"); toast("Clip recibido. Sale solo a su mejor hora."); if(el("clipCap")) el("clipCap").value=""; } else { h("err"); toast(j.error||"No se pudo subir"); } })
-      .catch(function(){ h("err"); toast("Sin conexión: el clip no se subió"); });
+      .then(function(r){return r.json();}).then(function(j){ if(j.ok){ h("ok"); toast("Clip received. It goes out on its own at its best time."); if(el("clipCap")) el("clipCap").value=""; } else { h("err"); toast(j.error||"Could not upload"); } })
+      .catch(function(){ h("err"); toast("No connection: clip not uploaded"); });
   }
   document.addEventListener("change",function(ev){ var t=ev.target; if(t&&t.id==="fClip"){ uploadClip(t.files&&t.files[0]); t.value=""; } });
   function unpublish(ch){
-    var id=(el("unpubId")&&el("unpubId").value||"").trim(); if(!/^[\\w-]{6,}$/.test(id)){ toast("Pega un ID de video válido"); return; }
-    if(tg&&tg.showConfirm){ tg.showConfirm("¿Despublicar "+id+" en "+CH[ch].name+"? Queda privado y oculto (reversible).",function(ok){ if(ok) doUnpub(ch,id); }); } else if(confirm("¿Despublicar "+id+"?")) doUnpub(ch,id);
+    var id=(el("unpubId")&&el("unpubId").value||"").trim(); if(!/^[\\w-]{6,}$/.test(id)){ toast("Paste a valid video ID"); return; }
+    if(tg&&tg.showConfirm){ tg.showConfirm("Unpublish "+id+" on "+CH[ch].name+"? It becomes private and hidden (reversible).",function(ok){ if(ok) doUnpub(ch,id); }); } else if(confirm("Unpublish "+id+"?")) doUnpub(ch,id);
   }
   function doUnpub(ch,id){
     api("/api/dispatch",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({workflow:"youtube_unpublish.yml",inputs:{video_id:id,channel:ch==="auto2"?"oddly":"data-lens"}})})
-      .then(function(r){return r.json();}).then(function(j){ if(j.ok){ h("ok"); toast("Despublicando "+id+". Te aviso al chat."); } else { h("err"); toast(j.error||"No se pudo despublicar"); } }).catch(function(){ h("err"); toast("Sin conexión"); });
+      .then(function(r){return r.json();}).then(function(j){ if(j.ok){ h("ok"); toast("Unpublishing "+id+". I'll notify you in chat."); } else { h("err"); toast(j.error||"Could not unpublish"); } }).catch(function(){ h("err"); toast("No connection"); });
   }
 
-  // ============ Datos ============
+  // ============ Data ============
   function loadBrain(){ return api("/api/brain").then(function(r){return r.json();}).then(function(j){ if(!j.error){ BR=j; } }).catch(function(){}); }
   function scheduleRefresh(){ clearTimeout(refT); refT=setTimeout(function(){ load(false); },60000); }
   function load(withState){
     var typing=curTab==="mas"&&((el("clipCap")&&el("clipCap").value)||(el("unpubId")&&el("unpubId").value));
     var ps=api("/api/state").then(function(r){return r.json();}).then(function(j){
-      if(j.error){ ST.error=(j.error==="no autorizado"?"No autorizado: abre la app desde el bot":"Error: "+(j.detail||j.error)); return; }
+      if(j.error){ ST.error=(j.error==="no autorizado"?"Not authorized: open the app from the bot":"Error: "+(j.detail||j.error)); return; }
       if(j.build&&BUILD!=="__BUILD__"&&BUILD!=="dev"&&j.build!==BUILD){ try{ location.replace(location.pathname+"?from=os&v="+encodeURIComponent(j.build)); }catch(e){} return; }
       ST=j;
-    }).catch(function(){ ST.error="Sin conexión. Reintento en un minuto."; });
+    }).catch(function(){ ST.error="No connection. Retrying in a minute."; });
     Promise.all([ps,loadBrain()]).then(function(){ if(!typing) render(); scheduleRefresh(); });
   }
   (function boot(){ el("s-vivo").innerHTML=skeleton()+skeleton(); })();
