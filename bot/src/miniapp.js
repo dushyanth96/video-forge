@@ -392,9 +392,9 @@ export const APP_HTML = `<!doctype html>
     var h='<h2>🏭 Factory</h2><div class="card">'
       +'<div class="muted" style="font-size:11px;margin-bottom:6px">Publishing capacity (last 7 days).</div>'
       +'<div class="row">'
-      +'<div class="kpi"><div class="n">'+(f.pub_7d||0)+'</div><div class="l">Publicados 7d</div></div>'
+      +'<div class="kpi"><div class="n">'+(f.pub_7d||0)+'</div><div class="l">Published 7d</div></div>'
       +'<div class="kpi"><div class="n">'+(f.per_day!=null?f.per_day:0)+'</div><div class="l">Per day</div></div>'
-      +'<div class="kpi"><div class="n">'+(f.pub_7d_long||0)+'</div><div class="l">Largos</div></div>'
+      +'<div class="kpi"><div class="n">'+(f.pub_7d_long||0)+'</div><div class="l">Longs</div></div>'
       +'<div class="kpi"><div class="n">'+(f.pub_7d_short||0)+'</div><div class="l">Shorts</div></div>'
       +'</div>';
     if(ramp.length){
@@ -419,9 +419,9 @@ export const APP_HTML = `<!doctype html>
         +'<div style="font-weight:700;margin-bottom:6px">🖼️ Thumbnail — '+(appr?'approved ✓, needs publishing':'to approve')+' · '+esc((v.title||"").slice(0,22))+'</div>'
         +'<a href="'+u+'" target="_blank"><img src="'+u+'" style="width:100%;border-radius:8px;display:block;margin-bottom:8px"></a>'
         +(appr
-          ? '<button class="btn" onclick="thumbPublish(\\''+v.video_id+'\\')">🌍 Publicar (put it on YouTube)</button>'
+          ? '<button class="btn" onclick="thumbPublish(\\''+v.video_id+'\\')">🌍 Publish (put it on YouTube)</button>'
           : '<button class="btn" onclick="thumbApprove(\\''+v.video_id+'\\')">✅ Approve</button>')
-        +'<button class="btn ghost" onclick="thumbRow(\\''+v.video_id+'\\')">🔁 Rehacer otra</button></div>';
+        +'<button class="btn ghost" onclick="thumbRow(\\''+v.video_id+'\\')">🔁 Redo another</button></div>';
     }).join("");
   }
   function matrixHtml(){
@@ -603,7 +603,7 @@ export const APP_HTML = `<!doctype html>
       +'<div class="card"><div class="muted" style="font-size:11px;margin-bottom:6px">Applied to the next script '+esc(srcTxt)+'.</div>'
       +'<div style="font-size:13px;white-space:pre-wrap;max-height:180px;overflow:auto">'+esc(l.brief)+'</div>'
       +(top?'<div style="margin-top:8px;border-top:1px solid rgba(255,255,255,.08);padding-top:6px"><div class="muted" style="font-size:11px;font-weight:700">What performs most:</div>'+top+'</div>':'')
-      +(l.at?'<div class="muted" style="font-size:10px;margin-top:6px">Analizado: '+esc(String(l.at).slice(0,16).replace("T"," "))+'</div>':'')
+      +(l.at?'<div class="muted" style="font-size:10px;margin-top:6px">Analyzed: '+esc(String(l.at).slice(0,16).replace("T"," "))+'</div>':'')
       +'</div>';
   }
   function fmtSlot(iso){
@@ -803,7 +803,7 @@ export const APP_HTML = `<!doctype html>
         +'<div class="vmeta">'
         +'<div class="vtitle">'+(v.video_id?'<a href="https://youtu.be/'+v.video_id+'" target="_blank">'+esc(titleTxt)+'</a>':esc(titleTxt))+'</div>'
         +(tline?'<div class="vsub">'+tline+'</div>':'')
-        +'<div class="vstatus">'+estado+' <span class="muted num">· '+num(v.views||0)+' vistas</span></div>'
+        +'<div class="vstatus">'+estado+' <span class="muted num">· '+num(v.views||0)+' views</span></div>'
         +act
         +'</div></div>';
     }).join("");

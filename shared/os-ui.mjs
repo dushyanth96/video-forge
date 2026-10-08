@@ -80,7 +80,7 @@ body{font-family:var(--os-sans);font-size:15.5px;line-height:1.5;-webkit-font-sm
 .os-row .meta{font-size:12.5px;color:var(--os-t2);margin-top:2px}
 .os-row .end{font-family:var(--os-mono);font-size:12px;color:var(--os-t2);white-space:nowrap}
 .os-chev{color:var(--os-t3);width:16px;height:16px;flex-shrink:0}
-/* Decisiones (Needs you) */
+/* Needs you (Decisions) */
 .os-need{border:1px solid var(--os-border);background:var(--os-surface);border-radius:var(--os-r-row);padding:12px 14px;margin:8px 0}
 .os-need[data-sev="critical"]{border-color:rgba(240,112,112,.45)}
 .os-need .h{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
@@ -88,7 +88,7 @@ body{font-family:var(--os-sans);font-size:15.5px;line-height:1.5;-webkit-font-sm
 .os-need .w{font-size:13px;color:var(--os-t2);margin-top:4px}
 .os-need .e{font-family:var(--os-mono);font-size:11.5px;color:var(--os-t3);margin-top:6px}
 .os-need .a{display:flex;gap:8px;margin-top:10px}
-/* Actividad de la IA */
+/* AI activity */
 .os-act{display:grid;grid-template-columns:46px 1fr;gap:10px;padding:8px 0;border-bottom:1px solid var(--os-hair);font-size:13.5px}
 .os-act:last-child{border-bottom:0}
 .os-act .tm{font-family:var(--os-mono);font-size:11.5px;color:var(--os-t3);padding-top:1px}
