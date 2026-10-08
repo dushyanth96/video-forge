@@ -11,7 +11,7 @@ describe("estado del OS al leer (/api/os)", () => {
     expect(s.system).toBe("radar");
     expect(s.pulse.system).toBe("radar");
     expect(s.global.status).toBe("normal");
-    expect(s.global.headline).toBe("Todo está corriendo");
+    expect(s.global.headline).toBe("All systems running");
   });
   it("un sistema sin pulse o viejo sale sin señal, nunca sano", async () => {
     const store = { "os/pulse/video-forge.json": pulse("video-forge", 400) };
@@ -19,7 +19,7 @@ describe("estado del OS al leer (/api/os)", () => {
     expect(s.pulse.stale).toBe(true);
     expect(s.pulse.status).toBe("degraded");
     expect(s.global.status).toBe("degraded");
-    expect(s.global.systems.find((x) => x.system === "viento").headline).toBe("Sin señal de Viento");
+    expect(s.global.systems.find((x) => x.system === "viento").headline).toBe("No signal from Viento");
   });
   it("una lectura que falla o un JSON basura no rompe el estado", async () => {
     const s = await osStateFrom(async (k) => { if (k.includes("radar")) throw new Error("R2 caído"); return { system: "otro" }; }, "viento", NOW);

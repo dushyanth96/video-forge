@@ -1,9 +1,9 @@
-// os_contract.mjs — CONTRATO of the AI OS of Juan (Video Forge · Viento · Radar + Orchestrator). PURO and testeable.
-// Cada especialista publishes a PULSE with the same way; the Orchestrator the joins in a GLOBAL. Everything lo that is
-// muestra in the Mini Apps sale of here: estado, agentes, actividad real, tareas, decisiones (needs) and insights.
-// Reglas of the brief that este contrato hace cumplir:
-//  - The confianza only existe if trae its base of datos; if not, "datos insuficientes".
-//  - All decisión (need) declara autonomía, evidencia and acciones permitidas.
+// os_contract.mjs — CONTRACT of Juan's AI OS (Video Forge · Viento · Radar + Orchestrator). Pure and testable.
+// Each specialist publishes a PULSE the same way; the Orchestrator joins them into a GLOBAL. Everything shown
+// in the Mini Apps comes from here: status, agents, real activity, tasks, decisions (needs) and insights.
+// Rules of the brief this contract enforces:
+//  - Confidence only exists if it brings its data basis; if not, "insufficient data".
+//  - Every decision (need) declares autonomy, evidence and allowed actions.
 //  - A pulse viejo NOT is muestra as sano: pasa to "degraded" with "without señal".
 //  - Is distingue quién hizo qué: sugerido, preparado, ejecutado, aprobado.
 
@@ -25,7 +25,7 @@ const str = (x, max = 280) => { const t = (x == null ? "" : String(x)).replace(/
 const iso = (x, fallback) => { const t = Date.parse(x); return Number.isFinite(t) ? new Date(t).toISOString() : fallback; };
 const oneOf = (x, list, dflt) => (list.includes(x) ? x : dflt);
 
-// Confianza honesta: {value 0..1, basis} o null. Sin base -> null.
+// Honest confidence: {value 0..1, basis} or null. No basis -> null.
 export function normConfidence(c) {
   if (c == null || typeof c !== "object") return null;
   const v = Number(c.value);
@@ -35,7 +35,7 @@ export function normConfidence(c) {
 }
 export function confidenceLabel(c) {
   const n = normConfidence(c);
-  return n ? `Confianza ${Math.round(n.value * 100)}% · ${n.basis}` : "Confianza: datos insuficientes";
+  return n ? `Confidence ${Math.round(n.value * 100)}% · ${n.basis}` : "Confidence: insufficient data";
 }
 
 export function normAgent(a = {}) {
@@ -108,12 +108,12 @@ export function validatePulse(p) {
   return { ok: errors.length === 0, errors };
 }
 
-// Pulse viejo = without señal. Never is muestra as sano.
+// Stale pulse = without signal. Never shown as healthy.
 export function applyStaleness(p, nowMs = Date.now(), maxAgeMin = 180) {
   const age = (nowMs - Date.parse(p.at)) / 60000;
   if (!(age > maxAgeMin)) return { ...p, stale: false, age_min: Math.max(0, Math.round(age)) };
   const h = age >= 90 ? `${Math.round(age / 60)} h` : `${Math.round(age)} min`;
-  return { ...p, stale: true, age_min: Math.round(age), status: RANK[p.status] <= RANK.degraded ? p.status : "degraded", headline: `Sin señal de ${p.name} desde hace ${h}` };
+  return { ...p, stale: true, age_min: Math.round(age), status: RANK[p.status] <= RANK.degraded ? p.status : "degraded", headline: `No signal from ${p.name} for ${h}` };
 }
 
 export function worstStatus(list) {
@@ -125,8 +125,7 @@ export function worstStatus(list) {
 export function mergeGlobal(pulses, nowMs = Date.now(), opts = {}) {
   const expected = opts.expected || Object.keys(SYSTEMS);
   const bySystem = {};
-  for (const p of pulses || []) if (p && SYSTEMS[p.system]) bySystem[p.system] = applyStaleness(p, nowMs, opts.maxAgeMin);
-  const systems = expected.map((k) => bySystem[k] || { system: k, name: SYSTEMS[k].name, role: SYSTEMS[k].role, status: "degraded", stale: true, headline: `Sin señal de ${SYSTEMS[k].name}`, at: null, agents: [], activity: [], tasks: [], needs: [], insights: [], metrics: [] });
+  for (const p of pulses || []) if (p && SYSTEMS[p.system]) bySystem[p.system] = applyStaleness(p, nowMs, opts.maxAgeMin);    const systems = expected.map((k) => bySystem[k] || { system: k, name: SYSTEMS[k].name, role: SYSTEMS[k].role, status: "degraded", stale: true, headline: `No signal from ${SYSTEMS[k].name}`, at: null, agents: [], activity: [], tasks: [], needs: [], insights: [], metrics: [] });
   const status = worstStatus(systems.map((s) => s.status));
   const needs = systems.flatMap((s) => s.needs || []).sort((a, b) => (SEV_RANK[a.severity] - SEV_RANK[b.severity]) || (Date.parse(a.created_at) - Date.parse(b.created_at)));
   const activity = systems.flatMap((s) => (s.activity || []).map((e) => ({ ...e, system: s.system }))).sort((a, b) => Date.parse(b.at) - Date.parse(a.at)).slice(0, 40);
@@ -134,10 +133,10 @@ export function mergeGlobal(pulses, nowMs = Date.now(), opts = {}) {
   const insights = systems.flatMap((s) => (s.insights || []).map((i) => ({ ...i, system: s.system })));
   const activeAgents = systems.flatMap((s) => (s.agents || []).filter((a) => !["idle", "paused"].includes(a.state))).length;
   let headline;
-  if (status === "critical") headline = "Atención: hay un problema crítico";
-  else if (needs.length) headline = needs.length === 1 ? "1 decisión te espera" : `${needs.length} decisiones te esperan`;
-  else if (status === "degraded") headline = "Un sistema no está reportando";
-  else headline = "Todo está corriendo";
+  if (status === "critical") headline = "Alert: there is a critical problem";
+  else if (needs.length) headline = needs.length === 1 ? "1 decision is waiting for you" : `${needs.length} decisions are waiting for you`;
+  else if (status === "degraded") headline = "A system is not reporting";
+  else headline = "All systems running";
   const priority = needs[0] ? { type: "need", system: needs[0].system, title: needs[0].title, why: needs[0].why }
     : insights[0] ? { type: "insight", system: insights[0].system, title: insights[0].what, why: insights[0].why } : null;
   return {
