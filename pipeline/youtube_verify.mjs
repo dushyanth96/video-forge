@@ -1,6 +1,6 @@
-// youtube_verify.mjs — confirma DONDE quedo un video (canal + privacidad).
-// Consulta la YouTube Data API con el refresh token y compara el canal contra el
-// esperado (The Data Lens). Imprime lineas VERIFY_* que el workflow manda al chat.
+// YouTube_verify.mjs — confirma WHERE quedo a video (channel + privacidad).
+// Consulta the YouTube Data API with the refresh token and compara the channel contra the
+// esperado (The Data Lens). Imprime lines VERIFY_* that the workflow sends to the chat.
 //
 // Uso: node pipeline/youtube_verify.mjs <VIDEO_ID>
 import fs from "node:fs";

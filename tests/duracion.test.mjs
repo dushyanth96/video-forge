@@ -17,7 +17,7 @@ describe("segundosISO", () => {
 
 describe("esLargo", () => {
   it("los Shorts REALES del canal no son largos", () => {
-    // Duraciones medidas en Oddly el 2026-10-03.
+    // Duraciones medidas in Oddly the 2026-10-03.
     expect(esLargo(segundosISO("PT18S"))).toBe(false);   // el otter, 18,7s
     expect(esLargo(segundosISO("PT50S"))).toBe(false);
     expect(esLargo(segundosISO("PT1M31S"))).toBe(false);
@@ -35,16 +35,16 @@ describe("esLargo", () => {
   });
 
   it("duracion desconocida NO cuenta como largo", () => {
-    // Importante: si la API no devuelve duracion, preferimos NO contarlo como largo.
-    // Contarlo mantendria el bug (un video sin duracion reiniciaria el contador).
+    // Important: if the API not devuelve duration, preferimos NOT contarlo as largo.
+    // Contarlo mantendria the bug (a video without duration reiniciaria the contador).
     for (const x of [0, null, undefined, NaN, "x"]) expect(esLargo(x)).toBe(false);
   });
 });
 
 describe("el bug que esto arregla", () => {
   it("un dia de Shorts NO deberia contar como 'hubo un video largo'", () => {
-    // Lo que veia idle_check antes: subidas del dia, todas Shorts. Si alguna cuenta como
-    // largo, IDLE se reinicia y la fabrica nunca arranca — que es lo que pasaba.
+    // Lo that veia idle_check before: subidas of the day, all Shorts. If alguna account as
+    // largo, IDLE is reinicia and the fabrica never arranca — that is lo that pasaba.
     const subidasDelDia = ["PT50S", "PT1M31S", "PT18S", "PT1M30S", "PT55S"];
     const hayLargo = subidasDelDia.some((d) => esLargo(segundosISO(d)));
     expect(hayLargo).toBe(false);

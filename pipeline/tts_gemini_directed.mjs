@@ -1,7 +1,7 @@
-// tts_gemini_directed.mjs — narra el video LARGO con voz de LOCUTOR (Gemini TTS, gratis),
-// beat por beat, con pausas, y produce el MISMO formato que el TTS anterior (WAV + timing
-// por beat) para que la voz combinada y el render funcionen igual. Corre por PEDAZOS en
-// paralelo (como el pipeline de Chatterbox).
+// tts_Gemini_directed.mjs — narra the video LARGO with voice of LOCUTOR (Gemini TTS, free),
+// beat by beat, with pausas, and produce the SAME formato that the TTS anterior (WAV + timing
+// by beat) for that the voice combinada and the render funcionen igual. Corre by PEDAZOS in
+// paralelo (as the pipeline of Chatterbox).
 //
 // Uso: node pipeline/tts_gemini_directed.mjs <voicemap.json> <out.wav> <chunkIndex> <numChunks>
 // Env: GEMINI_API_KEY, VOICE (default Charon).

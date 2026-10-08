@@ -1,10 +1,10 @@
-// replenish_ideas.mjs — mantiene la cola de PROXIMOS videos SIEMPRE con >=10 ideas por delante.
-// Si quedan menos de 10 sin producir, Gemini genera las que falten (alineadas a lo que funciona +
-// tendencias, en INGLES, SIN repetir temas ya usados/planeados), con su n y fecha, y las agrega a
-// state.upcoming. Asi la fabrica nunca se queda sin ideas.
+// replenish_ideas.mjs — mantiene the queue of PROXIMOS videos ALWAYS with >=10 ideas by delante.
+// If quedan less of 10 without producir, Gemini generates the that falten (alineadas to lo that funciona +
+// tendencias, in INGLES, WITHOUT repetir topics already usados/planeados), with its n and fecha, and the agrega to
+// state.upcoming. Asi the fabrica never is queda without ideas.
 //
 // Uso: node pipeline/replenish_ideas.mjs <state.json> <out_state.json> [produced.json] [target=10]
-// Env: GEMINI_API_KEY. Opcional: LEARNINGS (brief de lo que rinde) para alinear las ideas.
+// Env: GEMINI_API_KEY. Optional: LEARNINGS (brief of lo that rinde) for alinear the ideas.
 import fs from "node:fs";
 import { TEXT_MODELS } from "./_models.mjs";
 
@@ -39,8 +39,8 @@ async function gemini(prompt) {
 const up = Array.isArray(state.upcoming) ? state.upcoming : [];
 const published = Array.isArray(state.published) ? state.published : [];
 
-// Cuantas quedan SIN producir: fuera las ya producidas (produced.json) y las cubiertas por
-// los largos PUBLICOS. Eso es lo que hay "por delante".
+// Cuantas quedan WITHOUT producir: fuera the already producidas (produced.JSON) and the cubiertas by
+// the largos PUBLICOS. Eso is lo that hay "by delante".
 let doneSet = new Set();
 if (producedPath && fs.existsSync(producedPath)) {
   try { doneSet = new Set((JSON.parse(fs.readFileSync(producedPath, "utf8")).done) || []); } catch {}
@@ -55,11 +55,11 @@ if (need <= 0) {
   process.exit(0);
 }
 
-// Evitar duplicados: todos los temas ya planeados + publicados.
+// Avoid duplicados: all the topics already planeados + publicados.
 const usedTitles = [...up.map((u) => u.topic), ...published.map((v) => v.title)].filter(Boolean);
 const learn = (process.env.LEARNINGS || "").trim();
-// DIRECCION del canal (configurable). Si existe channel/direction.json, genera en ese estilo;
-// si no, cae al estilo historico (dinero/negocios). Asi el canal se puede PIVOTAR sin tocar codigo.
+// DIRECCION of the channel (configurable). If existe channel/direction.JSON, generates in ese estilo;
+// if not, cae to the estilo historico (money/negocios). Asi the channel is can PIVOTAR without tocar code.
 let DIR = null;
 try { DIR = JSON.parse(fs.readFileSync("channel/direction.json", "utf8")); } catch {}
 const prompt = DIR
@@ -81,7 +81,7 @@ if (!ideas || !ideas.length) {
   process.exit(0);
 }
 
-// Numeracion y fechas: seguir despues del mayor n y de la ultima fecha.
+// Numeracion and fechas: seguir after of the mayor n and of the last fecha.
 const maxN = Math.max(0, ...up.map((u) => +u.n || 0), publicLongCount);
 let lastDate = up.map((u) => u.target_date).filter(Boolean).sort().pop();
 let base = lastDate ? new Date(lastDate + "T00:00:00Z") : new Date();

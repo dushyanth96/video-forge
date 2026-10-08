@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { analyzeRetention } from "../pipeline/lib/retention_calc.mjs";
 
-// Curva: caída inicial suave (10%), meseta, y una CAÍDA FUERTE en ratio 0.4.
+// Curva: caída inicial suave (10%), meseta, and a CAÍDA FUERTE in ratio 0.4.
 const curve = [
   { ratio: 0.0, watch: 1.0 },
   { ratio: 0.03, watch: 0.9 },

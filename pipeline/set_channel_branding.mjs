@@ -1,6 +1,6 @@
-// set_channel_branding.mjs — aplica la MARCA del canal por API (YT2 mapeado a YT_*):
-// sube el BANNER, y fija descripcion + keywords + pais + idioma. El AVATAR no se puede por API
-// (lo sube Juan a mano). Preserva el resto de brandingSettings (no borra el titulo, etc.).
+// set_channel_branding.mjs — aplica the MARCA of the channel by API (YT2 mapeado to YT_*):
+// uploads the BANNER, and fija description + keywords + pais + idioma. The AVATAR not is can by API
+// (lo uploads Juan to mano). Preserva the resto of brandingSettings (not deletes the title, etc.).
 // Uso: node pipeline/set_channel_branding.mjs <channel.json> [banner.png]
 import fs from "node:fs";
 
@@ -12,7 +12,7 @@ const tr = await (await fetch("https://oauth2.googleapis.com/token", { method: "
 const T = tr.access_token; if (!T) { console.error("no token"); process.exit(1); }
 const H = { Authorization: `Bearer ${T}` };
 
-// 1) Canal actual (id + brandingSettings actuales para no borrar nada).
+// 1) Channel actual (id + brandingSettings actuales for not delete nothing).
 const chr = await (await fetch("https://www.googleapis.com/youtube/v3/channels?part=brandingSettings,snippet&mine=true", { headers: H })).json();
 const ch = (chr.items || [])[0]; if (!ch) { console.error("sin canal"); process.exit(1); }
 const id = ch.id;

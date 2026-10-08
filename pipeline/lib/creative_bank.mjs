@@ -1,8 +1,8 @@
-// creative_bank.mjs — Banco permanente de ideas/hooks/títulos (Growth Roadmap Fase 3). PURO.
-// Cada idea tiene ESTADO (BACKLOG→TESTING→WINNER|KILLED) y una PRIORIDAD por la fórmula
-// IMPACTO × PROBABILIDAD × VELOCIDAD ÷ COSTE -> bucket P0/P1/P2/P3/KILL, para decidir qué probar
-// primero. Se auto-siembra desde los OUTLIERS de Fase 2 (patrón ganador -> idea a replicar).
-// Sin dependencias, determinista (las fechas se inyectan).
+// creative_bank.mjs — Banco permanente of ideas/hooks/titles (Growth Roadmap Phase 3). PURO.
+// Cada idea tiene ESTADO (BACKLOG→TESTING→WINNER|KILLED) and a PRIORIDAD by the fórmula
+// IMPACTO × PROBABILIDAD × VELOCIDAD ÷ COSTE -> bucket P0/P1/P2/P3/KILL, for decidir qué probar
+// first. Is auto-siembra since the OUTLIERS of Phase 2 (patrón ganador -> idea to replicar).
+// Without dependencias, determinista (the fechas is inyectan).
 
 export const STATES = ["BACKLOG", "TESTING", "WINNER", "KILLED"];
 const NEXT = { BACKLOG: ["TESTING", "KILLED"], TESTING: ["WINNER", "KILLED", "BACKLOG"], WINNER: ["BACKLOG"], KILLED: ["BACKLOG"] };
@@ -18,7 +18,7 @@ export function priorityScore(item = {}) {
   return Math.round((impact * prob * vel / cost) * 100) / 100;
 }
 
-// Bucket de prioridad. Un item KILLED va a "KILL" pase lo que pase.
+// Bucket of prioridad. A item KILLED va to "KILL" pase lo that pase.
 export function bucket(item = {}) {
   if (item.state === "KILLED") return "KILL";
   const s = priorityScore(item);
@@ -52,7 +52,7 @@ export function newItem(fields = {}, nowMs = Date.now()) {
   return item;
 }
 
-// Transición de estado validada. Devuelve el item nuevo (no muta) o lanza si la transición es inválida.
+// Transition of estado validada. Devuelve the item new (not muta) or lanza if the transition is inválida.
 export function advance(item, to, nowMs = Date.now()) {
   if (!STATES.includes(to)) throw new Error(`estado inválido: ${to}`);
   const allowed = NEXT[item.state] || [];
@@ -63,19 +63,19 @@ export function advance(item, to, nowMs = Date.now()) {
   return out;
 }
 
-// Ordena el banco: por bucket (P0>P1>P2>P3>KILL) y dentro por prioridad desc.
+// Ordena the banco: by bucket (P0>P1>P2>P3>KILL) and dentro by prioridad desc.
 const BORD = { P0: 0, P1: 1, P2: 2, P3: 3, KILL: 4 };
 export function rankBank(items = []) {
   return (items || []).slice().sort((a, b) => (BORD[bucket(a)] - BORD[bucket(b)]) || (priorityScore(b) - priorityScore(a)));
 }
 
-// Lo próximo a PROBAR: BACKLOG mejor priorizado.
+// Lo next to PROBAR: BACKLOG best priorizado.
 export function nextToTest(items = [], n = 3) {
   return rankBank((items || []).filter((i) => i.state === "BACKLOG")).slice(0, n);
 }
 
-// Auto-siembra desde los outliers de Fase 2: si el patrón ganador no tiene ya una idea similar
-// en el banco, agrega una idea BACKLOG (source=outlier). `outliers` = salida de findOutliers.
+// Auto-siembra since the outliers of Phase 2: if the patrón ganador not tiene already a idea similar
+// in the banco, agrega a idea BACKLOG (source=outlier). `outliers` = output of findOutliers.
 export function seedFromOutliers(items, outliers, channel, nowMs = Date.now()) {
   const bank = (items || []).slice();
   if (!outliers || !outliers.count || !outliers.pattern) return bank;
@@ -83,7 +83,7 @@ export function seedFromOutliers(items, outliers, channel, nowMs = Date.now()) {
   const fmt = outliers.pattern.format && outliers.pattern.format.value;
   if (!hook) return bank;
   const text = `Replicar patrón ganador: hook "${hook}"${fmt ? ` en ${fmt}` : ""}`;
-  // Idempotente: no duplicar la misma idea (por texto + canal) si sigue viva.
+  // Idempotente: not duplicar the same idea (by texto + channel) if sigue viva.
   const exists = bank.some((i) => i.channel === channel && i.text === text && i.state !== "KILLED");
   if (exists) return bank;
   bank.push(newItem({

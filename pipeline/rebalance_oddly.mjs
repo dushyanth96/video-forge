@@ -1,17 +1,17 @@
-// rebalance_oddly.mjs — MOTOR ÚNICO de reparto de Oddly Loop (corregido por la auditoría BR-04/05/07/09).
-// Antes había dos motores (este y decide.mjs) con reglas distintas y la app mostraba el que no se ejecutaba.
-// Ahora este script es la única fuente: calcula la cadencia QUE SE EJECUTA y escribe decision.json con
-// exactamente ese reparto y su porqué, más una entrada en el registro de decisiones (ledger) con predicción,
-// métrica, criterio y fecha de revisión.
+// rebalance_Oddly.mjs — MOTOR ÚNICO of reparto of Oddly Loop (corregido by the auditoría BR-04/05/07/09).
+// Before había dos enginees (este and decide.mjs) with reglas distintas and the app mostraba the that not is ejecutaba.
+// Now este script is the única fuente: calcula the cadencia THAT IS EJECUTA and writes decision.JSON with
+// exactamente ese reparto and its porqué, more a input in the registro of decisiones (ledger) with predicción,
+// métrica, criterio and fecha of revisión.
 //
 // Reglas:
-//  - Ranking por MEDIANA de vistas/día de la cohorte de 5-30 días, sin nichos inferidos (niche_rank).
-//  - Solo nichos con muestra suficiente compiten por explotación; corte = mediana < 40% del mejor.
-//  - Subir el volumen (agresividad) SOLO si la cohorte reciente no rinde peor que la anterior a la misma
-//    edad (vistas al día 7). Sin dato -> no se escala.
-//  - Si el ledger tiene 2 fallos seguidos del escalado, se revierte al volumen base.
+//  - Ranking by MEDIANA of vistas/day of the cohorte of 5-30 days, without niches inferidos (niche_rank).
+//  - Only niches with muestra suficiente compiten by explotación; cut = mediana < 40% of the best.
+//  - Upload the volumen (agresividad) ONLY if the cohorte reciente not rinde worse that the anterior to the same
+//    edad (vistas to the day 7). Without dato -> not is escala.
+//  - If the ledger tiene 2 fallos seguidos of the escalado, is revierte to the volumen base.
 //
-// Entradas (las baja el workflow): state.json, cadence.json, exp.json, aggressiveness.json,
+// Inputs (the downloads the workflow): state.JSON, cadence.JSON, exp.JSON, aggressiveness.JSON,
 //   views_at_age.json, ledger.json. Salidas: cadence.new.json, exp.new.json, decision.json, ledger.new.json, summary.txt
 import fs from "node:fs";
 import { richReward, proportionalByScore, scoreCandidate } from "./lib/decision.mjs";
@@ -34,7 +34,7 @@ const EXP_MIN_VIDS = 5;
 const BASE_TOTAL = 8;
 const notes = [];
 
-// --- Ranking robusto (cohorte comparable). Fallback honesto si el estado aún no trae la lista. ---
+// --- Ranking robusto (cohorte comparable). Fallback honesto if the estado still not trae the ready. ---
 let rank = state.niche_rank && Array.isArray(state.niche_rank.rows) ? state.niche_rank : null;
 if (!rank && Array.isArray(state.list) && state.list.length) rank = rankNiches(state.list, { nowMs: now });
 const engine = rank ? "mediana cohorte 5-30d" : "sin_dato";
@@ -70,7 +70,7 @@ if (active) {
   }
 } else activarSiguiente();
 
-// --- Volumen: base, o agresivo SOLO si la cohorte reciente no se diluye ---
+// --- Volumen: base, or agresivo ONLY if the cohorte reciente not is diluye ---
 const currentTotal = Object.values(cad.shorts_per_category || {}).reduce((a, b) => a + (+b || 0), 0) || BASE_TOTAL;
 const wantsMore = !!(aggr && aggr.oddly && aggr.oddly.behind && +aggr.oddly.cadence_total > currentTotal);
 const gate = scaleGate(viewsAtAge, { nowMs: now });
@@ -88,7 +88,7 @@ if (reverted) {
   notes.push(`⏸️ Escalado bloqueado (sigo en ${TOTAL}/día): ${gate.reason}.`);
 }
 
-// --- Reparto por score (mediana × confianza) entre nichos con muestra ---
+// --- Reparto by score (mediana × confianza) between niches with muestra ---
 const expSlots = active ? 1 : 0;
 const content = Math.max(1, TOTAL - expSlots);
 const established = [...new Set([...BASE, ...promoted])].filter((k) => !active || k !== active.key);
@@ -97,7 +97,7 @@ const top = Math.max(1, ...withSample.map(med));
 let survivors = withSample.filter((k) => med(k) >= CUT * top);
 let fallback = false;
 if (!survivors.length) {
-  // Sin nichos con muestra: no se inventa ganador; se conserva la cadencia vigente.
+  // Without niches with muestra: not is inventa ganador; is conserva the cadencia vigente.
   fallback = true;
   survivors = Object.entries(cad.shorts_per_category || {}).filter(([, v]) => +v > 0).map(([k]) => k);
   if (!survivors.length) survivors = ["satisfying"];
@@ -114,8 +114,8 @@ if (fallback) {
   const cand = survivors.map((k) => ({ key: k, reward: richReward({ vpd: med(k) }, { vpd: top }), samples: nOf(k) }));
   alloc = proportionalByScore(cand, content, { minPerArm: content >= survivors.length ? 1 : 0 }).alloc;
 }
-// Estrategia del hito intermedio (decisión de Juan, 2026-09-14): mayoría de cupos al nicho líder, solo si
-// tiene muestra, rinde claramente sobre el canal y el ledger no pidió revertir el reparto.
+// Estrategia of the hito intermedio (decisión of Juan, 2026-09-14): mayoría of cupos to the niche líder, only if
+// tiene muestra, rinde claramente about the channel and the ledger not pidió revertir the reparto.
 let goalPush = null;
 if (!fallback) {
   const lead = survivors.slice().sort((a, b) => med(b) - med(a))[0];
@@ -144,7 +144,7 @@ const newCad = {
   variant,
 };
 
-// --- decision.json = EXACTAMENTE lo ejecutado, con porqué por nicho ---
+// --- decision.JSON = EXACTAMENTE lo ejecutado, with porqué by niche ---
 const candidates = [...new Set([...established, ...(active ? [active.key] : [])])].map((k) => {
   const r = row[k] || {};
   const sc = scoreCandidate({ key: k, reward: richReward({ vpd: med(k) }, { vpd: top }), samples: nOf(k) });
@@ -167,7 +167,7 @@ const decision = {
   note: "Motor único: este reparto es la cadencia que ejecuta la producción. HECHO: mediana y n de la cohorte. INFERENCIA: score y corte.",
 };
 
-// --- Ledger: predicción verificable de ESTA decisión ---
+// --- Ledger: predicción verificable of ESTA decisión ---
 if (leader && leader[1] > 0 && row[leader[0]] && row[leader[0]].rel != null) {
   ledger.push(newEntry({
     type: "niche_allocation", channel: "auto2", subject: leader[0],

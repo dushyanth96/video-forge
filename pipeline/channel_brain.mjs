@@ -1,10 +1,10 @@
-// channel_brain.mjs — EL CEREBRO de los canales. Revisa la salud de Oddly y Data Lens,
-// mide QUE rinde (por direccion en Data Lens), y ESCALA a "reestructurar" si un canal sigue
-// estancado tras suficientes PRUEBAS. Filosofia: probar en pequeno -> medir -> escalar al
-// ganador -> si nada rinde, reestructurar (nunca producir masivo sin probar).
+// channel_brain.mjs — THE BRAIN of the channels. Revisa the salud of Oddly and Data Lens,
+// mide THAT rinde (by direccion in Data Lens), and ESCALA to "reestructurar" if a channel sigue
+// estancado after suficientes TESTS. Filosofia: probar in pequeno -> medir -> escalar to the
+// ganador -> if nothing rinde, reestructurar (never producir masivo without probar).
 //
 // Uso: node pipeline/channel_brain.mjs   (lee dl_state.json, oddly_state.json, channel/direction.json)
-// Salida: brain.txt (resumen para Telegram) + brain.json (verdictos).
+// Output: brain.txt (resumen for Telegram) + brain.JSON (verdictos).
 import fs from "node:fs";
 import { MONET_GOALS } from "./lib/monetization.mjs";
 import { decidirVolumen } from "./lib/volumen_util.mjs";
@@ -16,9 +16,9 @@ const dl = rj("dl_state.json", {});
 const od = rj("oddly_state.json", {});
 const dir = rj("channel/direction.json", null) || rj("direction.json", null);
 
-// ENFOQUE: el Cerebro decide solo sobre Oddly. La pausa de Data Lens ya estaba en el ledger
-// (la escribe brain_live); aqui simplemente se respeta, en vez de seguir emitiendo veredictos
-// y acciones de un canal pausado. Sus metricas se siguen mostrando.
+// ENFOQUE: the Brain decide only about Oddly. The pausa of Data Lens already estaba in the ledger
+// (the writes brain_live); here simplemente is respeta, in vez of seguir emitiendo veredictos
+// and acciones of a channel pausado. Its metricas is siguen mostrando.
 const ledger = rj("ledger.json", []);
 const dlPausa = pausaDe(ledger, "data-lens");
 const dlDecide = decideSobre(ledger, "data-lens");
@@ -26,9 +26,9 @@ const dlDecide = decideSobre(ledger, "data-lens");
 const now = Date.now();
 const days = (iso) => (iso ? Math.max(1, (now - Date.parse(iso)) / 86400000) : 1);
 
-// ---- TENDENCIA SEMANA A SEMANA (de weekly_stats.json; la llena weekly_stats.yml) ----
-// El Cerebro ahora TAMBIEN mira vistas/likes/subs semana contra semana, usando solo
-// semanas COMPLETAS (la semana en curso va parcial por el retraso de Analytics de 2-3 dias).
+// ---- TENDENCIA WEEK to WEEK (of weekly_stats.JSON; the llena weekly_stats.yml) ----
+// The Brain now TAMBIEN mira vistas/likes/subs week contra week, usando only
+// weeks COMPLETAS (the week in curso va parcial by the retraso of Analytics of 2-3 days).
 const weekly = rj("weekly_stats.json", null);
 function weekTrend(chKey) {
   const c = weekly && weekly.channels && weekly.channels[chKey];
@@ -54,14 +54,14 @@ const dlTrend = weekTrend("data_lens");
 const odSubs = +od.subs || 0, odViews = +od.total_views || 0, odVids = +od.videos || 0;
 const odRank = (od.niche_ranking || []).slice().sort((a, b) => (b.avg_vpd || 0) - (a.avg_vpd || 0));
 const odTop = odRank[0] || null;
-// El veredicto de Oddly sale del RENDIMIENTO, no de tener suscriptores.
+// The veredicto of Oddly sale of the PERFORMANCE, not of tener suscriptores.
 //
-// Antes la condicion de "sano" era `(odTop && odTop.avg_vpd >= 20) || odSubs > 0`. Ese
-// `|| odSubs > 0` hacia que cualquier canal con UN suscriptor saliera 🟢 sano para siempre,
-// y dejaba la rama de "estancado" inalcanzable. Por eso Oddly se reportaba sano con 67 subs
-// y 46 vistas por video (2026-10-03).
+// Before the condicion of "sano" era `(odTop && odTop.avg_vpd >= 20) || odSubs > 0`. Ese
+// `|| odSubs > 0` hacia that cualquier channel with A suscriptor saliera 🟢 sano for always,
+// and dejaba the branch of "estancado" inalcanzable. By eso Oddly is reportaba sano with 67 subs
+// and 46 vistas by video (2026-10-03).
 //
-// Tambien se exige MUESTRA: el nicho que "gana" no significa nada si se midio con 2 videos.
+// Tambien is exige MUESTRA: the niche that "gana" not significa nothing if is midio with 2 videos.
 const odNicho = odTop ? evaluarMuestra(odTop.n ?? odTop.videos ?? 0, { que: "videos del nicho" }) : evaluarMuestra(0, { que: "videos del nicho" });
 const odVistasPorVideo = odVids ? odViews / odVids : 0;
 const VPV_SANO = 100;   // vistas acumuladas por video que separan "vivo" de "no lo ve nadie"
@@ -81,9 +81,9 @@ if (odVids < 10) {
   odMsg = `${odSubs} subs · ${odVids} videos · ${Math.round(odVistasPorVideo)} vistas por video acumuladas — nada despega, revisar FORMATO.`;
 }
 
-// ---------------- THE DATA LENS (canal de HISTORIA) ----------------
-// Mide por CATEGORIA (guerras/inventos/personajes) con stats EN VIVO de los video_id del mapa
-// (channel/history_map.json). Solo cuentan los Shorts PUBLICOS (los privados no tienen vistas).
+// ---------------- THE DATA LENS (channel of HISTORIA) ----------------
+// Mide by CATEGORIA (guerras/inventos/personajes) with stats IN VIVO of the video_id of the mapa
+// (channel/history_map.JSON). Only cuentan the Shorts PUBLICOS (the privados not tienen vistas).
 const { YT_CLIENT_ID, YT_CLIENT_SECRET, YT_REFRESH_TOKEN } = process.env;
 const histMap = rj("history_map.json", []);
 const dlSubs = +((dl.channel_stats || {}).subs ?? (dl.monetization || {}).subs) || 0;
@@ -138,17 +138,17 @@ if (nTest < MIN_TEST) {
 }
 
 // ---- META DE MONETIZACION (fin 2026) + AGRESIVIDAD ----
-// Cuánto/día hace falta de subs y vistas para cumplir YPP antes del 31-dic → qué tan fuerte empujar.
+// Cuánto/day hace falta of subs and vistas for cumplir YPP before of the 31-dic → qué tan fuerte empujar.
 const DEADLINE = Date.parse("2026-12-31T23:59:59Z");
 const daysLeft = Math.max(1, Math.ceil((DEADLINE - now) / 86400000));
-// Oddly empuja contra SU meta del año (nivel intermedio desde 2026-09-14), no contra la completa.
+// Oddly empuja contra ITS meta of the año (nivel intermedio since 2026-09-14), not contra the completa.
 const OD_T = Object.fromEntries(MONET_GOALS.auto2.targets.map((t) => [t.key, t.target]));
 const OD_SUBS_T = OD_T.subs || 1000, OD_VIEWS_T = OD_T.shorts_views_90d || 10000000;
 const dlViews = +((dl.channel_stats || {}).total_views ?? (dl.monetization || {}).views) || 0;
-// ¿Mas volumen sirve, o hay que cambiar el formato? Antes esto era una regla fija
-// ("Oddly va atras -> 12/dia"). Medido el 2026-10-03: 518 videos, 67 subs, mediana de
-// 46 vistas por Short. A 12/dia faltaria ~200x para la meta, asi que subir la cadencia
-// solo multiplica videos que nadie ve. La decision ahora sale de la aritmetica.
+// ¿More volumen sirve, or hay that cambiar the formato? Before esto era a regla fija
+// ("Oddly va atras -> 12/day"). Medido the 2026-10-03: 518 videos, 67 subs, mediana of
+// 46 vistas by Short. to 12/day faltaria ~200x for the meta, asi that upload the cadencia
+// only multiplica videos that nadie ve. The decision now sale of the aritmetica.
 const odVol = decidirVolumen({
   vistasTotales: odViews, videos: odVids, metaVistas: OD_VIEWS_T, diasRestantes: daysLeft,
 });
@@ -168,8 +168,8 @@ const lines = [
   `   ${trendLine(odTrend)}`,
   `   ${monetLine(odSubs, odViews, OD_VIEWS_T, OD_SUBS_T)}`,
   "",
-  // Pausado: se muestran las METRICAS (Juan quiere verlas) pero sin veredicto, sin
-  // direcciones a escalar y sin presion de meta — nada de eso aplica a un canal en pausa.
+  // Pausado: is muestran the METRICAS (Juan wants verlas) but without veredicto, without
+  // direcciones to escalar and without presion of meta — nothing of eso aplica to a channel in pausa.
   ...(dlDecide
     ? [
         `📊 The Data Lens: ${dlVerdict}`,
@@ -185,8 +185,8 @@ const lines = [
         `   ${lineaPausa(dlPausa)}`,
       ]),
 ];
-// Honestidad sobre cuanto se sabe: si la muestra no da, se dice ANTES de que alguien actue
-// sobre un veredicto sacado de cuatro datos.
+// Honestidad about cuanto is sabe: if the muestra not da, is dice BEFORE of that alguien actue
+// about a veredicto sacado of cuatro datos.
 const ret = rj("retention_auto2.json", null);
 const avisos = [];
 if (!odNicho.suficiente && odVids >= 10) avisos.push(`ranking de nichos con ${odNicho.n} video(s) medidos`);
@@ -201,10 +201,10 @@ if (avisoMuestra) lines.push("", avisoMuestra);
 if (odVol.reestructurar) lines.push("", `⚠️ ACCION: Oddly necesita REESTRUCTURA de formato, no mas volumen. ${odVol.razon}.`);
 if (restructure && dlDecide) lines.push("", "⚠️ ACCION: The Data Lens necesita REESTRUCTURA. Dile a Claude: «reestructura Data Lens con direcciones nuevas».");
 
-// REGLA DURA: la fecha NO se mueve. Si un canal va atrás, se ESCALA la agresividad (no se alarga el plazo).
-// El ritmo/día necesario ya sube solo cada día que pasa (need / daysLeft con deadline fijo).
+// REGLA DURA: the fecha NOT is mueve. If a channel va atrás, is ESCALA the agresividad (not is alarga the plazo).
+// The ritmo/day necessary already uploads only cada day that pasa (need / daysLeft with deadline fijo).
 lines.push("", "🎯 Meta fin-2026 FIJA — no se alarga. Si un canal va atrás se ESCALA, pero el CÓMO sale de los datos: más volumen solo si las vistas POR VIDEO que ya tiene alcanzan la meta; si no alcanzan ni produciendo al máximo, el problema es el formato y se reestructura (hoy el foco del Cerebro es Oddly; Data Lens esta en pausa y solo se mide). El ritmo/día necesario sube solo con cada día que pasa.");
-// Señal para el optimizador: cuánta agresividad de volumen empujar en Oddly (a mayor brecha vs meta, más).
+// Señal for the optimizador: cuánta agresividad of volumen empujar in Oddly (to mayor brecha vs meta, more).
 const odSubsPerDay = +(Math.max(0, OD_SUBS_T - odSubs) / daysLeft).toFixed(2);
 const odViewsPerDay = Math.ceil(Math.max(0, OD_VIEWS_T - odViews) / daysLeft);
 const odGap = odSubs >= OD_SUBS_T && odViews >= OD_VIEWS_T ? 0 : 1;   // aún no elegible -> empujar
@@ -220,7 +220,7 @@ const aggressiveness = {
            note: odVol.razon },
   data_lens: dlDecide
     ? { behind: dlSubs < 1000, note: restructure ? "reestructurar formato (el volumen no arregla 0 vistas)" : "medir" }
-    // En pausa: ninguna accion. `paused` es la señal para quien consuma esto.
+    // In pausa: ninguna accion. `paused` is the señal for quien consuma esto.
     : { paused: true, since: dlPausa && dlPausa.at, review_at: dlPausa && dlPausa.review_at, note: "fuera del foco del Cerebro; solo se miden metricas" },
 };
 fs.writeFileSync("aggressiveness.json", JSON.stringify(aggressiveness, null, 2));

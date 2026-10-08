@@ -1,6 +1,6 @@
-// hooks.mjs — HookNeuron + alimentar el registro de hipótesis (Brain OS Fase 4b).
-// Lee episodios + retención de un canal -> construye la memoria de hooks y AÑADE evidencia real
-// al registro de hipótesis (idempotente por episodio+hipótesis).
+// hooks.mjs — HookNeuron + alimentar the registro of hipótesis (Brain OS Phase 4b).
+// Lee episodios + retención of a channel -> construye the memoria of hooks and AÑADE evidencia real
+// to the registro of hipótesis (idempotente by episodio+hipótesis).
 // Uso: node pipeline/hooks.mjs <episodes.json> <retention.json> <hypotheses.json> <hooksOut.json>
 import fs from "node:fs";
 import { summarizeHooks } from "./lib/hook_calc.mjs";
@@ -14,11 +14,11 @@ const episodes = (read(epFile, {}).episodes) || [];
 const retById = {};
 for (const v of (read(retFile, {}).videos) || []) retById[v.video_id] = v;
 
-// 1) Memoria de hooks (ganadores vs fallidos por tipo).
+// 1) Memoria of hooks (ganadores vs fallidos by type).
 const hookMemory = { at: new Date().toISOString(), by_type: summarizeHooks(episodes, retById) };
 fs.writeFileSync(hooksOut || "hooks.json", JSON.stringify(hookMemory, null, 2));
 
-// 2) Evidencia -> registro de hipótesis (no re-añade la del mismo episodio+hipótesis).
+// 2) Evidencia -> registro of hipótesis (not re-añade the of the same episodio+hipótesis).
 let reg = read(hypFile, []);
 if (!Array.isArray(reg)) reg = reg.hypotheses || [];
 const byId = new Map(reg.map((h) => [h.id, h]));

@@ -1,6 +1,6 @@
-// alerts.mjs — runner de alertas de crecimiento (Growth Fase 4). Lee la memoria del canal en R2,
-// corre las reglas y escribe alerts.json. Imprime SOLO las alertas accionables (warn/critical)
-// para que el workflow las mande por Telegram (sin ruido cuando todo va bien).
+// alerts.mjs — runner of alertas of crecimiento (Growth Phase 4). Lee the memoria of the channel in R2,
+// corre the reglas and writes alerts.JSON. Imprime ONLY the alertas accionables (warn/critical)
+// for that the workflow the mande by Telegram (without ruido when everything va bien).
 // Uso: node pipeline/alerts.mjs <channel> <history> <episodes> <monetization_report> <decision> <alertsOut>
 import fs from "node:fs";
 import { evaluateAlerts, SEVERITY } from "./lib/alerts.mjs";
@@ -14,7 +14,7 @@ const monet = read(monetF, {});
 const decision = read(decF, {});
 const ch = (monet.channels && monet.channels[channel]) || {};
 
-// Historial YPP por ventana (ypp_history.json). Claves ausentes no disparan alertas (guarda en growthDrop).
+// Historial YPP by ventana (ypp_history.JSON). Keys ausentes not disparan alertas (stores in growthDrop).
 const historyKeys = channel === "auto2"
   ? [{ key: "subs", label: "Suscriptores" }, { key: "shorts_views_90d", label: "Vistas de Shorts (90 días)" }]
   : [{ key: "subs", label: "Suscriptores" }, { key: "watch_hours_365d", label: "Horas vistas (365 días)" }];

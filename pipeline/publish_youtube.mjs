@@ -1,14 +1,14 @@
 // publish_youtube.mjs — sube a YouTube (Data API v3) con OAuth2 (refresh token).
 //
-// SOLO corre con el approve del owner. El discard NO llama a este script:
+// ONLY corre with the approve of the owner. The discard NOT llama to este script:
 // cero llamadas a YouTube = cero cuota gastada.
 //
-// Uso: node pipeline/publish_youtube.mjs <video.mp4> <review.json> <out youtube.json>
+// Usage: node pipeline/publish_YouTube.mjs <video.mp4> <review.JSON> <out YouTube.JSON>
 //
 // Env (todas obligatorias, ninguna hardcodeada):
 //   YT_CLIENT_ID       OAuth2 client id (Google Cloud Console)
 //   YT_CLIENT_SECRET   OAuth2 client secret
-//   YT_REFRESH_TOKEN   refresh token del owner (flujo installed-app)
+//   YT_REFRESH_TOKEN   refresh token of the owner (flujo installed-app)
 //   YT_PRIVACY         public | unlisted | private (default: public)
 //   YT_CATEGORY_ID     default: 28 (Science & Technology)
 import fs from "node:fs";
@@ -80,7 +80,7 @@ async function resumableUpload(token) {
     const t = await init.text().catch(() => "");
     throw new Error(`resumable init fallo (${init.status}): ${t.slice(0, 300)}`);
   }
-  // 2) Subir por chunks con Content-Range (reanudable por si la red falla).
+  // 2) Upload by chunks with Content-Range (reanudable by if the red fails).
   let uploaded = 0;
   while (uploaded < file.length) {
     const end = Math.min(file.length, uploaded + CHUNK) - 1;
@@ -95,7 +95,7 @@ async function resumableUpload(token) {
       body: chunk,
     });
     if (r.status === 308) {
-      // 308: incompleto; el header Range dice cuantos bytes recibio.
+      // 308: incompleto; the header Range dice cuantos bytes recibio.
       const range = r.headers.get("range") || "";
       const m = /bytes=0-(\d+)/.exec(range);
       uploaded = m ? +m[1] + 1 : uploaded + chunk.length;

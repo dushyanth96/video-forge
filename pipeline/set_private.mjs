@@ -1,5 +1,5 @@
-// set_private.mjs — DESPUBLICA/desprograma un video: lo pone en PRIVADO en YouTube (reversible,
-// NO borra). Poner privado tambien limpia el publishAt programado. Usa YT_* (para Oddly el
+// set_private.mjs — DESPUBLICA/desprograma a video: lo pone in PRIVATE in YouTube (reversible,
+// NOT deletes). Poner private tambien cleans the publishAt scheduled. Uses YT_* (for Oddly the
 // workflow mapea YT2_* -> YT_*). Uso: node pipeline/set_private.mjs <video_id>
 const { YT_CLIENT_ID, YT_CLIENT_SECRET, YT_REFRESH_TOKEN } = process.env;
 const vid = (process.argv[2] || "").trim();
@@ -10,7 +10,7 @@ const tr = await (await tf("https://oauth2.googleapis.com/token", { method: "POS
 const token = tr.access_token; if (!token) { console.error("token fail"); process.exit(1); }
 const H = { Authorization: `Bearer ${token}` };
 
-// Lee el video (confirmar que existe + su titulo/estado actual).
+// Lee the video (confirmar that existe + its title/estado actual).
 const g = await (await tf(`https://www.googleapis.com/youtube/v3/videos?part=snippet,status&id=${encodeURIComponent(vid)}`, { headers: H })).json();
 const it = (g.items || [])[0];
 if (!it) { console.error(`video no encontrado: ${vid}`); process.exit(1); }
@@ -18,10 +18,10 @@ const title = (it.snippet && it.snippet.title) || "";
 const was = (it.status && it.status.privacyStatus) || "?";
 const schedAt = (it.status && it.status.publishAt) || null; // OJO: un video PROGRAMADO está en "private" CON publishAt
 const scheduled = schedAt && Date.parse(schedAt) > Date.now();
-// Solo saltar si ya está privado Y sin programación futura (nada que despublicar/desprogramar).
+// Only saltar if already is private and without scheduling futura (nothing that despublicar/desprogramar).
 if (was === "private" && !scheduled) { console.log(`ya estaba PRIVADO (sin programar): ${vid} — ${title}`); process.exit(0); }
 
-// publishAt: null EXPLÍCITO -> cancela la programación (omitirlo NO la borra: YouTube la conserva).
+// publishAt: null EXPLÍCITO -> cancela the scheduling (omitirlo NOT the deletes: YouTube the conserva).
 const r = await tf("https://www.googleapis.com/youtube/v3/videos?part=status", {
   method: "PUT", headers: { ...H, "content-type": "application/json" },
   body: JSON.stringify({ id: vid, status: { privacyStatus: "private", publishAt: null, selfDeclaredMadeForKids: false } }),

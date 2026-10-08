@@ -1,36 +1,36 @@
 import { describe, it, expect } from "vitest";
 import { findOutliers } from "../pipeline/lib/video_score.mjs";
 
-// Construye episodios maduros con vistas suficientes para pasar los pisos.
+// Construye episodios maduros with vistas suficientes for pasar the pisos.
 const ep = (id, titulo, pct) => ({
   video_id: id, title: titulo, format: "short",
   age_days: 20, views: 500, vpd: 10, vs_baseline_pct: pct,
 });
 
-// Titulos que el clasificador lee como cada tipo de hook.
+// Titles that the clasificador lee as cada type of hook.
 const lista = (n) => `${n} Oddly Satisfying Facts That Reset Your Brain`;
 const pregunta = (n) => `Why Do Otters Hold Hands? ${n}`;
 
 describe("findOutliers corregido por tasa base", () => {
   it("NO propone replicar el formato dominante solo por ser dominante", () => {
-    // El caso real de Oddly: canal hecho casi entero de listicles. Los ganadores son
-    // listicles porque TODO es listicle, no porque el formato funcione.
+    // The caso real of Oddly: channel hecho casi entero of listicles. The ganadores are
+    // listicles because EVERYTHING is listicle, not because the formato funcione.
     const eps = [];
     for (let i = 0; i < 90; i++) eps.push(ep(`l${i}`, lista(i), i < 20 ? 120 : -10));
     for (let i = 0; i < 10; i++) eps.push(ep(`q${i}`, pregunta(i), i < 2 ? 120 : -10));
 
     const r = findOutliers(eps);
     expect(r.count).toBeGreaterThan(0);
-    // El hook dominante entre ganadores es el mismo que el del canal -> sin lift.
+    // The hook dominante between ganadores is the same that the of the channel -> without lift.
     expect(r.pattern.hook.lift).toBeLessThan(1.3);
     expect(r.suggestion).toMatch(/NINGÚN patrón está sobre-representado/);
     expect(r.suggestion).toMatch(/PROBAR algo distinto/);
-    // Lo que NO debe decir: "replicar".
+    // Lo that NOT must decir: "replicar".
     expect(r.suggestion).not.toMatch(/^Replicar/);
   });
 
   it("SÍ detecta un patrón cuando esta de verdad sobre-representado", () => {
-    // Las preguntas son el 10% del canal pero el 70% de los ganadores: eso sí es señal.
+    // The preguntas are the 10% of the channel but the 70% of the ganadores: eso yes is señal.
     const eps = [];
     for (let i = 0; i < 90; i++) eps.push(ep(`l${i}`, lista(i), i < 3 ? 120 : -10));
     for (let i = 0; i < 10; i++) eps.push(ep(`q${i}`, pregunta(i), i < 7 ? 200 : -10));
@@ -42,7 +42,7 @@ describe("findOutliers corregido por tasa base", () => {
   });
 
   it("no canta patrón con uno o dos ganadores sueltos (lift alto por azar)", () => {
-    // Una sola pregunta ganadora da lift enorme pero no es evidencia de nada.
+    // A sola pregunta ganadora da lift enorme but not is evidencia of nothing.
     const eps = [];
     for (let i = 0; i < 90; i++) eps.push(ep(`l${i}`, lista(i), -10));
     eps.push(ep("q0", pregunta(0), 300));

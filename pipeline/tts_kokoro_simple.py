@@ -1,9 +1,9 @@
-# tts_kokoro_simple.py — narra un TEXTO plano con Kokoro TTS (open source, GRATIS y SIN CUOTA).
-# Reemplaza a Gemini TTS para el short de espacio: no depende de cuota diaria y da voz calmada.
-# Parte el texto en frases, narra cada una (voz calmada, ritmo lento), mete pausas suaves y exporta mp3.
+# tts_kokoro_simple.py — narra a TEXTO shot with Kokoro TTS (open source, FREE and WITHOUT CUOTA).
+# Reemplaza to Gemini TTS for the short of espacio: not depende of cuota diaria and da voice calmada.
+# Part the texto in frases, narra cada a (voice calmada, ritmo slow), mete pausas suaves and exporta mp3.
 #
 # Uso: python pipeline/tts_kokoro_simple.py <texto.txt> <salida.mp3> [speed]
-# Env: KVOICE (voz Kokoro, default af_heart = cálida). Requiere kokoro-v1.0.onnx + voices-v1.0.bin en cwd.
+# Env: KVOICE (voice Kokoro, default af_heart = cálida). Requires kokoro-v1.0.onnx + voices-v1.0.bin in cwd.
 import sys, os, re
 import numpy as np
 import soundfile as sf

@@ -1,9 +1,9 @@
-// reset_data_lens.mjs — AUDITA o RESETEA The Data Lens a "cero limpio", SIN BORRAR nada.
-//   audit  -> lista TODO (publico / programado / privado + shorts) y clasifica "prueba" vs "viejo".
-//             Tambien clasifica la cola por producir. NO cambia nada.
-//   apply  -> pone PRIVADO lo publico/programado en YouTube (desprograma) y agrega TODO el
-//             inventario a hidden_videos.json (lo saca de la app: nada queda "por programar").
-//   Todo reversible: para revivir un video, quitarlo de channel/hidden_videos.json.
+// reset_data_lens.mjs — AUDITA or RESETEA The Data Lens to "cero limpio", WITHOUT DELETE nothing.
+//   audit  -> ready EVERYTHING (public / scheduled / private + Shorts) and clasifica "test" vs "viejo".
+//             Tambien clasifica the queue by producir. NOT cambia nothing.
+//   apply  -> pone PRIVATE lo public/scheduled in YouTube (desprograma) and agrega EVERYTHING the
+//             inventario to hidden_videos.JSON (lo saca of the app: nothing queda "by schedule").
+//   Everything reversible: for revivir a video, quitarlo of channel/hidden_videos.JSON.
 // Uso: node pipeline/reset_data_lens.mjs <audit|apply>
 import fs from "node:fs";
 
@@ -23,13 +23,13 @@ const T = await tok();
 const H = { Authorization: `Bearer ${T}` };
 const get = async (u) => (await fetch(u, { headers: H })).json();
 
-// 1) Listar TODOS los uploads del canal
+// 1) Listar ALL the uploads of the channel
 const ch = await get("https://www.googleapis.com/youtube/v3/channels?part=contentDetails&mine=true");
 const up = ch.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
 let ids = [], page = "";
 if (up) { do { const j = await get(`https://www.googleapis.com/youtube/v3/playlistItems?part=contentDetails&maxResults=50&playlistId=${up}&pageToken=${page}`); ids.push(...(j.items || []).map((i) => i.contentDetails.videoId)); page = j.nextPageToken || ""; } while (page); }
 
-// 2) Estado de cada uno
+// 2) Estado of cada uno
 const V = [];
 for (let i = 0; i < ids.length; i += 50) {
   const j = await get(`https://www.googleapis.com/youtube/v3/videos?part=snippet,status,contentDetails&id=${ids.slice(i, i + 50).join(",")}`);
@@ -45,11 +45,11 @@ const publicos = V.filter((v) => v.priv === "public");
 const programados = V.filter((v) => v.priv !== "public" && v.publishAt);
 const privados = V.filter((v) => v.priv !== "public" && !v.publishAt);
 
-// 3) Cola por producir (state.upcoming, si el workflow bajo state.json)
+// 3) Queue by producir (state.upcoming, if the workflow bajo state.JSON)
 let upcoming = [];
 try { const st = JSON.parse(fs.readFileSync("state.json", "utf8")); upcoming = st.upcoming || []; } catch {}
 
-// 4) Resumen compacto para Telegram
+// 4) Resumen compacto for Telegram
 const S = [];
 S.push(`🧪 *Auditoría — The Data Lens*`);
 S.push(`Total: ${V.length} · Públicos: ${publicos.length} · Programados: ${programados.length} · Privados: ${privados.length}`);
@@ -71,7 +71,7 @@ const summary = S.join("\n");
 fs.writeFileSync("audit_summary.txt", summary);
 console.log(summary);
 
-// 5) APPLY: ocultar en YouTube + sacar todo de la app
+// 5) APPLY: ocultar in YouTube + sacar everything of the app
 if (mode === "apply") {
   const hide = [...publicos, ...programados];
   let okHide = 0;

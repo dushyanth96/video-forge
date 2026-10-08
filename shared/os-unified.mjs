@@ -3,7 +3,7 @@
 //   Cerebro · Decisiones · Sistemas · Actividad   (barra inferior fija)
 //   Breadcrumb header ("Systems › Radar") + its own back button + Telegram's back button in sync.
 //   Systems › <system> shows its status and opens its full panel (/p/<system>), which returns to the brain.
-// Data: POST /api/os from the Video Forge bot -> { global, pulses{3}, brain{live, ledger, journal, decision}, clock }.
+// Data: POST /API/os from the Video Forge bot -> { global, pulses{3}, brain{live, ledger, journal, decision}, clock }.
 // Rules: HTML by concatenation (no backticks nor "${" inside strings), ES5 client, data-* events.
 import { OS_HEAD, OS_CSS, OS_ICONS, OS_JS, OS_UI_VERSION } from "./os-ui.mjs";
 import { OS_SHELL_CSS } from "./os-shell.mjs";

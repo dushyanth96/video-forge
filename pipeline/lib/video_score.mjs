@@ -1,32 +1,32 @@
-// video_score.mjs — Score universal por video + Matriz de outliers (Growth Roadmap Fase 2). PURO.
-// Combina las señales que las neuronas ya miden (rendimiento vs baseline del canal, retención/hook,
+// video_score.mjs — Score universal by video + Matriz of outliers (Growth Roadmap Phase 2). PURO.
+// Combina the señales that the neuronas already miden (performance vs baseline of the channel, retención/hook,
 // engagement, madurez) en un score 0-100 + un VEREDICTO accionable: SCALE / ITERATE / TEST_AGAIN /
-// STOP. Y detecta OUTLIERS propios (videos que superan la mediana del canal) -> extrae su patrón
-// para proponer un experimento. Reutiliza sampleConfidence/median y classifyHook. Sin dependencias.
+// STOP. and detecta OUTLIERS propios (videos that superan the mediana of the channel) -> extrae its patrón
+// for proponer a experiment. Reutiliza sampleConfidence/median and classifyHook. Without dependencias.
 import { sampleConfidence, median } from "./analytics_math.mjs";
 import { classifyHook } from "./hook_calc.mjs";
 
 const clamp01 = (x) => (x < 0 ? 0 : x > 1 ? 1 : x);
 
-// Umbrales del veredicto (por datos, no opinión). ratio = vpd del video / mediana del canal.
+// Umbrales of the veredicto (by datos, not opinión). ratio = vpd of the video / mediana of the channel.
 export const SCALE_RATIO = 1.3;   // >=30% sobre la mediana -> escalar el patrón
 export const STOP_RATIO = 0.5;    // <50% de la mediana -> no repetir este patrón
 const MATURE_DAYS = 5;            // Analytics va 2-3 días atrás; <5d aún no mide
 const MIN_VIEWS = 50;            // muy pocas vistas -> sin señal
 
 // ep: episodio (episode_calc) con vpd, vs_baseline_pct, age_days, views, likes.
-// ret: retención opcional { hook_score, early_drop_pct }.
+// ret: retención optional { hook_score, early_drop_pct }.
 export function scoreVideo(ep = {}, ret = null, opts = {}) {
   const matureDays = opts.matureDays != null ? opts.matureDays : MATURE_DAYS;
   const minViews = opts.minViews != null ? opts.minViews : MIN_VIEWS;
   const views = Number(ep.views) || 0;
   const mature = ep.age_days != null && ep.age_days >= matureDays && views >= minViews;
 
-  // Rendimiento relativo al canal: vs_baseline_pct (+30% => ratio 1.3).
+  // Performance relativo to the channel: vs_baseline_pct (+30% => ratio 1.3).
   const ratio = ep.vs_baseline_pct == null ? null : (100 + Number(ep.vs_baseline_pct)) / 100;
   const perf = ratio == null ? null : clamp01(ratio / 2); // ratio 2 -> 1.0 ; 1 -> 0.5
 
-  // Retención (si hay curva): hook alto + poca caída inicial.
+  // Retención (if hay curva): hook alto + poca caída inicial.
   let retention = null;
   if (ret && (Number.isFinite(ret.hook_score) || Number.isFinite(ret.early_drop_pct))) {
     const hk = Number.isFinite(ret.hook_score) ? clamp01(ret.hook_score / 1.2) : 0.5;
@@ -38,7 +38,7 @@ export function scoreVideo(ep = {}, ret = null, opts = {}) {
   const engagement = clamp01((views > 0 ? (Number(ep.likes) || 0) / views : 0) / 0.05);
   const confidence = sampleConfidence(views, opts.k != null ? opts.k : 200);
 
-  // Score 0-100: pesos renormalizados entre las señales presentes.
+  // Score 0-100: pesos renormalizados between the señales presentes.
   const parts = [];
   if (perf != null) parts.push([0.5, perf]);
   if (retention != null) parts.push([0.3, retention]);
@@ -75,8 +75,8 @@ export function scoreVideo(ep = {}, ret = null, opts = {}) {
   };
 }
 
-// Matriz de OUTLIERS: videos maduros que superan la mediana por >= factor. Extrae el patrón
-// dominante (formato + tipo de hook) para proponer un experimento (Fase 2 §22).
+// Matriz of OUTLIERS: videos maduros that superan the mediana by >= factor. Extrae the patrón
+// dominante (formato + type of hook) for proponer a experiment (Phase 2 §22).
 export function findOutliers(episodes, opts = {}) {
   const factor = opts.factor != null ? opts.factor : 1.5;
   const matureDays = opts.matureDays != null ? opts.matureDays : MATURE_DAYS;
@@ -87,18 +87,18 @@ export function findOutliers(episodes, opts = {}) {
     .map((e) => ({ video_id: e.video_id, title: e.title || "", format: e.format || null, hook_type: classifyHook(e.title), vpd: e.vpd != null ? e.vpd : null, vs_baseline_pct: e.vs_baseline_pct }))
     .sort((a, b) => (b.vs_baseline_pct || 0) - (a.vs_baseline_pct || 0));
 
-  // PATRON ENTRE LOS OUTLIERS, CORREGIDO POR TASA BASE.
+  // PATRON BETWEEN THE OUTLIERS, CORREGIDO BY TASA BASE.
   //
-  // Antes esto tomaba la MODA del hook entre los outliers y la proponia como patron a
-  // replicar. Eso es la falacia de la tasa base: si el 91% del canal usa hooks de tipo
-  // "number", el ~91% de los outliers seran "number" aunque ese hook sea neutro o malo.
-  // Peor: la sugerencia hace producir mas de lo mismo, la proporcion sube, y la proxima
-  // corrida lo "confirma". Un bucle que encierra al canal en el formato que ya tiene.
-  // (Visto en Oddly el 2026-10-03: "replicar hook number", con 47 de 49 outliers... sobre
-  // un canal hecho casi entero de listicles.)
+  // Before esto tomaba the MODA of the hook between the outliers and the proponia as patron to
+  // replicar. Eso is the falacia of the tasa base: if the 91% of the channel uses hooks of type
+  // "number", the ~91% of the outliers seran "number" aunque ese hook sea neutro or malo.
+  // Worse: the sugerencia hace producir more of lo same, the proporcion uploads, and the next
+  // corrida lo "confirma". A bucle that encierra to the channel in the formato that already tiene.
+  // (Visto in Oddly the 2026-10-03: "replicar hook number", with 47 of 49 outliers... about
+  // a channel hecho casi entero of listicles.)
   //
-  // Ahora se compara la proporcion DENTRO de los outliers contra la proporcion en toda la
-  // poblacion madura. Solo es patron lo que esta SOBRE-representado (lift) y con muestra.
+  // Now is compara the proporcion DENTRO of the outliers contra the proporcion in all the
+  // poblacion madura. Only is patron lo that esta ABOUT-representado (lift) and with muestra.
   const cuenta = (arr, f) => { const c = {}; for (const x of arr) { const k = f(x); if (k) c[k] = (c[k] || 0) + 1; } return c; };
   const conHook = eps.map((e) => ({ ...e, hook_type: classifyHook(e.title) }));
 
@@ -118,7 +118,7 @@ export function findOutliers(episodes, opts = {}) {
   const hookTop = patron("hook_type");
   const fmtTop = patron("format");
 
-  // Umbrales: sobre-representado al menos 30% y con al menos 3 ganadores detras.
+  // Umbrales: about-representado to the less 30% and with to the less 3 ganadores detras.
   const LIFT_MIN = 1.3, MIN_GANADORES = 3;
   const real = (p) => !!(p && p.lift != null && p.lift >= LIFT_MIN && p.count >= MIN_GANADORES);
 
@@ -131,7 +131,7 @@ export function findOutliers(episodes, opts = {}) {
     if (real(fmtTop)) partes.push(`formato ${fmtTop.value} (×${fmtTop.lift})`);
     suggestion = `Replicar lo que está SOBRE-representado entre los ganadores: ${partes.join(" · ")} — ${outliers.length} video(s) superan ${Math.round((factor - 1) * 100)}% la mediana.`;
   } else {
-    // Honesto: hay ganadores, pero se parecen al resto del canal. No hay nada que replicar.
+    // Honesto: hay ganadores, but is parecen to the resto of the channel. Not hay nothing that replicar.
     const dom = hookTop ? ` El más común entre ellos ("${hookTop.value}") lo es porque ya es ${Math.round(hookTop.base_rate * 100)}% del canal, no porque funcione (×${hookTop.lift}).` : "";
     suggestion = `${outliers.length} video(s) superan ${Math.round((factor - 1) * 100)}% la mediana, pero NINGÚN patrón está sobre-representado: lo que ganó se parece al resto.${dom} Hace falta PROBAR algo distinto, no replicar.`;
   }

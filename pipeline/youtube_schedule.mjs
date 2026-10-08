@@ -1,5 +1,5 @@
-// youtube_schedule.mjs — PROGRAMA la publicación de un video: lo deja PRIVADO con publishAt, y
-// YouTube lo hace PÚBLICO solo cuando llega esa hora. Uso para publicar en las mejores horas.
+// YouTube_schedule.mjs — SCHEDULES the publishing of a video: lo deja PRIVATE with publishAt, and
+// YouTube lo hace PUBLIC only when llega esa hour. Uso for publish in the best hours.
 // Uso: node pipeline/youtube_schedule.mjs <VIDEO_ID> <PUBLISH_AT_ISO_UTC>
 import fs from "node:fs";
 
@@ -19,7 +19,7 @@ async function getToken() {
 }
 const token = await getToken();
 
-// Para programar, el video debe quedar PRIVADO con publishAt (YouTube lo publica solo a esa hora).
+// For schedule, the video must quedar PRIVATE with publishAt (YouTube lo publishes only to esa hour).
 const r = await fetch("https://www.googleapis.com/youtube/v3/videos?part=status", {
   method: "PUT",
   headers: { Authorization: `Bearer ${token}`, "content-type": "application/json" },
@@ -29,7 +29,7 @@ const j = await r.json();
 if (!r.ok || !j.id) {
   const reason = j?.error?.errors?.[0]?.reason || "";
   if (reason === "invalidPublishAt") {
-    // Caso NORMAL, no un fallo: YouTube no deja agendar videos que ya estuvieron publicos.
+    // Caso NORMAL, not a failure: YouTube not deja agendar videos that already estuvieron publicos.
     // No marcar failure (no ensuciar Problemas ni spamear errores). Aviso suave.
     fs.writeFileSync("schedule_result.txt", `ℹ️ Este video no se puede AGENDAR (YouTube no permite programar videos que ya estuvieron públicos). Si lo quieres vivo, publícalo directo desde la app.`);
     console.log("invalidPublishAt -> no agendable (video viejo). No es un fallo de la fabrica.");

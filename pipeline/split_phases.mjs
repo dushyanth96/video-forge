@@ -1,11 +1,11 @@
-// split_phases.mjs — parte el video largo en FASES de ~3 min para renderizar cada una
+// split_phases.mjs — part the video largo in PHASES of ~3 min for render cada a
 // con su propia puerta de calidad (3 intentos, umbral 7.5) y luego unirlas. Renderizar
-// 3 min x3 SI cabe en el runner gratis; 7-12 min x3 no. Cada fase es un video de 0 a su
-// duracion (se re-basea el tiempo a 0), con su rebanada de narracion y su voicemap.
+// 3 min x3 IF cabe in the runner free; 7-12 min x3 not. Cada phase is a video of 0 to its
+// duration (is re-basea the tiempo to 0), with its rebanada of narration and its voicemap.
 //
 // Uso: node pipeline/split_phases.mjs <timing.json> <voicemap_full.json> <outDir=phases>
 // Env: PHASE_SECONDS (default 180). Escribe phases/<k>/timing.json + voicemap.json y
-// phases/manifest.json = [{k, absStart, absEnd, total, hook}]. Imprime el array de fases.
+// phases/manifest.JSON = [{k, absStart, absEnd, total, hook}]. Imprime the array of phases.
 import fs from "node:fs";
 
 const [timingPath, voicemapPath, outDir = "phases"] = process.argv.slice(2);
@@ -17,7 +17,7 @@ const vm = voicemapPath && fs.existsSync(voicemapPath) ? JSON.parse(fs.readFileS
 const beats = timing.beats || [];
 if (!beats.length) { console.error("split_phases: timing sin beats"); process.exit(1); }
 
-// Agrupa beats contiguos hasta ~PHASE segundos por grupo.
+// Agrupa beats contiguos until ~PHASE seconds by grupo.
 const groups = [];
 let cur = [];
 let curDur = 0;
@@ -27,7 +27,7 @@ for (let i = 0; i < beats.length; i++) {
   if (curDur >= PHASE) { groups.push(cur); cur = []; curDur = 0; }
 }
 if (cur.length) groups.push(cur);
-// Si la ultima fase quedo muy corta, fusionala con la anterior.
+// If the last phase quedo very cuts, fusionala with the anterior.
 if (groups.length >= 2) {
   const last = groups[groups.length - 1];
   const lastDur = last.reduce((a, i) => a + (beats[i].dur || 0), 0);
@@ -48,7 +48,7 @@ groups.forEach((idxs, k) => {
   const offset = first.start || 0;
   const absStart = +(first.start || 0).toFixed(3);
   const absEnd = +(lastB.end || (lastB.start + lastB.dur) || 0).toFixed(3);
-  // Beats re-baseados a 0 (para que la fase renderice como un video que empieza en 0).
+  // Beats re-baseados to 0 (for that the phase renderice as a video that empieza in 0).
   let t = 0;
   const pb = idxs.map((i, j) => {
     const b = beats[i];
@@ -58,7 +58,7 @@ groups.forEach((idxs, k) => {
     return beat;
   });
   fs.writeFileSync(`${dir}/timing.json`, JSON.stringify({ total: +t.toFixed(3), beats: pb }, null, 2));
-  // Rebanada del voicemap (misma posicion/orden que los beats de timing).
+  // Rebanada of the voicemap (same posicion/orden that the beats of timing).
   const vmSlice = { ...vm, beats: (vm.beats || []).slice(idxs[0], idxs[idxs.length - 1] + 1) };
   fs.writeFileSync(`${dir}/voicemap.json`, JSON.stringify(vmSlice, null, 2));
   manifest.push({ k, absStart, absEnd, total: +t.toFixed(3), hook: (pb[0] && pb[0].text || "").slice(0, 200) });

@@ -304,7 +304,7 @@ export const APP_HTML = `<!doctype html>
     var prop=ST.shorts_proposal||[];
     var uplPend=prop.filter(function(s){return s.state==="uploaded" && s.privacy!=="public" && !s.publish_at;}); // shorts made that still need to be published/scheduled
     var anyUploaded=prop.some(function(s){return s.state==="uploaded";});
-    // Video already published → the next step is the shorts (only if any are missing; the made/scheduled ones stay hidden).
+    // Video already published → the next step is the Shorts (only if any are missing; the made/scheduled ones stay hidden).
     if(sst.pending) return '<div class="card" style="border:1px solid var(--cy)"><div style="font-weight:700">🎬 Next: approve shorts</div><div class="muted" style="font-size:12px;margin:4px 0">There are '+sst.pending+' suggested short(s) waiting for your approval.</div><button class="btn" onclick="goShorts()">View shorts to approve</button></div>';
     if(sst.approved_pend) return '<div class="card" style="border:1px solid var(--cy)"><div style="font-weight:700">🎬 Next: generate shorts</div><div class="muted" style="font-size:12px;margin:4px 0">'+sst.approved_pend+' approved(s), ready to generate.</div><button class="btn" onclick="goShorts()">Go to Shorts</button></div>';
     if(uplPend.length) return '<div class="card"><button class="btn" onclick="goShorts()">🎬 Publish/schedule shorts ('+uplPend.length+')</button></div>';
@@ -425,7 +425,7 @@ export const APP_HTML = `<!doctype html>
     }).join("");
   }
   function matrixHtml(){
-    // Does the video ALREADY have shorts? (from the tree, includes SCHEDULED ones) -> don't mark "no shorts".
+    // Does the video ALREADY have Shorts? (from the tree, includes SCHEDULED ones) -> don't mark "not Shorts".
     var hasShorts={}; (ST.video_tree||[]).forEach(function(l){ if((l.shorts||[]).length) hasShorts[l.video_id]=true; });
     var shDone=function(v){ return (v.stages||{}).shorts || hasShorts[v.video_id]; };
     // Only videos produced with something pending; the ones already complete ✓ don't appear, and the ones already
@@ -1179,7 +1179,7 @@ export const APP_HTML = `<!doctype html>
       var _fc=el("fClip"); if(_fc) _fc.onchange=function(e){uploadClip(e.target.files[0]);};
       // AGENDA: next to publish (scheduled) + in review + automatic status + best hours
       el("s-agenda").innerHTML = auto2AgendaHtml();
-      // ANALYTICS: KPIs + top 3 + no-views + radar (without listing every video)
+      // ANALYTICS: KPIs + top 3 + not-views + Radar (without listing every video)
       el("s-analitica").innerHTML = weeklyHtml("oddly") + auto2KpisHtml() + goalHtml(ST.auto2 && ST.auto2.monet_goal) + auto2TopHtml() + nicheRadarHtml();
       // MORE: info + refresh
       el("s-mas").innerHTML = '<h2>⚙️ Automatic channel</h2><div class="card muted" style="font-size:12px">Oddly Loop · @oddlyloophq · legal ASMR/satisfying compilations, automated. Only licensed sources (compliance gateway).</div>'
@@ -1207,7 +1207,7 @@ export const APP_HTML = `<!doctype html>
       +promiseMiniHtml()
       +healthLineHtml();
 
-    // ===== PRODUCE ===== production + results + what's happening with each video + shorts.
+    // ===== PRODUCE ===== production + results + what's happening with each video + Shorts.
     var next = up[0], rest = up.slice(1);
     var producing = (ST.active||[]).some(function(r){return /Producir|guion|Render VIDEO|Voiceover/i.test(r.name||"");});
     var prows = rest.map(function(u){return '<tr><td>#'+(u.n||"")+'</td><td>'+esc(u.topic||"")+'<div class="muted" style="font-size:11px">'+esc(u.why||"")+'</div></td><td style="text-align:right;white-space:nowrap">'+esc(u.target_date||"")+'</td></tr>';}).join("");
@@ -1267,7 +1267,7 @@ export const APP_HTML = `<!doctype html>
     }
     if(skip.length) shb+='<div class="muted" style="font-size:12px;margin:6px 2px">Saltados: '+skip.length+'.</div>';
     if(shortsTargetVid){
-      // Juan tapped ＋Do on a SPECIFIC video -> we generate the shorts of THAT video.
+      // Juan tapped ＋Do on to SPECIFIC video -> we generate the Shorts of THAT video.
       shb+='<div class="card" style="border:1px solid var(--cy)"><div style="font-weight:700;font-size:13px;margin-bottom:4px">🎬 Generate shorts from:</div>'
         +'<div style="font-size:13px;margin-bottom:2px">'+esc(vidTitle(shortsTargetVid).slice(0,44))+'</div>'
         +'<div class="muted" style="font-size:12px;margin:4px 0 8px">The AI analyzes THIS video: how many shorts, from what moments and how long, and proposes them for you to approve.</div>'
@@ -1594,7 +1594,7 @@ export const APP_HTML = `<!doctype html>
     if(mode==="public"&&tg&&tg.showConfirm){ tg.showConfirm("Publish this Oddly Loop video NOW (public)?",function(ok){if(ok)go();}); } else go();
   }
   function oddlyManual(vid){
-    // Mark/unmark an Oddly scheduled video as "mine" (purple). Immediate effect: the /api/state
+    // Mark/unmark an Oddly scheduled video as "mine" (purple). Immediate effect: the /API/state
     // re-reads manual_videos.json live, so with load() the color changes on tap (without waiting for the report).
     if(!vid){toast("no video");return;}
     if(tg&&tg.HapticFeedback)tg.HapticFeedback.impactOccurred("light");
@@ -1686,7 +1686,7 @@ export const APP_HTML = `<!doctype html>
     refTimer=setTimeout(function(){ if(curTab!=="mas" && !isTyping()) load(); else scheduleRefresh(); }, ms);
   }
   function load(){ api("/api/state").then(function(r){return r.json();}).then(function(j){ if(j.error){ el("hd").textContent = j.error==="no autorizado" ? "No autorizado" : ("⚠️ "+(j.detail||j.error)+" — retrying…"); scheduleRefresh(); return; } ST=j; render(); scheduleRefresh(); }).catch(function(){el("hd").textContent="No connection — retrying…";scheduleRefresh();}); }
-  // Skeleton mientras llega el primer /api/state (evita pantalla vacia al abrir).
+  // Skeleton mientras llega the primer /API/state (avoids pantalla vacia to the abrir).
   (function skeletonBoot(){ var s=""; for(var i=0;i<4;i++){ s+='<div class="card"><div class="sk-l" style="width:'+(46+i*10)+'%"></div><div class="sk-l s"></div></div>'; } var e=el("s-inicio"); if(e&&!e.innerHTML) e.innerHTML=s; })();
   applyChannelTheme(curChannel);   // brand accent + initial channel's logo
   load();

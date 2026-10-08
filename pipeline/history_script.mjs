@@ -1,10 +1,10 @@
-// history_script.mjs — Genera el GUION de un Short de "Historia que cambio el mundo".
-// Elige un tema no usado (semilla curada o propuesto por la IA), y con Gemini escribe la
-// NARRACION estilo HISTORIADOR con gancho brutal en los primeros segundos, dividida en beats
-// visuales, y por cada beat una QUERY concreta para buscar footage de archivo (dominio publico).
+// history_script.mjs — Generates the SCRIPT of a Short of "Historia that cambio the mundo".
+// Elige a topic not used (semilla curada or propuesto by the IA), and with Gemini writes the
+// NARRATION estilo HISTORIADOR with hook brutal in the primeros seconds, dividida in beats
+// visuales, and by cada beat a QUERY concreta for search footage of file (dominio public).
 //
 // Uso: node pipeline/history_script.mjs <script.json> <narration.txt>
-// Lee (cwd): history_used.json (temas ya usados, de R2), channel/history_topics.seed.json.
+// Lee (cwd): history_used.JSON (topics already usados, of R2), channel/history_topics.seed.JSON.
 // Env: GEMINI_API_KEY(,2).
 import fs from "node:fs";
 import { revisar } from "./lib/titulos.mjs";
@@ -14,7 +14,7 @@ const [outScript = "script.json", outNarration = "narration.txt"] = process.argv
 const KEYS = [process.env.GEMINI_API_KEY, process.env.GEMINI_API_KEY2].filter(Boolean);
 const tf = (u, o = {}, ms = 45000) => fetch(u, { ...o, signal: AbortSignal.timeout(ms) });
 
-// Temas ya usados + semilla curada
+// Topics already usados + semilla curada
 let usedTitles = [];
 try { usedTitles = JSON.parse(fs.readFileSync("history_titles.json", "utf8")); } catch {}
 if (!Array.isArray(usedTitles)) usedTitles = [];
@@ -24,13 +24,13 @@ const usedSet = new Set((Array.isArray(used) ? used : []).map((s) => String(s).t
 let seed = [];
 try { seed = JSON.parse(fs.readFileSync("channel/history_topics.seed.json", "utf8")).topics || []; } catch {}
 const fresh = seed.filter((t) => !usedSet.has(t.toLowerCase().trim()));
-// Elegir tema semilla: el primero libre (variar por longitud de la lista de usados para no repetir orden).
+// Elegir topic semilla: the first libre (variar by longitud of the ready of usados for not repetir orden).
 const pickIdx = usedSet.size % Math.max(1, fresh.length);
-// TOPIC del workflow tiene prioridad; si no, un tema no usado de la semilla.
+// TOPIC of the workflow tiene prioridad; if not, a topic not used of the semilla.
 const seedTopic = (process.env.TOPIC || "").trim()
   || (fresh.length ? fresh[pickIdx] : (seed[usedSet.size % Math.max(1, seed.length)] || "A moment in history that changed the world"));
 
-// CATEGORIA (experimento A/B/C): si viene DIRECTION, la IA elige un tema DENTRO de esa direccion.
+// CATEGORIA (experiment to/B/C): if viene DIRECTION, the IA elige a topic DENTRO of esa direccion.
 const DIRECTION = (process.env.DIRECTION || "").trim();
 let dirDef = null;
 try { dirDef = ((JSON.parse(fs.readFileSync("channel/direction.json", "utf8")).directions) || []).find((d) => d.key === DIRECTION); } catch {}
@@ -68,7 +68,7 @@ let out = null;
 const raw = await genText(PROMPT, { json: true });
 if (raw) { try { out = JSON.parse(raw); } catch {} }
 
-// Fallback minimo si la IA falla: narracion basica del tema semilla (para no romper el pipeline).
+// Fallback minimo if the IA fails: narration basica of the topic semilla (for not romper the pipeline).
 if (!out || !out.narration || !Array.isArray(out.beats) || !out.beats.length) {
   console.error("Gemini fallo o JSON invalido -> uso fallback del tema semilla");
   out = {
@@ -81,11 +81,11 @@ if (!out || !out.narration || !Array.isArray(out.beats) || !out.beats.length) {
     vibe: "cinematic",
   };
 }
-// PUERTA DEL TITULO. El pipeline ya evitaba repetir TEMAS, pero nunca miro los TITULOS:
+// GATE OF THE TITLE. The pipeline already evitaba repetir TOPICS, but never miro the TITLES:
 // dos temas distintos (Leningrado, Constantinopla) colapsan en "The Deadliest Siege in
 // Human History". Asi se publicaron SIETE videos con ese mismo titulo, varios con cero
-// vistas. Se revisa, se reintenta una vez diciendole al modelo que hizo mal, y si insiste
-// se FALLA: publicar el septimo duplicado es peor que no publicar hoy.
+// vistas. Is revisa, is retries a vez diciendole to the modelo that hizo mal, and if insiste
+// is FAILS: publish the septimo duplicado is worse that not publish today.
 let chequeo = revisar(out.title, usedTitles);
 if (!chequeo.ok) {
   console.error(`Titulo rechazado (${chequeo.motivo}): "${out.title}" — reintentando`);

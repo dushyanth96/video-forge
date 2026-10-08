@@ -1,6 +1,6 @@
-// set_thumbnail.mjs — pone una miniatura personalizada en un video de YouTube (thumbnails.set).
-// Usa el mismo OAuth que los uploaders (YT_* — para Oddly se mapea YT2_->YT_ en el workflow).
-// NO rompe el flujo si falla (p. ej. canal sin verificar para miniaturas -> 403): solo avisa.
+// set_thumbnail.mjs — pone a thumbnail personalizada in a video of YouTube (thumbnails.set).
+// Uses the same OAuth that the uploaders (YT_* — for Oddly is mapea YT2_->YT_ in the workflow).
+// NOT rompe the flujo if fails (p. e.g.. channel without verify for thumbnails -> 403): only avisa.
 //
 // Uso: node pipeline/set_thumbnail.mjs <videoId> [thumbnail.jpg]
 import fs from "node:fs";

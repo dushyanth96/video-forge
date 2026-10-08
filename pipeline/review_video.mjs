@@ -1,9 +1,9 @@
-// review_video.mjs — auto-review de cada video con Gemini (IA, gratis). Saca 4
-// fotogramas, los manda a Gemini vision, y devuelve una critica de calidad +
-// gancho/retencion + mejoras para MAS VISTAS y MONETIZACION. El resultado se
-// manda al chat de Telegram junto con el video.
+// review_video.mjs — auto-review of cada video with Gemini (IA, free). Saca 4
+// fotogramas, the sends to Gemini vision, and devuelve a critica of quality +
+// hook/retencion + mejoras for MORE VISTAS and MONETIZATION. The result is
+// sends to the chat of Telegram junto with the video.
 //
-// Uso: node pipeline/review_video.mjs <video.mp4> ["titulo"] [outFile=review.txt]
+// Usage: node pipeline/review_video.mjs <video.mp4> ["title"] [outFile=review.txt]
 import fs from "node:fs";
 import { execSync } from "node:child_process";
 import { TEXT_MODELS } from "./_models.mjs";
@@ -13,7 +13,7 @@ const KEY = process.env.GEMINI_API_KEY;
 if (!KEY) { console.log("Sin GEMINI_API_KEY -> sin auto-review."); process.exit(0); }
 if (!fs.existsSync(video)) { console.log("No hay video para revisar."); process.exit(0); }
 
-// Lee la narracion de APERTURA (ahi vive el gancho) para juzgarlo desde el guion, no de un frame.
+// Lee the narration of APERTURA (there vive the hook) for juzgarlo since the script, not of a frame.
 let openingText = "";
 if (voicemap && fs.existsSync(voicemap)) {
   try {
@@ -26,7 +26,7 @@ const hookBlock = openingText
   ? `\nGANCHO (analiza el TEXTO de la narracion de apertura, ahi vive el gancho): "${openingText}"\nDi si es FUERTE o DEBIL y por que (curiosidad, cifra impactante, promesa clara). Si es debil, propon una mejor primera linea.\n`
   : "";
 
-// Duracion para muestrear fotogramas repartidos.
+// Duration for muestrear fotogramas repartidos.
 let dur = 45;
 try { dur = parseFloat(execSync(`ffprobe -v error -show_entries format=duration -of csv=p=0 "${video}"`).toString().trim()) || 45; } catch {}
 fs.mkdirSync("_rev_frames", { recursive: true });

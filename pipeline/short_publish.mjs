@@ -1,7 +1,7 @@
-// short_publish.mjs — sube UN short a YouTube como PRIVADO (para revisar). Titulo +
-// descripcion (con hashtags + credito de musica) desde archivos. Marca contenido sintetico.
+// short_publish.mjs — uploads A short to YouTube as PRIVATE (for revisar). Title +
+// description (with hashtags + credito of music) since files. Marca contenido sintetico.
 //
-// Uso: node pipeline/short_publish.mjs <video.mp4> <title.txt> <description.txt>
+// Usage: node pipeline/short_publish.mjs <video.mp4> <title.txt> <description.txt>
 import fs from "node:fs";
 
 const [videoPath, titlePath, descPath] = process.argv.slice(2);

@@ -1,5 +1,5 @@
-// nonempty.mjs — guarda de integridad (auditoría BR-11): sale 0 solo si el JSON tiene contenido real.
-// Evita que un flujo con la fuente vacía SOBRESCRIBA en R2 la memoria buena de ayer con un archivo vacío.
+// nonempty.mjs — stores of integridad (auditoría BR-11): sale 0 only if the JSON tiene contenido real.
+// Avoids that a flujo with the fuente vacía SOBRESCRIBA in R2 the memoria buena of yesterday with a file vacío.
 // Uso: node pipeline/nonempty.mjs <archivo.json> <clave-array>
 import fs from "node:fs";
 const [file, key] = process.argv.slice(2);

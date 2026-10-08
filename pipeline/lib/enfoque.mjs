@@ -1,15 +1,15 @@
-// enfoque.mjs — en que canal manda el Cerebro.
+// enfoque.mjs — in that channel sends the Brain.
 //
-// Decision de Juan (2026-10-04): el Cerebro decide SOLO sobre Oddly Loop. The Data Lens
+// Decision of Juan (2026-10-04): the Brain decide ONLY about Oddly Loop. The Data Lens
 // queda fuera de sus veredictos, acciones y presion de meta — pero sus METRICAS se siguen
-// recogiendo y mostrando, porque quiere poder verlas.
+// recogiendo and mostrando, because wants poder verlas.
 //
-// No es una regla nueva ni un interruptor aparte: el ledger del Cerebro YA registraba la
-// pausa de Data Lens (`type: "channel_pause"`, la escribe brain_live.mjs) con su criterio y
-// su fecha de revision. `brain_live` la respetaba; `channel_brain` no se habia enterado y
-// seguia emitiendo "🔴 REESTRUCTURAR" y pidiendo acciones de un canal pausado.
+// Not is a regla new nor a interruptor aparte: the ledger of the Brain ALREADY registraba the
+// pausa of Data Lens (`type: "channel_pause"`, the writes brain_live.mjs) with its criterio and
+// its fecha of revision. `brain_live` the respetaba; `channel_brain` not is habia enterado and
+// seguia emitiendo "🔴 REESTRUCTURAR" and pidiendo acciones of a channel pausado.
 //
-// Asi que esto no decide nada: lee la decision que ya estaba tomada y la hace valer.
+// Asi that esto not decide nothing: lee the decision that already estaba tomada and the hace valer.
 
 /** Busca la pausa activa de un canal en el ledger. Devuelve la entrada o null. */
 export function pausaDe(ledger, canal) {
@@ -18,7 +18,7 @@ export function pausaDe(ledger, canal) {
 }
 
 /**
- * ¿El Cerebro debe emitir veredictos y acciones para este canal?
+ * ¿The Brain must emitir veredictos and acciones for este channel?
  * Pausado -> NO decide (pero sus metricas se siguen mostrando).
  */
 export function decideSobre(ledger, canal) {

@@ -74,7 +74,7 @@ def top_videos(temas: list, por_tema: int, min_dur: int, cuantos: int) -> dict:
             cand.append(c)
     cand.sort(key=lambda c: c["popularity"], reverse=True)
 
-    # Verificamos los mas populares (metadata) hasta llenar el TOP (tope de 40 consultas).
+    # Verificamos the more populares (metadata) until llenar the TOP (tope of 40 consultas).
     top, revisados = [], 0
     for c in cand:
         if len(top) >= cuantos or revisados >= 40:
@@ -86,7 +86,7 @@ def top_videos(temas: list, por_tema: int, min_dur: int, cuantos: int) -> dict:
             continue
         top.append(c)
 
-    # Los HD (>=720p) primero; a igualdad, los mas populares.
+    # The HD (>=720p) first; to igualdad, the more populares.
     top.sort(key=lambda v: (1 if (v.get("height") or 0) >= 720 else 0, v["popularity"]), reverse=True)
 
     if top:

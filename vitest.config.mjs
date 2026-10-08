@@ -1,6 +1,6 @@
 import { defineConfig } from "vitest/config";
 
-// Red de tests del Brain OS (Fase 0). Corre los *.test.mjs de tests/ en Node.
+// Brain OS test suite (Phase 0). Runs the *.test.mjs files from tests/ in Node.
 export default defineConfig({
   test: {
     include: ["tests/**/*.test.mjs"],

@@ -15,7 +15,7 @@ import {
 } from "../pipeline/lib/audio_mix.mjs";
 import { synthBgm, synthWhoosh, synthPopUi, synthCodeTyping, synthDataPing, wavBytes } from "../assets/audio/make_fallback_audio.mjs";
 
-// ---- Fijas (el guion de Phase C: 4 beats, hook/concept/deep_dive/takeaway) ----
+// ---- Fijas (the script of Phase C: 4 beats, hook/concept/deep_dive/takeaway) ----
 const TIMING = {
   title: "Under the Hood",
   subtitle: "The numbers",
@@ -86,7 +86,7 @@ describe("swellWindows", () => {
   });
   it("recorta el end del beat al total", () => {
     const t = { total: 15, beats: [{ start: 2, end: 99 }] };
-    // el beat cubre hasta el total: solo queda la intro
+    // the beat cubre until the total: only queda the intro
     expect(swellWindows(t)).toEqual([[0, 2]]);
   });
 });
@@ -120,7 +120,7 @@ describe("buildMixCommand — solo BGM (ducking)", () => {
     expect(cmd).toContain("volume=0.12");
     expect(SIDECHAIN_PARAMS).toBe("threshold=0.08:ratio=5:attack=50:release=300");
     expect(cmd).toContain("[bgm_swell][tts_sc]sidechaincompress=threshold=0.08:ratio=5:attack=50:release=300[bgm_ducked]");
-    // El sidechain es la VOZ (2do input): comprime la musica, no al reves.
+    // The sidechain is the VOICE (2do input): comprime the music, not to the reves.
     expect(cmd).not.toContain("[tts][bgm");
   });
 
@@ -160,7 +160,7 @@ describe("buildMixCommand — BGM + SFX", () => {
   });
 
   it("cada SFX lleva adelay al segundo del beat y su ganancia de la libreria", () => {
-    // orden por beat: whoosh + efecto de tipo (hook:data_ping, concept:pop_ui,
+    // orden by beat: whoosh + efecto of type (hook:data_ping, concept:pop_ui,
     // deep_dive:code_typing, takeaway:data_ping)
     expect(cmd).toContain("[3:a]aformat=sample_rates=48000:channel_layouts=stereo,adelay=3200:all=1,volume=0.25[sfx0]"); // whoosh beat 1
     expect(cmd).toContain("adelay=3200:all=1,volume=0.35[sfx1]"); // data_ping hook
@@ -196,7 +196,7 @@ describe("buildMixCommand — SFX sin BGM", () => {
   });
 });
 
-// ============ validez sintactica del -filter_complex (sin ffmpeg) ============
+// ============ validez sintactica of the -filter_complex (without ffmpeg) ============
 describe("el -filter_complex ensamblado es un grafo de etiquetas valido", () => {
   function checkGraph(cmd) {
     const fc = cmd.match(/-filter_complex "([^"]+)"/)[1];
@@ -205,9 +205,9 @@ describe("el -filter_complex ensamblado es un grafo de etiquetas valido", () => 
     expect(fc.endsWith(";")).toBe(false);
     // Corchetes balanceados
     expect((fc.match(/\[/g) || []).length).toBe((fc.match(/\]/g) || []).length);
-    // Toda etiqueta interna se define una vez y se consume una vez;
-    // las entradas externas [N:a] se consumen una vez; el unico
-    // output del grafo ([mixed_audio]) se consume via -map.
+    // All tag interna is define a vez and is consume a vez;
+    // the inputs externas [N:to] is consumen a vez; the unico
+    // output of the grafo ([mixed_audio]) is consume via -map.
     const labels = [...fc.matchAll(/\[([a-zA-Z0-9_:]+)\]/g)].map((m) => m[1]);
     const counts = {};
     for (const l of labels) counts[l] = (counts[l] || 0) + 1;
@@ -217,7 +217,7 @@ describe("el -filter_complex ensamblado es un grafo de etiquetas valido", () => 
     const outputs = internals.filter((l) => counts[l] === 1);
     expect(outputs).toEqual(["mixed_audio"]);
     for (const l of internals) if (l !== "mixed_audio") expect(counts[l]).toBe(2);
-    // amix=inputs=N coincide con la cantidad de etiquetas que lo alimentan
+    // amix=inputs=N coincide with the cantidad of tags that lo alimentan
     for (const m of fc.matchAll(/((?:\[[^\]]+\])+)amix=inputs=(\d+)/g)) {
       const feeders = [...m[1].matchAll(/\[([^\]]+)\]/g)].map((x) => x[1]);
       expect(Number(m[2])).toBe(feeders.length);
@@ -290,7 +290,7 @@ describe("make_fallback_audio — sintesis CC0 determinista", () => {
   });
 });
 
-// ============== contratos de la fase: workflow + docs ==============
+// ============== contratos of the phase: workflow + docs ==============
 describe("motiongfx_daily.yml — persistencia de past_topics.json", () => {
   const yml = fs.readFileSync(path.join(import.meta.dirname, "..", ".github", "workflows", "motiongfx_daily.yml"), "utf8");
 

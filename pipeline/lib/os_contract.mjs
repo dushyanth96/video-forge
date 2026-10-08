@@ -1,11 +1,11 @@
-// os_contract.mjs — CONTRATO del AI OS de Juan (Video Forge · Viento · Radar + Orchestrator). PURO y testeable.
-// Cada especialista publica un PULSE con la misma forma; el Orchestrator los une en un GLOBAL. Todo lo que se
-// muestra en las Mini Apps sale de aquí: estado, agentes, actividad real, tareas, decisiones (needs) e insights.
-// Reglas del brief que este contrato hace cumplir:
-//  - La confianza solo existe si trae su base de datos; si no, "datos insuficientes".
-//  - Toda decisión (need) declara autonomía, evidencia y acciones permitidas.
-//  - Un pulse viejo NO se muestra como sano: pasa a "degraded" con "sin señal".
-//  - Se distingue quién hizo qué: sugerido, preparado, ejecutado, aprobado.
+// os_contract.mjs — CONTRATO of the AI OS of Juan (Video Forge · Viento · Radar + Orchestrator). PURO and testeable.
+// Cada especialista publishes a PULSE with the same way; the Orchestrator the joins in a GLOBAL. Everything lo that is
+// muestra in the Mini Apps sale of here: estado, agentes, actividad real, tareas, decisiones (needs) and insights.
+// Reglas of the brief that este contrato hace cumplir:
+//  - The confianza only existe if trae its base of datos; if not, "datos insuficientes".
+//  - All decisión (need) declara autonomía, evidencia and acciones permitidas.
+//  - A pulse viejo NOT is muestra as sano: pasa to "degraded" with "without señal".
+//  - Is distingue quién hizo qué: sugerido, preparado, ejecutado, aprobado.
 
 export const SYSTEMS = {
   "video-forge": { name: "Video Forge", role: "Create", accent: "#A594FF" },
@@ -79,7 +79,7 @@ export function normMetric(m = {}) {
   };
 }
 
-// Construye un pulse válido (lanza si el sistema o el estado no existen: el contrato no admite inventos).
+// Construye a pulse valid (lanza if the sistema or the estado not existen: the contrato not admite inventos).
 export function makePulse(p = {}, nowMs = Date.now()) {
   if (!SYSTEMS[p.system]) throw new Error(`sistema desconocido: ${p.system}`);
   const nowIso = new Date(nowMs).toISOString();
@@ -108,7 +108,7 @@ export function validatePulse(p) {
   return { ok: errors.length === 0, errors };
 }
 
-// Pulse viejo = sin señal. Nunca se muestra como sano.
+// Pulse viejo = without señal. Never is muestra as sano.
 export function applyStaleness(p, nowMs = Date.now(), maxAgeMin = 180) {
   const age = (nowMs - Date.parse(p.at)) / 60000;
   if (!(age > maxAgeMin)) return { ...p, stale: false, age_min: Math.max(0, Math.round(age)) };
@@ -121,7 +121,7 @@ export function worstStatus(list) {
   return s.length ? s.sort((a, b) => RANK[a] - RANK[b])[0] : "degraded";
 }
 
-// GLOBAL: lo que ve el usuario en los 5 segundos del Home, igual en las tres apps.
+// GLOBAL: lo that ve the usuario in the 5 seconds of the Home, igual in the tres apps.
 export function mergeGlobal(pulses, nowMs = Date.now(), opts = {}) {
   const expected = opts.expected || Object.keys(SYSTEMS);
   const bySystem = {};
@@ -148,8 +148,8 @@ export function mergeGlobal(pulses, nowMs = Date.now(), opts = {}) {
   };
 }
 
-// Lo que devuelve /api/os en cada Worker: une los pulses guardados en el momento de la lectura.
-// getJson(key) -> objeto o null. Un pulse que falta o está viejo sale como "sin señal".
+// Lo that devuelve /API/os in cada Worker: joins the pulses guardados in the momento of the lectura.
+// getJson(key) -> objeto or null. A pulse that falta or is viejo sale as "without señal".
 export async function osStateFrom(getJson, system, nowMs = Date.now(), opts = {}) {
   const keys = Object.keys(SYSTEMS);
   const raw = await Promise.all(keys.map((k) => Promise.resolve().then(() => getJson(`os/pulse/${k}.json`)).catch(() => null)));
@@ -159,5 +159,5 @@ export async function osStateFrom(getJson, system, nowMs = Date.now(), opts = {}
   return { v: 1, system, global, pulse: mine ? applyStaleness(mine, nowMs, opts.maxAgeMin) : null };
 }
 
-// Autonomía por tipo de acción (el OS nunca ejecuta CRITICAL solo).
+// Autonomía by type of acción (the OS never ejecuta CRITICAL only).
 export function canAutoExecute(autonomy) { return autonomy === "AUTO"; }

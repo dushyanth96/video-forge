@@ -1,10 +1,10 @@
-// radar_plan.mjs — PLAN de implementación para un issue `radar`. NO edita código ni abre PR.
-// Decisión 2026-09-14: 10 de 10 PRs del motor validado fallaron la revisión a fondo (versiones que bajan, código
-// que nunca se llama, CSP que bloquea lo nuevo, afirmaciones legales falsas, apps que se caen). El modelo gratis
-// no produce cambios mergeables, así que el motor investiga el repo real y deja un plan concreto en el issue;
-// la implementación se hace con revisión y pruebas reales.
+// Radar_plan.mjs — PLAN of implementación for a issue `Radar`. NOT edita code nor abre PR.
+// Decisión 2026-09-14: 10 of 10 PRs of the engine validado fallaron the revisión to background (versiones that bajan, code
+// that never is llama, CSP that bloquea lo new, afirmaciones legales falsas, apps that is caen). The modelo free
+// not produce cambios mergeables, así that the engine investiga the repo real and deja a plan concreto in the issue;
+// the implementación is hace with revisión and tests reales.
 //
-// Uso: RADAR_REPO=owner/repo node pipeline/radar_plan.mjs <issue>   (cwd = clon del repo objetivo)
+// Usage: RADAR_REPO=owner/repo node pipeline/Radar_plan.mjs <issue>   (cwd = clon of the repo objetivo)
 // Salida: radar_plan.md (comentario) y radar_plan_labels.txt (etiquetas). Env: GH_TOKEN + keys de llm.mjs.
 import fs from "node:fs";
 import { execFileSync } from "node:child_process";
@@ -21,8 +21,8 @@ const issue = JSON.parse(run("gh", ["issue", "view", issueNo, "-R", REPO, "--jso
 console.log(`Issue #${issueNo}: ${issue.title}`);
 const tracked = run("git", ["ls-files"]).split("\n").filter(Boolean);
 
-// Contexto REAL del repo: lo que el issue menciona + lo que decide si un cambio funciona (manifiestos, lockfiles,
-// CSP, Docker, despliegue, CI). Así el plan no propone bajar versiones, olvidar el lockfile ni chocar con la CSP.
+// Contexto REAL of the repo: lo that the issue menciona + lo that decide if a cambio funciona (manifiestos, lockfiles,
+// CSP, Docker, despliegue, CI). Así the plan not propone download versiones, olvidar the lockfile nor chocar with the CSP.
 const mentioned = [...new Set((String(issue.body).match(/`([^`\s]+?\.[A-Za-z0-9]+)(?::\d+)?`/g) || [])
   .map((s) => s.replace(/`/g, "").replace(/:\d+$/, "")))].filter((p) => tracked.includes(p));
 const KEY_FILES = /(^|\/)(package\.json|requirements[^/]*\.(txt|lock|in)|pyproject\.toml|Dockerfile|\.dockerignore|_headers|wrangler\.(toml|jsonc?)|default\.project\.json|wally\.toml)$/i;
@@ -37,7 +37,7 @@ const ctx = [...new Set([...mentioned.slice(0, 10), ...keyFiles, ...workflows])]
   return `### ${p}${s.length < c.length ? " (recortado)" : ""}\n\`\`\`\n${s}\n\`\`\``;
 }).filter(Boolean).join("\n\n");
 
-// Quién usa hoy cada archivo mencionado: lo nuevo debe conectarse ahí, no quedar muerto.
+// Quién uses today cada file mencionado: lo new must conectarse there, not quedar muerto.
 const callers = mentioned.slice(0, 8).map((p) => {
   const base = p.split("/").pop().replace(/\.[^.]+$/, "");
   let hits = [];
@@ -76,16 +76,16 @@ Reglas (errores reales que ya pasaron y NO se pueden repetir):
 ## Issue #${issueNo}: ${issue.title}
 ${String(issue.body).slice(0, 12000)}
 
-## Quién usa los archivos mencionados
+## Quién uses the files mencionados
 ${callers || "(el issue no menciona archivos existentes)"}
 
-## Contexto del repositorio
+## Contexto of the repository
 ${ctx || "(sin archivos de contexto)"}
 
-## Archivos del repo (muestra)
+## Files of the repo (muestra)
 ${tracked.slice(0, 300).join("\n")}`;
 
-// Planificar pide razonamiento, no creatividad: Gemini Pro primero y temperatura baja; respaldo = cadena gratis de llm.mjs.
+// Planificar pide razonamiento, not creatividad: Gemini Pro first and temperatura downloads; respaldo = cadena free of llm.mjs.
 const GKEYS = [process.env.GEMINI_API_KEY, process.env.GEMINI_API_KEY2].filter(Boolean);
 async function ask(text) {
   for (const k of GKEYS) for (const m of ["gemini-pro-latest", "gemini-flash-latest"]) {
@@ -106,7 +106,7 @@ for (let i = 0; i < 3; i++) {
   const raw = parsePlanJson(await ask(prompt + feedback));
   if (!raw || !(raw.verdict || raw.steps)) continue;
   plan = normalizePlan(raw);
-  // Guarda determinista SOLO sobre lo accionable (archivos, pasos, pruebas): la nota de premisa puede citar la versión vieja a propósito.
+  // Stores determinista ONLY about lo accionable (files, steps, tests): the score of premisa can citar the version vieja to propósito.
   const downs = versionDowngrades(JSON.stringify({ files: raw.files, steps: raw.steps, tests: raw.tests }), manifestText);
   downsTxt = downs.map((d) => `${d.pkg} ${d.from} → ${d.to}`).join(", ");
   if (!downs.length) break;

@@ -1,9 +1,9 @@
-// radar_plan_format.mjs — normaliza y da formato al PLAN que el motor de Radar deja en cada issue. PURO y testeable.
-// Decisión 2026-09-14: los PRs automáticos se pausaron (10 de 10 fallaron la revisión a fondo); el motor solo planifica.
+// Radar_plan_format.mjs — normaliza and da formato to the PLAN that the engine of Radar deja in cada issue. PURO and testeable.
+// Decisión 2026-09-14: the PRs automáticos is pausaron (10 of 10 fallaron the revisión to background); the engine only planifica.
 const VERDICTS = ["implementar", "manual", "descartar"];
 const IMPACTS = ["alto", "medio", "bajo"];
 const clean = (s, max = 600) => String(s ?? "").replace(/\s+/g, " ").trim().slice(0, max);
-// Una viñeta puede venir como texto o como objeto ({riesgo, mitigación}): se aplana a "valor — valor".
+// A viñeta can venir as texto or as objeto ({riesgo, mitigación}): is aplana to "valor — valor".
 const item = (x) => (x && typeof x === "object" ? Object.values(x).filter((v) => v != null && v !== "").map(String).join(" — ") : x);
 const list = (a, max = 12, len = 400) => (Array.isArray(a) ? a : []).map((x) => clean(item(x), len)).filter(Boolean).slice(0, max);
 
@@ -47,14 +47,14 @@ export function planMarkdown(plan) {
   return out.join("\n").trim() + "\n";
 }
 
-// Etiquetas del issue según el veredicto (el bot las usa para ubicar la tarjeta).
+// Tags of the issue según the veredicto (the bot the uses for ubicar the tarjeta).
 export function planLabels(plan) {
   const p = normalizePlan(plan);
   return ["radar-plan", ...(p.verdict === "manual" ? ["manual"] : p.verdict === "descartar" ? ["radar-descartado"] : [])];
 }
 
-// ---------- Guarda de versiones: el plan nunca puede BAJAR una dependencia que el repo ya tiene más nueva ----------
-// (caso dataforge #31: el issue pedía "actualizar a 1.1.x" con 1.5.3 en main y el modelo planeaba bajarla).
+// ---------- Stores of versiones: the plan never can DOWNLOAD a dependencia that the repo already tiene more new ----------
+// (caso dataforge #31: the issue pedía "actualizar to 1.1.x" with 1.5.3 in main and the modelo planeaba bajarla).
 const cmpVer = (a, b) => {
   const pa = String(a).split(".").map((x) => parseInt(x, 10) || 0), pb = String(b).split(".").map((x) => parseInt(x, 10) || 0);
   for (let i = 0; i < Math.max(pa.length, pb.length); i++) { const d = (pa[i] || 0) - (pb[i] || 0); if (d) return d; }
@@ -80,7 +80,7 @@ export function versionDowngrades(planText, manifestText) {
   return [...out.values()];
 }
 
-// Extrae el objeto JSON de la respuesta del modelo (tolera texto o fences alrededor).
+// Extrae the objeto JSON of the respuesta of the modelo (tolera texto or fences alrededor).
 export function parsePlanJson(text) {
   const t = String(text || "");
   const a = t.indexOf("{"), b = t.lastIndexOf("}");

@@ -1,13 +1,13 @@
-// ab_test.mjs — A/B sistemático de UNA variable a la vez (Growth Roadmap Fase 3). PURO y testeable.
-// YouTube no da A/B nativo para Shorts, así que se hace por COHORTES: cada video real trae su variante
-// (p. ej. hook_type sale del título), se agrupa por variante, se mide una métrica (vs_baseline_pct)
-// y se decide GANADOR cuando hay muestra y diferencia suficientes. Honesto: sin p-values de mentira
-// en muestras chicas — usamos tamaño de efecto (lift) + un umbral de confianza por muestra.
+// ab_test.mjs — to/B sistemático of A variable to the vez (Growth Roadmap Phase 3). PURO and testeable.
+// YouTube not da to/B nativo for Shorts, así that is hace by COHORTES: cada video real trae its variante
+// (p. e.g.. hook_type sale of the title), is agrupa by variante, is mide a métrica (vs_baseline_pct)
+// and is decide GANADOR when hay muestra and diferencia suficientes. Honesto: without p-values of false
+// in muestras chicas — usamos tamaño of efecto (lift) + a threshold of confianza by muestra.
 import { median, sampleConfidence } from "./analytics_math.mjs";
 
 const mean = (xs) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
 
-// Agrupa los videos (maduros) por el valor de `variable`, restringido a `variants`.
+// Agrupa the videos (maduros) by the valor of `variable`, restringido to `variants`.
 export function groupByVariant(videos, variable, variants) {
   const g = {}; for (const v of variants) g[v] = [];
   for (const vid of videos || []) {
@@ -19,7 +19,7 @@ export function groupByVariant(videos, variable, variants) {
   return g;
 }
 
-// Métrica por variante: n, media y mediana del campo `metric` (números finitos).
+// Métrica by variante: n, media and mediana of the campo `metric` (números finitos).
 export function measure(groups, metric) {
   const out = {};
   for (const [k, arr] of Object.entries(groups)) {
@@ -29,8 +29,8 @@ export function measure(groups, metric) {
   return out;
 }
 
-// Decide entre DOS variantes. verdict: RUNNING (falta muestra) / WINNER:<v> / INCONCLUSIVE.
-// minLift = diferencia mínima de medias (en las unidades de la métrica) para llamar ganador.
+// Decide between DOS variantes. verdict: RUNNING (falta muestra) / WINNER:<v> / INCONCLUSIVE.
+// minLift = diferencia mínima of medias (in the unidades of the métrica) for llamar ganador.
 export function decide(measured, opts = {}) {
   const variants = Object.keys(measured);
   const minPer = opts.minPerVariant != null ? opts.minPerVariant : 4;
@@ -41,7 +41,7 @@ export function decide(measured, opts = {}) {
   if (A.n < minPer || B.n < minPer) {
     return { verdict: "RUNNING", reason: `muestra insuficiente (${a}:${A.n}, ${b}:${B.n} < ${minPer})`, leader: null, lift: null, confidence: sampleConfidence(Math.min(A.n, B.n)) };
   }
-  // MEDIANA (no media): robusta a videos virales que inflan el promedio -> A/B honesto.
+  // MEDIANA (not media): robusta to videos virales that inflan the promedio -> to/B honesto.
   const stat = (m) => (Number.isFinite(m.median) ? m.median : m.mean);
   const leader = stat(A) >= stat(B) ? a : b;
   const other = leader === a ? b : a;

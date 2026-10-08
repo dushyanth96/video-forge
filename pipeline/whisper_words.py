@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-# whisper_words.py — saca el timestamp EXACTO de cada palabra del audio (para el karaoke).
-# Usa faster-whisper (CPU, gratis). Salida: JSON [{word,start,end}].
+# whisper_words.py — saca the timestamp EXACTO of cada palabra of the audio (for the karaoke).
+# Uses faster-whisper (CPU, free). Output: JSON [{word,start,end}].
 # Uso: python pipeline/whisper_words.py <audio.mp3> <words.json>
 import json
 import sys
@@ -9,7 +9,7 @@ audio, out = sys.argv[1], sys.argv[2]
 
 from faster_whisper import WhisperModel
 
-# "base" = buen balance para voz TTS clara; int8 = rapido en CPU.
+# "base" = buen balance for voice TTS clara; int8 = fast in CPU.
 model = WhisperModel("base", device="cpu", compute_type="int8")
 segments, info = model.transcribe(audio, language="en", word_timestamps=True)
 

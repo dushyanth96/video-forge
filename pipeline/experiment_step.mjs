@@ -1,6 +1,6 @@
-// experiment_step.mjs — registra el resultado de un video y decide si SUBIR la duracion objetivo.
-// La idea (pedida por Juan): ir aumentando la duracion de los videos POCO A POCO, midiendo si aguanta.
-// Opera sobre un archivo local exp.json (el workflow lo baja/sube de R2 con wrangler).
+// experiment_step.mjs — registra the result of a video and decide if UPLOAD the duration objetivo.
+// The idea (pedida by Juan): ir aumentando the duration of the videos LITTLE to LITTLE, midiendo if aguanta.
+// Opera about a file local exp.JSON (the workflow lo downloads/uploads of R2 with wrangler).
 //
 // Uso: node pipeline/experiment_step.mjs <actual_sec> <qa_score> <qa_passed 1|0> <n>
 import fs from "node:fs";
@@ -25,8 +25,8 @@ const rec = {
 };
 d.history = (d.history || []).concat([rec]).slice(-40);
 
-// Avanzar la rampa: el video debe HABER PASADO QA y llegar al objetivo (>=90% de la duracion).
-// (Que haya renderizado ya prueba que la duracion cabe en el timeout del job.)
+// Avanzar the rampa: the video must HABER PASADO QA and llegar to the objetivo (>=90% of the duration).
+// (That haya renderizado already test that the duration cabe in the timeout of the job.)
 const hitTarget = rec.qa_passed && rec.actual_sec >= targetMin * 60 * 0.9;
 d.streak = hitTarget ? (d.streak || 0) + 1 : 0;
 
@@ -42,5 +42,5 @@ if (d.streak >= 2 && d.step < d.ramp.length - 1) {
 }
 fs.writeFileSync(F, JSON.stringify(e, null, 2));
 console.log(msg);
-// Exportar el mensaje para que el workflow avise por Telegram.
+// Exportar the message for that the workflow avise by Telegram.
 try { fs.writeFileSync("experiment_msg.txt", msg); } catch {}

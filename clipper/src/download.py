@@ -124,7 +124,7 @@ def _descargar_archive(idf: str, url: str, work_dir: str) -> dict:
     }
 
 
-# --- Respaldo yt-dlp (para URLs que no sean de archive.org) ---
+# --- Respaldo yt-dlp (for URLs that not sean of archive.org) ---
 def _meta_ytdlp(url: str) -> dict:
     r = subprocess.run(tools.ytdlp() + ["-J", "--no-warnings", url],
                        capture_output=True, text=True, timeout=120)

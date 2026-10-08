@@ -146,7 +146,7 @@ export default {
   },
 };
 
-// Serves a video from R2 over HTTP with Range support (streaming + seek in the
+// Serves to video from R2 over HTTP with Range support (streaming + seek in the
 // browser). Only exposes the safe prefixes (video/ and recipe/); NEVER voice/ nor
 // states. So Juan sees the result without the 50MB Telegram limit.
 async function handleWatch(request, env, key, token) {
@@ -154,7 +154,7 @@ async function handleWatch(request, env, key, token) {
   if (!/^(video|recipe|voices)\/[^?]+\.(mp4|mov|webm|jpg|jpeg|png|webp|mp3|wav|m4a)$/.test(key)) {
     return new Response("not allowed", { status: 403 });
   }
-  // TODO file requires a signed link (HMAC): video, voices and recipes. Before, video/ and voices/ were open
+  // EVERYTHING file requires to signed link (HMAC): video, voices and recipes. Before, video/ and voices/ were open
   // and anyone with the URL could download the production video even though it stayed private (QA finding).
   const good = await watchToken(env, key);
   if (!good || !safeEqual(token, good)) return new Response("unauthorized", { status: 403 });
@@ -248,7 +248,7 @@ async function reviewMsg(env, cb, text) {
   const chatId = cb.message?.chat?.id;
   const mid = cb.message?.message_id;
   const payload = { chat_id: chatId, message_id: mid, text, parse_mode: "Markdown    "};
-  // If the original message is a video, the edit goes by caption.
+  // If the original message is to video, the edit goes by caption.
   const method = cb.message?.video ? "editMessageCaption" : "editMessageText";
   try {
     await tg(env, method, payload);
@@ -420,7 +420,7 @@ function buildCalendar(scheduled, days) {
   }
   return [...daysMap.values()].sort((a, b) => a.date.localeCompare(b.date));
 }
-// Schedules a video at the next best free slot (used by /api/schedule and /api/approve).
+// Schedules to video at the next best free slot (used by /API/schedule and /API/approve).
 async function doSchedule(env, vid, isProductionVideo) {
   const inv = await channelInventory(env);
   const occupied = [...(inv.longs || []), ...(inv.shorts || [])].filter((v) => v.publish_at && Date.parse(v.publish_at) > Date.now()).map((v) => Date.parse(v.publish_at));
@@ -661,15 +661,15 @@ async function handleApi(request, env, url) {
     const vledger = vledgerR || {};
     // "manual" = ONLY what Juan marks by hand (channel/manual_videos.json). By default EVERYTHING is from the
     // Bot (all production is uploaded via the factory). Juan notifies when he uploads something manual and that id
-    // enters the list. So no Bot video shows as "manual" due to an incomplete ledger.
+    // enters the list. So not Bot video shows as "manual" due to an incomplete ledger.
     const manualSet = new Set(manualR || []);
     const slimV = (v) => ({ video_id: v.video_id, title: (v.title || "").replace(/ #Shorts$/, ""), privacy: v.privacy, views: v.views || 0, watch_min: v.watch_min || 0, manual: manualSet.has(v.video_id), niche_label: dlLabel(v.title) });
     state.video_tree = (inv.longs || []).map((l) => ({ ...slimV(l), shorts: (byParent[l.video_id] || []).map(slimV) }));
     const groupedIds = new Set(Object.values(byParent).flat().map((s) => s.video_id));
     state.video_tree_ungrouped = (inv.shorts || []).filter((sh) => !groupedIds.has(sh.video_id)).map(slimV);
-    // Control MATRIX per long video: check of what's done + possible actions.
+    // Control MATRIX per long video: check of what's done + possible Actions.
     // published = live from the channel; thumbnail = record; shorts = record OR the plan
-    // (if the plan is for this video and its approved shorts are already uploaded) -> auto-corrects.
+    // (if the plan is for this video and its approved Shorts are already uploaded) -> auto-corrects.
     const planFor = plan.for_video_id;
     const planApproved = (plan.shorts || []).filter((s) => s.approved);
     const planShortsDone = planApproved.length > 0 && planApproved.every((s) => s.video_id);
@@ -686,8 +686,8 @@ async function handleApi(request, env, url) {
           // "published" = already managed: public LIVE or SCHEDULED (publishes itself at its hour).
           publicado: v.privacy === "public" || scheduled,
           miniatura: !!st.thumbnail, // ✓ = applied on YouTube (thumb_url = only generated, to approve)
-          // shorts DONE if: the record says so, OR the video ALREADY HAS shorts on the channel (byParent),
-          // OR the current plan is for this video and its approved shorts were already uploaded.
+          // Shorts DONE if: the record says so, OR the video ALREADY HAS Shorts on the channel (byParent),
+          // OR the current plan is for this video and its approved Shorts were already uploaded.
           shorts: !!st.shorts || ((byParent[v.video_id] || []).length > 0) || !!(planFor && planFor === v.video_id && planShortsDone),
         },
       };
@@ -701,7 +701,7 @@ async function handleApi(request, env, url) {
     // Shorts "done" = there are approved ones and ALL are uploaded (they have video_id).
     const shortsDone = approvedShorts.length > 0 && approvedShorts.every((s) => s.video_id);
     (state.published || []).forEach((v, i) => { v.shorts_done = i === 0 ? shortsDone : false; });
-    // Groups the shorts under the video they belong to (for now, the 1st published).
+    // Groups the Shorts under the video they belong to (for now, the 1st published).
     const firstVid = (state.published || [])[0] || {};
     const shortsWith = approvedShorts.map((s) => ({
       title: s.title, video_id: s.video_id || null,
@@ -728,14 +728,14 @@ async function handleApi(request, env, url) {
       };
     });
     const sp = state.shorts_proposal;
-    // Shorts are made from the latest PUBLIC video (not from a scheduled/private one).
+    // Shorts are made from the latest PUBLIC video (not from to scheduled/private one).
     const latestPublic = (state.published || []).find((v) => v.privacy === "public") || {};
     // Is the current plan for the LATEST public video? (to not suggest extra).
     const forCurrent = !!(plan.for_video_id && latestPublic.video_id && plan.for_video_id === latestPublic.video_id);
     const anyToAct = sp.some((s) => s.state === "pending" || s.state === "approved");
     const allDone = sp.some((s) => s.state === "uploaded") && !anyToAct;
-    // Is the PARENT VIDEO of these shorts already public? Shorts of a private/scheduled video
-    // must not be published (they'd drive traffic to a video nobody sees).
+    // Is the PARENT VIDEO of these Shorts already public? Shorts of to private/scheduled video
+    // must not be published (they'd drive traffic to to video nobody sees).
     const parentVid = invAll.find((v) => v.video_id === plan.for_video_id);
     const parentPublic = !!(parentVid && parentVid.privacy === "public");
     state.shorts_status = {
@@ -748,7 +748,7 @@ async function handleApi(request, env, url) {
       parent_id: plan.for_video_id || null,
       parent_public: parentPublic,
       parent_title: (parentVid && parentVid.title) || null,
-      // Suggest ONLY if there is ALREADY a public video, nothing to decide/generate, and (no plan or it's for another video).
+      // Suggest ONLY if there is ALREADY to public video, nothing to decide/generate, and (not plan or it's for another video).
       can_suggest: !!latestPublic.video_id && !anyToAct && (sp.length === 0 || !forCurrent),
       latest_video_id: latestPublic.video_id || null,
     };
@@ -963,7 +963,7 @@ async function handleApi(request, env, url) {
   }
 
   if (url.pathname === "/api/approve" && request.method === "POST") {
-    // Approve the description/SEO AND schedule the video at the next best hour (US), in a single tap.
+    // Approve the description/SEO AND schedule the video at the next best hour (US), in to single tap.
     const pkg = await r2json(env, "video/0001-youtube-money/package.json");
     const title = pkg ? pkg.title || "" : "";
     await env.R2.put("video/0001-youtube-money/seo_approved.json",
@@ -990,9 +990,9 @@ async function handleApi(request, env, url) {
   }
 
   if (url.pathname === "/api/oddly-publish" && request.method === "POST") {
-    // Schedule/publish an Oddly Loop video WITH a durable marker, so it does NOT drop and
+    // Schedule/publish an Oddly Loop video WITH to durable marker, so it does NOT drop and
     // reappear as "to review" while the report (2h) refreshes the inventory. Writes
-    // channel/auto2/pending_sched.json (read live by /api/state) -> the video shows "🕒 Scheduling…"
+    // channel/auto2/pending_sched.JSON (read live by /API/state) -> the video shows "🕒 Scheduling…"
     // until it's actually scheduled/public, or until it's cleaned by failure/TTL.
     let body = {}; try { body = await request.json(); } catch {}
     const vid = String(body.video_id || "");

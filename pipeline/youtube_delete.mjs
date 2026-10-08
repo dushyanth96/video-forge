@@ -1,5 +1,5 @@
-// youtube_delete.mjs — BORRA (permanente) los video_id indicados del canal.
-// Solo borra los IDs que se le pasan; nunca hace un barrido masivo.
+// YouTube_delete.mjs — DELETES (permanente) the video_id indicados of the channel.
+// Only deletes the IDs that is le pasan; never hace a barrido masivo.
 // Uso: node pipeline/youtube_delete.mjs <id1> <id2> ...
 import fs from "node:fs";
 

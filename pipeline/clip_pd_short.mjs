@@ -1,13 +1,13 @@
-// clip_pd_short.mjs — CLIPEADOR de shorts a partir de video LARGO de DOMINIO PÚBLICO (Archive.org).
-// Flujo: resuelve el item en Archive.org -> descarga el mp4 -> saca miniaturas -> la IA (Gemini
-// Vision) "mira" y elige el MEJOR momento (gag/escena) + título -> corta ~35s -> arma un SHORT 9:16
-// (fondo desenfocado + film centrado) con NUESTRO audio (música) + subtítulo + crédito PD + grade
-// cine. Salida: <out.mp4> + publish/package.json + clip_manifest.json (para la puerta de compliance).
-// AUDIO: si el film PD trae audio propio (p. ej. sonoro), se CONSERVA (también es dominio público);
-// si es cine mudo (sin pista), ponemos música. Ambos casos vía finishClip.
+// clip_pd_short.mjs — CLIPEADOR of Shorts to partir of video LARGO of DOMINIO PUBLIC (Archive.org).
+// Flow: resuelve the item in Archive.org -> descarga the mp4 -> saca thumbnails -> the IA (Gemini
+// Vision) "mira" and elige the BEST momento (gag/scene) + title -> cuts ~35s -> arma a SHORT 9:16
+// (background desenfocado + film centrado) with NUESTRO audio (music) + subtitle + crédito PD + grade
+// cine. Output: <out.mp4> + publish/package.JSON + clip_manifest.JSON (for the gate of compliance).
+// AUDIO: if the film PD trae audio propio (p. e.g.. sonoro), is CONSERVA (también is dominio public);
+// if is cine mudo (without track), ponemos music. Both casos vía finishClip.
 //
-// Uso: node pipeline/clip_pd_short.mjs "<título>" <categoria> <out.mp4>
-// Env: GEMINI_API_KEY(,2). music.mp3 opcional en el cwd.
+// Usage: node pipeline/clip_pd_short.mjs "<title>" <categoria> <out.mp4>
+// Env: GEMINI_API_KEY(,2). music.mp3 optional in the cwd.
 import fs from "node:fs";
 import { execSync } from "node:child_process";
 import { sourceWH, smartCropVf, finishClip } from "./clip_frame.mjs";
@@ -20,7 +20,7 @@ const work = "clipwork"; fs.mkdirSync(work, { recursive: true });
 const FONT = ["/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"].find((f) => fs.existsSync(f)) || "";
 const sh = (c) => execSync(c, { stdio: ["ignore", "pipe", "pipe"] }).toString();
 
-// 1) Resolver el item en Archive.org (por título, mediatype movies, preferir 1080p).
+// 1) Resolver the item in Archive.org (by title, mediatype movies, preferir 1080p).
 console.log(`Buscando "${title}" en Archive.org…`);
 const q = encodeURIComponent(`title:(${title}) AND mediatype:movies`);
 const sr = await (await tf(`https://archive.org/advancedsearch.php?q=${q}&fl=identifier,title,year&rows=15&output=json`)).json();
@@ -28,7 +28,7 @@ let docs = (sr.response && sr.response.docs) || [];
 if (!docs.length) { console.error("No encontré el item en Archive.org"); process.exit(1); }
 docs.sort((a, b) => (/1080|hd|high/i.test(b.title || "") ? 1 : 0) - (/1080|hd|high/i.test(a.title || "") ? 1 : 0));
 
-// 2) Elegir un mp4 grande del primer item que tenga uno.
+// 2) Elegir a mp4 grande of the primer item that tenga uno.
 let mp4url = null, ident = null;
 for (const d of docs.slice(0, 6)) {
   try {
@@ -40,7 +40,7 @@ for (const d of docs.slice(0, 6)) {
 if (!mp4url) { console.error("No hallé un mp4 descargable"); process.exit(1); }
 console.log(`Item: ${ident}`);
 
-// 3) Descargar el film.
+// 3) Descargar the film.
 const film = `${work}/film.mp4`;
 console.log("Descargando el film…");
 const r = await tf(mp4url, {}, 600000);
@@ -50,7 +50,7 @@ const dur = parseFloat(sh(`ffprobe -v error -show_entries format=duration -of cs
 if (dur < 60) { console.error("film muy corto/ilegible"); process.exit(1); }
 console.log(`Duración: ${Math.round(dur / 60)} min`);
 
-// 4) Miniaturas cada ~ (dur/18), saltando 8% inicial/final.
+// 4) Thumbnails cada ~ (dur/18), saltando 8% inicial/final.
 const a0 = dur * 0.08, a1 = dur * 0.92, N = 16, step = (a1 - a0) / N;
 const thumbs = [];
 for (let i = 0; i < N; i++) {
@@ -60,7 +60,7 @@ for (let i = 0; i < N; i++) {
 }
 if (!thumbs.length) { console.error("no pude sacar miniaturas"); process.exit(1); }
 
-// 5) La IA MIRA las miniaturas y elige el mejor momento + título/subtítulo.
+// 5) The IA MIRA the thumbnails and elige the best momento + title/subtitle.
 async function pickMoment() {
   if (!KEYS.length) return null;
   const parts = [{ text: `Eres editor de SHORTS virales. Estas ${thumbs.length} miniaturas son de la película muda de DOMINIO PÚBLICO "${title}" (categoría: ${niche}). Cada una trae su timestamp en segundos. Elige el momento MÁS ICÓNICO y VIRAL: el gag/escena más famoso e impactante que la gente COMPARTIRÍA hoy — NADA aburrido ni de relleno; prioriza acción/movimiento/sorpresa clara. Devuelve SOLO JSON: {"start": <segundos, del timestamp elegido menos 4>, "title": "título en INGLÉS de alto CTR (<=60 chars)", "subject_x": <0.0 a 1.0: posición horizontal del sujeto/acción principal en ese fotograma; 0=izquierda, 0.5=centro, 1=derecha>}.` }];
@@ -81,21 +81,21 @@ if (!pick || !isFinite(+pick.start)) { const t = thumbs[Math.floor(thumbs.length
 let start = Math.max(a0, Math.min(+pick.start, dur - CLIP - 2));
 console.log(`Momento elegido: ${Math.round(start)}s · "${pick.title}"`);
 
-// 6) Cortar + 9:16 PROFESIONAL con SUJETO CENTRADO (smart crop): llena la pantalla, tamaño completo,
-// sin barras ni subtítulos, y la ventana 9:16 sigue al sujeto (no lo corta). Grade cine. Audio nuestro.
+// 6) Cut + 9:16 PROFESIONAL with SUJETO CENTRADO (smart crop): llena the pantalla, tamaño completo,
+// without barras nor subtitles, and the ventana 9:16 sigue to the sujeto (not lo cuts). Grade cine. Audio nuestro.
 const { w: srcW, h: srcH } = sourceWH(film);
 const sx = isFinite(+pick.subject_x) ? +pick.subject_x : 0.5;
 const vf = smartCropVf(W, H, srcW, srcH, sx, "eq=contrast=1.07:saturation=1.06:brightness=0.01");
-// Corte PRECISO: seek rápido a un keyframe antes + seek fino exacto -> primer fotograma NÍTIDO
-// (evita el frame ampliado/borroso de arrancar a mitad de GOP).
+// Cut PRECISO: seek fast to a keyframe before + seek fino exacto -> primer fotograma NÍTIDO
+// (avoids the frame ampliado/borroso of arrancar to half of GOP).
 const pre = Math.max(0, start - 3), fine = (start - pre).toFixed(2);
 const raw = `${work}/raw.mp4`;
-// Corte conservando el audio original si existe (sin -an); si es mudo, no habrá pista.
+// Cut conservando the audio original if existe (without -an); if is mudo, not habrá track.
 execSync(`ffmpeg -y -ss ${pre} -i "${film}" -ss ${fine} -t ${CLIP} -vf "${vf}" -r 30 -c:v libx264 -preset medium -crf 19 -pix_fmt yuv420p -profile:v high -c:a aac -b:a 160k "${raw}"`, { stdio: "inherit" });
 const hadAudio = finishClip(raw, outPath);
 console.log("audio original: " + (hadAudio ? "sí" : "no (solo música)"));
 
-// 7) Paquete de publicación + manifiesto de compliance (fuente = dominio público).
+// 7) Paquete of publishing + manifiesto of compliance (fuente = dominio public).
 fs.mkdirSync("publish", { recursive: true });
 const pkg = { title: (pick.title || title).slice(0, 100) + " #Shorts", description: `${pick.caption || ""}\n\nClip de "${title}" — dominio público.\n#Shorts #classicmovies #comedy`, tags: ["shorts", "classic movie", "comedy", "silent film", niche], language: "en" };
 fs.writeFileSync("publish/package.json", JSON.stringify(pkg, null, 2));

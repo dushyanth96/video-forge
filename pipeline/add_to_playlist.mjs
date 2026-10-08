@@ -1,6 +1,6 @@
-// add_to_playlist.mjs — agrega un video a una playlist (la CREA si no existe) del canal
-// cuyos tokens esten en YT_* (para Oddly, el workflow mapea YT2_* -> YT_*).
-// Uso: node pipeline/add_to_playlist.mjs <VIDEO_ID> "<Titulo de la playlist>"
+// add_to_playlist.mjs — agrega a video to a playlist (the CREATES if not existe) of the channel
+// cuyos tokens esten in YT_* (for Oddly, the workflow mapea YT2_* -> YT_*).
+// Usage: node pipeline/add_to_playlist.mjs <VIDEO_ID> "<Title of the playlist>"
 const [videoId, playlistTitle = "Mis Clips"] = process.argv.slice(2);
 const { YT_CLIENT_ID, YT_CLIENT_SECRET, YT_REFRESH_TOKEN } = process.env;
 if (!videoId) { console.error("falta VIDEO_ID"); process.exit(1); }

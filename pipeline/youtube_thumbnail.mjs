@@ -1,6 +1,6 @@
-// youtube_thumbnail.mjs — fija la miniatura de un video ya subido (thumbnails.set).
-// Requiere scope youtube (el token ya lo tiene). Si el canal no permite miniaturas
-// personalizadas (sin verificar), lo reporta pero NO rompe el flujo (exit 0).
+// YouTube_thumbnail.mjs — fija the thumbnail of a video already uploaded (thumbnails.set).
+// Requires scope YouTube (the token already lo tiene). If the channel not allows thumbnails
+// personalizadas (without verify), lo reporta but NOT rompe the flujo (exit 0).
 // Uso: node pipeline/youtube_thumbnail.mjs <VIDEO_ID> <imagen.jpg>
 import fs from "node:fs";
 

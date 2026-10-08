@@ -1,10 +1,10 @@
-# tts_kokoro.py — narra el video con Kokoro TTS (open source, gratis, sin cuota) como
-# RESPALDO de Gemini. Produce el MISMO formato que tts_gemini_directed.mjs: un WAV por
-# pedazo + <out>.timing.json con {sr, beats:[{index,tipo,text,dur}]}, para que la union
-# y el render funcionen igual. Corre por PEDAZOS (como el pipeline de Gemini).
+# tts_kokoro.py — narra the video with Kokoro TTS (open source, free, without cuota) as
+# RESPALDO of Gemini. Produce the SAME formato that tts_Gemini_directed.mjs: a WAV by
+# pedazo + <out>.timing.JSON with {sr, beats:[{index,type,text,dur}]}, for that the join
+# and the render funcionen igual. Corre by PEDAZOS (as the pipeline of Gemini).
 #
 # Uso: python pipeline/tts_kokoro.py <voicemap.json> <out.wav> <chunkIndex> <numChunks>
-# Env: KVOICE (voz Kokoro, default am_michael). Modelos: kokoro-v1.0.onnx + voices-v1.0.bin.
+# Env: KVOICE (voice Kokoro, default am_michael). Modelos: kokoro-v1.0.onnx + voices-v1.0.bin.
 import json, sys, os, math
 import numpy as np
 import soundfile as sf

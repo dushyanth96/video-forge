@@ -1,7 +1,7 @@
-// os_pulse_videoforge.mjs — PULSE de Video Forge para el AI OS. Solo datos reales del cerebro:
-// plan de hoy/mañana (lineup), bitácora (journal), ledger, meta por ventana (monetization_report), historial YPP
-// y ejecuciones de GitHub Actions (runs). Video Forge es 100% automático: sus "needs" son solo decisiones
-// estratégicas (nunca aprobar publicaciones).
+// os_pulse_videoforge.mjs — PULSE of Video Forge for the AI OS. Only datos reales of the brain:
+// plan of today/tomorrow (lineup), bitácora (journal), ledger, meta by ventana (monetization_report), historial YPP
+// and ejecuciones of GitHub Actions (runs). Video Forge is 100% automático: its "needs" are only decisiones
+// estratégicas (never approve publicaciones).
 // Uso: node pipeline/os_pulse_videoforge.mjs <lineup.json> <journal.json> <ledger.json> <monet.json> <decision.json> <runs.json> <ypp_hist.json> <out.json>
 import fs from "node:fs";
 import { makePulse, validatePulse } from "./lib/os_contract.mjs";
@@ -14,7 +14,7 @@ const journal = rj(journalF, []);
 const ledger = rj(ledgerF, []);
 const monet = rj(monetF, {});
 const decision = rj(decisionF, {});
-// Solo producción: corridas de main. Un fallo en la rama de un PR no es un fallo de Video Forge.
+// Only producción: corridas of main. A failure in the branch of a PR not is a failure of Video Forge.
 const runs = rj(runsF, []).filter((r) => !r || r.headBranch == null || r.headBranch === "main");
 const yppHist = rj(yppHistF, []);
 
@@ -26,12 +26,12 @@ const T = L.today || { items: [], summary: {} };
 const M = L.tomorrow || { items: [], summary: {} };
 const oddly = (monet.channels && monet.channels.auto2) || {};
 const ypp = oddly.ypp || null;
-// Requisitos de la META elegida (Oddly: nivel intermedio desde 2026-09-14).
+// Requisitos of the META elegida (Oddly: nivel intermedio since 2026-09-14).
 const full = ypp && ypp.tiers && ypp.tiers[(ypp && ypp.goal_tier) || "full"];
 const shortsReq = full ? [...(full.reqs || []), ...(full.options || [])].find((r) => r.key === "shorts_views_90d") : null;
 const subsReq = full ? (full.reqs || []).find((r) => r.key === "subs") : null;
 
-// ---- Agentes (estado desde ejecuciones reales) ----
+// ---- Agentes (estado since ejecuciones reales) ----
 const brain = lastRun("Cerebro en vivo (plan de mañana + producción continua)");
 const produce = runsOf("Producir compilacion (Oddly Loop / canal auto)");
 const producing = produce.filter((r) => r.status !== "completed");
@@ -44,9 +44,9 @@ const agents = [
   { id: "trend", name: "Trend Agent", state: trends ? (trends.status !== "completed" ? "researching" : "observing") : "idle", since: trends && trends.createdAt, detail: "Radar de crecimiento semanal" },
 ];
 
-// ---- Actividad: la bitácora del cerebro (eventos reales) + fallos de ejecución ----
+// ---- Actividad: the bitácora of the brain (eventos reales) + fallos of ejecución ----
 const AGENT_BY_KIND = { plan: "Content Agent", produccion: "Publishing Agent", autocritica: "Analytics Agent", ciclo: "Content Agent" };
-// Sin ruido: si la bitácora repite el mismo texto, queda solo el más reciente.
+// Without ruido: if the bitácora repite the same texto, queda only the more reciente.
 const seenText = new Set();
 const journalRecent = (Array.isArray(journal) ? journal : []).slice(-60).reverse().filter((j) => { const k = String(j.text || ""); if (seenText.has(k)) return false; seenText.add(k); return true; }).slice(0, 20).reverse();
 const activity = journalRecent.map((j) => ({ at: j.at, agent: AGENT_BY_KIND[j.kind] || "Content Agent", text: j.text, kind: j.kind, trust: "executed" }));
@@ -62,9 +62,9 @@ const tasks = produce.slice(0, 8).map((r) => ({
   result: r.status === "completed" && r.conclusion === "success" ? "Lista y en su franja" : null, next: r.status !== "completed" ? "Sale sola en su franja al terminar" : null, url: r.url,
 }));
 
-// ---- Decisiones (solo estratégicas) ----
+// ---- Decisiones (only estratégicas) ----
 const needs = [];
-// La meta ya la decidió Juan (nivel intermedio). Solo vuelve a pedir criterio si la revisión de 28 días falla.
+// The meta already the decidió Juan (nivel intermedio). Only vuelve to pedir criterio if the revisión of 28 days fails.
 const goalReview = L.oddly_goal && L.oddly_goal.review;
 if (goalReview && goalReview.status === "FALLO") {
   needs.push({
@@ -79,7 +79,7 @@ if (dl && dl.paused && dl.review_at && Date.parse(dl.review_at) - now < 3 * 8640
   needs.push({ id: "vf-datalens-review", title: "Revisión de la pausa de Data Lens", severity: "info", autonomy: "REVIEW", why: "Se cumple el plazo de 21 días del experimento semanal.", evidence: dl.best_views_so_far != null ? `Mejor experimento: ${dl.best_views_so_far} vistas (criterio ${dl.target_views_7d})` : "Sin experimentos medidos aún", actions: [{ id: "open-dl", label: "Ver", kind: "open" }] });
 }
 
-// ---- Insights con qué/por qué/impacto/acción ----
+// ---- Insights with qué/by qué/impacto/acción ----
 const insights = [];
 if (L.oddly_goal && shortsReq && shortsReq.per_day_actual != null) {
   const rv = L.oddly_goal.review;
@@ -95,7 +95,7 @@ if (lead && lead.rel != null) insights.push({ what: `${lead.label} rinde ${lead.
 const judged = (Array.isArray(ledger) ? ledger : []).filter((e) => e.status === "ACERTO" || e.status === "FALLO");
 if (judged.length) { const hits = judged.filter((e) => e.status === "ACERTO").length; insights.push({ what: `El cerebro acertó ${hits} de ${judged.length} decisiones juzgadas`, why: "Cada decisión se revisa en su fecha contra su propio criterio", action: judged.length - hits >= 2 ? "Revisar las reglas que fallaron" : "Seguir midiendo" }); }
 
-// ---- Métricas con interpretación ----
+// ---- Métricas with interpretación ----
 const metrics = [];
 if (shortsReq && shortsReq.cur != null) {
   metrics.push({ key: "shorts_views_90d", label: "Vistas de Shorts", value: shortsReq.cur, timeframe: "últimos 90 días", context: `requisito ${shortsReq.target.toLocaleString("es")}`, interpretation: `Ritmo ${Math.round(shortsReq.per_day_actual || 0).toLocaleString("es")}/día; se necesitan ${Math.round(shortsReq.per_day_needed || 0).toLocaleString("es")}/día.`, series: (Array.isArray(yppHist) ? yppHist : []).map((h) => h.shorts_views_per_day_28d).filter((x) => x != null) });

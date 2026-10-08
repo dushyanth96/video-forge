@@ -1,12 +1,12 @@
-// clip_frame.mjs — helper compartido de los clippers: RECORTE 9:16 con SUJETO CENTRADO (smart crop).
-// En vez de recortar siempre al centro (que corta al sujeto si está a un lado), la IA nos dice la
-// posición horizontal del sujeto (sx, 0-1) y recortamos la ventana 9:16 centrada en ÉL. Calculamos
-// el offset en Node con las dimensiones reales (ffprobe) -> robusto, sin expresiones frágiles de ffmpeg.
+// clip_frame.mjs — helper compartido of the clippers: RECORTE 9:16 with SUJETO CENTRADO (smart crop).
+// In vez of recortar always to the centro (that cuts to the sujeto if is to a lado), the IA nos dice the
+// posición horizontal of the sujeto (sx, 0-1) and recortamos the ventana 9:16 centrada in ÉL. Calculamos
+// the offset in Node with the dimensiones reales (ffprobe) -> robusto, without expresiones frágiles of ffmpeg.
 import fs from "node:fs";
 import { execSync } from "node:child_process";
 
-// Cierra el clip conservando su AUDIO ORIGINAL (los sonidos reales del video) como protagonista,
-// con música MUY baja de fondo. Si el clip no tiene audio (cine mudo), usa música. loudnorm -14.
+// Cierra the clip conservando its AUDIO ORIGINAL (the sounds reales of the video) as protagonista,
+// with music VERY downloads of background. If the clip not tiene audio (cine mudo), uses music. loudnorm -14.
 export function finishClip(rawClip, outPath) {
   const hasAudio = (() => { try { return execSync(`ffprobe -v error -select_streams a -show_entries stream=index -of csv=p=0 "${rawClip}"`, { stdio: ["ignore", "pipe", "ignore"] }).toString().trim().length > 0; } catch { return false; } })();
   const hasMusic = fs.existsSync("music.mp3");
@@ -27,7 +27,7 @@ export function sourceWH(film) {
   try { const s = execSync(`ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 "${film}"`, { stdio: ["ignore", "pipe", "ignore"] }).toString().trim().split(","); return { w: +s[0] || 0, h: +s[1] || 0 }; } catch { return { w: 0, h: 0 }; }
 }
 
-// vf 9:16 con el sujeto centrado (sx) + grade + nitidez + viñeta cine.
+// vf 9:16 with the sujeto centrado (sx) + grade + nitidez + viñeta cine.
 export function smartCropVf(W, H, srcW, srcH, sx = 0.5, grade = "eq=contrast=1.06:saturation=1.05") {
   let base;
   const x = Math.max(0, Math.min(1, isFinite(+sx) ? +sx : 0.5));

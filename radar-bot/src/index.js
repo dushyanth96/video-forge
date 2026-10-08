@@ -1,14 +1,14 @@
-// radar-bot — Worker de Telegram + MINI APP (UI web) para controlar el Radar.
-// /radar abre la Mini App: PESTAÑAS POR REPO, badge de prioridad, y flujo por etapas
-// (⚙️ Ejecutar → 👀 Revisar → 🔀 Merge). El Merge solo aparece tras Revisar (no mergear sin ver).
-// Autenticación segura vía Telegram initData (HMAC con el token del bot); solo el dueño.
+// Radar-bot — Worker of Telegram + MINI APP (UI web) for controlar the Radar.
+// /Radar abre the Mini App: PESTAÑAS BY REPO, badge of prioridad, and flujo by etapas
+// (⚙️ Ejecutar → 👀 Revisar → 🔀 Merge). The Merge only aparece after Revisar (not mergear without ver).
+// Autenticación segura vía Telegram initData (HMAC with the token of the bot); only the dueño.
 
 import { WorkerEntrypoint } from "cloudflare:workers";
 import { osStateFrom } from "../../pipeline/lib/os_contract.mjs";
 import { osShellHtml } from "../../shared/os-shell.mjs";
 
 const GH = "https://api.github.com";
-// El motor CENTRAL vive en video-forge e implementa en cualquier repo objetivo (usa el PAT).
+// The engine CENTRAL vive in video-forge and implementa in cualquier repo objetivo (uses the PAT).
 const MOTOR = "juanberrio0399/video-forge";
 const REPOS = [
   "juanberrio0399/video-forge",
@@ -29,17 +29,17 @@ const prioOf = (body) => { const m = (body || "").match(/Prioridad:\**\s*(Alta|M
 const rank = (p) => (p === "alta" ? 0 : p === "media" ? 1 : p === "baja" ? 2 : 3);
 const short = (repo) => repo.split("/").pop();
 
-// ---------- Autenticación de la Mini App (Telegram initData) ----------
+// ---------- Autenticación of the Mini App (Telegram initData) ----------
 async function hmac(keyBytes, msg) {
   const key = await crypto.subtle.importKey("raw", keyBytes, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   return new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(msg)));
 }
 const toHex = (buf) => [...buf].map((b) => b.toString(16).padStart(2, "0")).join("");
-// Comparación en tiempo constante (no revela cuántos caracteres del hash coinciden).
+// Comparación in tiempo constante (not revela cuántos caracteres of the hash coinciden).
 function safeEq(a, b) { a = String(a || ""); b = String(b || ""); if (a.length !== b.length) return false; let d = 0; for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i); return d === 0; }
 async function validInit(initData, token) {
   try {
-    // Sin token del bot no hay forma de validar: se rechaza (antes la clave quedaba vacía y era falsificable).
+    // Without token of the bot not hay way of validar: is rechaza (before the key quedaba vacía and era falsificable).
     if (!initData || !token) return null;
     const p = new URLSearchParams(initData);
     const hash = p.get("hash"); if (!hash) return null;
@@ -54,19 +54,19 @@ async function validInit(initData, token) {
   } catch { return null; }
 }
 async function ownerFromReq(request, env) {
-  // Puerta interna del AI OS: el bot único ya validó a Juan con su propia sesión de Telegram.
+  // Gate interna of the AI OS: the bot único already validó to Juan with its propia sesión of Telegram.
   if (env && env.__trustedOwner === true) return { id: env.OWNER_CHAT_ID, trusted: true };
   const initData = request.headers.get("x-init-data") || "";
   const user = await validInit(initData, env.TELEGRAM_BOT_TOKEN);
   if (!user || !user.id) return null;
-  // Seguridad: sin OWNER_CHAT_ID configurado NADIE entra (antes, sin la variable, entraba cualquier usuario).
+  // Security: without OWNER_CHAT_ID configurado NADIE entra (before, without the variable, entraba cualquier usuario).
   if (!env.OWNER_CHAT_ID || String(user.id) !== String(env.OWNER_CHAT_ID)) return null;
   return user;
 }
 
-// ---------- Datos del radar ----------
-// Vínculo PR<->issue con la API OFICIAL (GraphQL closingIssuesReferences): GitHub ya parsea
-// "Closes #N" de forma fiable. Devuelve { issueNumber: {number,url,title} } de los PR abiertos.
+// ---------- Datos of the Radar ----------
+// Vínculo PR<->issue with the API OFICIAL (GraphQL closingIssuesReferences): GitHub already parsea
+// "Closes #N" of way fiable. Devuelve { issueNumber: {number,url,title} } of the PR abiertos.
 async function ghGraphQL(env, query, variables) {
   const r = await fetch(`${GH}/graphql`, { method: "POST", headers: { Authorization: `Bearer ${env.GH_TOKEN}`, "User-Agent": "radar-bot", "content-type": "application/json" }, body: JSON.stringify({ query, variables }) });
   const j = await r.json().catch(() => ({}));
@@ -79,13 +79,13 @@ async function prMap(env, repo) {
   try {
     const d = await ghGraphQL(env, q, { owner, name });
     for (const pr of (d?.repository?.pullRequests?.nodes || [])) {
-      // draft = el motor no pudo completar la revisión o el CI quedó rojo: NO se mergea.
+      // draft = the engine not pudo completar the revisión or the CI quedó rojo: NOT is mergea.
       const ciRed = (pr.labels?.nodes || []).some((l) => l.name === "radar-ci-rojo");
       const info = { number: pr.number, url: pr.url, title: pr.title, incomplete: /\[INCOMPLETO\]/i.test(pr.title || ""), draft: !!pr.isDraft, ciRed, validated: /^## Validation$/m.test(pr.body || "") };
-      // 1) PRs que CIERRAN el issue (Closes #N) — vínculo oficial.
+      // 1) PRs that CIERRAN the issue (Closes #N) — vínculo oficial.
       for (const is of (pr.closingIssuesReferences?.nodes || [])) map[String(is.number)] = info;
-      // 2) PRs que solo REFERENCIAN el issue (Ref #N = PR incompleto): `Ref` NO crea closingIssuesReference,
-      //    así que el bot no los "veía" y se esperaba hasta el timeout. Los detectamos por el cuerpo.
+      // 2) PRs that only REFERENCIAN the issue (Ref #N = PR incompleto): `Ref` NOT creates closingIssuesReference,
+      //    así that the bot not the "veía" and is esperaba until the timeout. The detectamos by the cuerpo.
       for (const m of (pr.body || "").matchAll(/(?:ref|closes?|fix(?:es)?|resolves?)\s+#(\d+)/gi)) {
         if (!map[m[1]]) map[m[1]] = info;
       }
@@ -94,19 +94,19 @@ async function prMap(env, repo) {
   return map;
 }
 async function buildState(env) {
-  // En paralelo por repo (5 repos) para que la app cargue rápido.
-  // error=true si GitHub no respondió (NO se traga en silencio: la UI lo muestra).
-  // err por issue = el motor falló (etiqueta `motor-fallo` que pone el workflow al romperse).
+  // In paralelo by repo (5 repos) for that the app cargue fast.
+  // error=true if GitHub not respondió (NOT is traga in silencio: the UI lo muestra).
+  // err by issue = the engine failed (tag `engine-failure` that pone the workflow to the romperse).
   const repos = await Promise.all(REPOS.map(async (repo) => {
     let error = false; const issues = [];
     try {
       const [map, r] = await Promise.all([prMap(env, repo), gh(env, `/repos/${repo}/issues?labels=radar&state=open&per_page=50`)]);
       if (r.ok) {
-        // Fuera los que NO requieren acción: los issues-reporte del propio radar ("resumen de la corrida").
+        // Fuera the that NOT requieren acción: the issues-reporte of the propio Radar ("resumen of the corrida").
         const list = (await r.json()).filter((is) => !is.pull_request && !/resumen de la corrida/i.test(is.title || ""));
         for (const is of list) {
           const has = (n) => (is.labels || []).some((l) => l.name === n);
-          // invalid = el cambio no pasó la validación (sin PR); rejected = la revisión lo descartó por impacto o por no verificable.
+          // invalid = the cambio not pasó the validación (without PR); rejected = the revisión lo descartó by impacto or by not verificable.
           issues.push({ number: is.number, title: is.title, url: is.html_url, prio: prioOf(is.body), err: has("motor-fallo"), manual: has("manual"), invalid: has("radar-no-valida"), rejected: has("radar-descartado"), planned: has("radar-plan"), pr: map[String(is.number)] || null });
         }
         issues.sort((a, b) => rank(a.prio) - rank(b.prio));
@@ -118,8 +118,8 @@ async function buildState(env) {
 }
 async function doAction(env, action, repo, number) {
   if (action === "run") {
-    // Motor CENTRAL en video-forge en MODO PLAN: deja un plan verificable en el issue (los PRs automáticos están pausados).
-    // Quita las marcas de la corrida anterior ANTES de lanzar: si no, la app ve el estado viejo y avisa de algo que no ocurrió.
+    // Engine CENTRAL in video-forge in MODE PLAN: deja a plan verificable in the issue (the PRs automáticos are pausados).
+    // Quita the marcas of the corrida anterior BEFORE of lanzar: if not, the app ve the estado viejo and avisa of something that not ocurrió.
     await Promise.all(["motor-fallo", "radar-no-valida", "radar-descartado", "radar-plan"].map((l) => gh(env, `/repos/${repo}/issues/${number}/labels/${encodeURIComponent(l)}`, { method: "DELETE" }).catch(() => null)));
     const r = await gh(env, `/repos/${MOTOR}/actions/workflows/radar_implement.yml/dispatches`, { method: "POST", body: JSON.stringify({ ref: "main", inputs: { issue: String(number), repo, mode: "plan" } }) });
     return (r.ok || r.status === 204) ? "📋 Preparando el plan. Tarda 1-2 minutos — te aviso cuando termine." : "❌ No pude lanzar el motor.";
@@ -127,11 +127,11 @@ async function doAction(env, action, repo, number) {
   if (action === "merge") {
     const pr = (await prMap(env, repo))[String(number)];
     if (!pr) return `🔎 No hay PR abierto para el #${number}.`;
-    // Un PR incompleto no cierra el issue: mergearlo deja trabajo a medias en main.
+    // A PR incompleto not cierra the issue: mergearlo deja trabajo to medias in main.
     if (pr.incomplete) return `🚫 No mergeo el PR #${pr.number}: está marcado [INCOMPLETO]. Revísalo o reintenta el motor.`;
     if (pr.ciRed) return `⛔ No mergeo el PR #${pr.number}: su CI quedó en rojo. Reintenta el motor para repararlo.`;
     if (pr.draft) return `⛔ No mergeo el PR #${pr.number}: está en borrador (no pasó toda la validación). Revísalo o reintenta el motor.`;
-    // CANDADO DE BUILD: no mergear si el CI del PR no está en verde (evita mergear builds rotos).
+    // CANDADO OF BUILD: not mergear if the CI of the PR not is in verde (avoids mergear builds rotos).
     try {
       const full = await (await gh(env, `/repos/${repo}/pulls/${pr.number}`)).json();
       const sha = full && full.head && full.head.sha;
@@ -144,7 +144,7 @@ async function doAction(env, action, repo, number) {
         if (pending.length) return `⏳ El CI del PR #${pr.number} aún corre (${pending.map((r) => r.name).join(", ")}). Espera a que quede ✅ verde y reintenta el merge.`;
       }
     } catch {
-      // Seguridad: si no se puede verificar el CI, NO se mergea (antes dejaba pasar ante un error de lectura).
+      // Security: if not is can verify the CI, NOT is mergea (before dejaba pasar ante a error of lectura).
       return `⚠️ No pude verificar el CI del PR #${pr.number} ahora. No mergeo sin verificar; reintenta en un momento.`;
     }
     const m = await gh(env, `/repos/${repo}/pulls/${pr.number}/merge`, { method: "PUT", body: JSON.stringify({ merge_method: "squash" }) });
@@ -159,7 +159,7 @@ async function doAction(env, action, repo, number) {
   return "Acción desconocida.";
 }
 
-// ---------- Mini App (HTML) — diseño pro, nativo de Telegram ----------
+// ---------- Mini App (HTML) — diseño pro, nativo of Telegram ----------
 const APP_HTML = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <title>Radar</title><style>
@@ -297,16 +297,16 @@ function issueCard(r,is){
   }else if(running){
     acts='<div class="waitb"><span class="dot"></span>Preparando el plan… te aviso al terminar</div>';
   }else if(is.manual&&!is.pr){
-    // Requiere configuración TUYA (MCP, recursos Cloudflare, settings de GitHub, APIs experimentales…).
-    // NO se implementa con un PR: no hay Ejecutar ni Merge. Solo abrir el issue con el paso a paso.
+    // Requires configuración TUYA (MCP, recursos Cloudflare, settings of GitHub, APIs experimentales…).
+    // NOT is implementa with a PR: not hay Ejecutar nor Merge. Only abrir the issue with the step to step.
     acts='<button class="b" data-act="open" data-url="'+esc(is.url)+'">📋 Ver pasos</button>'
       +'<button class="b g" data-act="close" data-repo="'+esc(r.repo)+'" data-n="'+is.number+'">✅ Ya lo configuré</button>';
   }else if(!is.pr&&is.rejected){
-    // La revisión lo descartó (bajo impacto o no verificable): leer el motivo y cerrarlo o replantearlo.
+    // The revisión lo descartó (bajo impacto or not verificable): leer the motivo and cerrarlo or replantearlo.
     acts='<button class="b" data-act="open" data-url="'+esc(is.url)+'">📋 Ver motivo</button>'
       +'<button class="b d" data-act="close" data-repo="'+esc(r.repo)+'" data-n="'+is.number+'">Cerrar issue</button>';
   }else if(!is.pr&&is.planned){
-    // Plan listo en el issue: leerlo y decidir si se implementa (los PRs automáticos están pausados).
+    // Plan ready in the issue: leerlo and decidir if is implementa (the PRs automáticos are pausados).
     acts='<button class="b" data-act="open" data-url="'+esc(is.url)+'">📄 Ver plan</button>'
       +'<button class="b g" data-act="run" data-repo="'+esc(r.repo)+'" data-n="'+is.number+'">🔁 Rehacer plan</button>'
       +'<button class="b d" data-act="close" data-repo="'+esc(r.repo)+'" data-n="'+is.number+'">Descartar</button>';
@@ -315,7 +315,7 @@ function issueCard(r,is){
       +'<button class="b" data-act="run" data-repo="'+esc(r.repo)+'" data-n="'+is.number+'">'+(is.err||is.invalid?"🔁 Reintentar":"📋 Preparar plan")+'</button>'
       +'<button class="b d" data-act="close" data-repo="'+esc(r.repo)+'" data-n="'+is.number+'">Descartar</button>';
   }else if(is.pr.draft||is.pr.ciRed){
-    // PR que NO está validado del todo: sin botón de merge.
+    // PR that NOT is validado of the everything: without button of merge.
     acts='<button class="b" data-act="open" data-url="'+esc(is.pr.url)+'">📄 Ver PR</button>'
       +'<button class="b" data-act="run" data-repo="'+esc(r.repo)+'" data-n="'+is.number+'">🔁 Reintentar</button>';
   }else if(!REVIEWED[k]){
@@ -368,8 +368,8 @@ function load(first){
 }
 function doAct(repo,n,action){h("medium");toast("Procesando…");api("/api/action",{action:action,repo:repo,number:n}).then(function(res){h(action==="merge"?"ok":"light");toast(res.msg||"Listo");setTimeout(function(){load(false);},1500);});}
 function notify(m){try{if(TG.showAlert){TG.showAlert(m);return;}}catch(e){}toast(m);}
-// Tras Ejecutar, el motor tarda 1-2 min. NO dejamos al usuario esperando a ciegas: vigilamos el
-// estado del issue y avisamos con alerta al terminar (PR listo ✅ o motor falló ❌ → reintenta).
+// After Ejecutar, the engine tarda 1-2 min. NOT dejamos to the usuario esperando to ciegas: vigilamos the
+// estado of the issue and avisamos with alerta to the terminar (PR ready ✅ or engine failed ❌ → retries).
 function watchRun(repo,n){
   var k=repo+"#"+n,tries=0;
   var iv=setInterval(function(){
@@ -417,7 +417,7 @@ document.addEventListener("click",function(ev){
 load(true);
 </script></body></html>`;
 
-// AI OS: lee los pulses del R2 compartido (bucket video-forge) y arma el estado global al leer.
+// AI OS: lee the pulses of the R2 compartido (bucket video-forge) and arma the estado global to the leer.
 async function osState(env) {
   const get = async (k) => { try { const o = env.R2 && (await env.R2.get(k)); return o ? await o.json() : null; } catch { return null; } };
   return osStateFrom(get, "radar");
@@ -429,17 +429,17 @@ const radarHandler = {
 
     // Mini App
     if (url.pathname === "/os") {
-      // AI OS: app común de Radar. El panel de repos sigue en /app.
+      // AI OS: app común of Radar. The panel of repos sigue in /app.
       return new Response(osShellHtml("radar", { build: env.APP_BUILD }), { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store, no-cache, must-revalidate", "pragma": "no-cache" } });
     }
-    // Entradas viejas (/app, /) desde el botón de /radar ya enviado o BotFather: abren el AI OS. Panel con ?from=os.
+    // Inputs viejas (/app, /) since the button of /Radar already enviado or BotFather: abren the AI OS. Panel with ?from=os.
     if ((url.pathname === "/app" || url.pathname === "/") && url.searchParams.get("from") !== "os") {
       return new Response(osShellHtml("radar", { build: env.APP_BUILD }), { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store, no-cache, must-revalidate", "pragma": "no-cache" } });
     }
     if (url.pathname === "/app" || url.pathname === "/") {
       return new Response(APP_HTML.replace("__BUILD__", String(env.APP_BUILD || "dev")).replace("__API_BASE__", env.__osBase === "/v/radar" ? "/v/radar" : ""), { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store, no-cache, must-revalidate", "pragma": "no-cache" } });
     }
-    // API de la Mini App (auth por initData)
+    // API of the Mini App (auth by initData)
     if (url.pathname.startsWith("/api/") && request.method === "POST") {
       const user = await ownerFromReq(request, env);
       if (!user) return json({ error: "No autorizado (abre desde el bot)." }, 401);
@@ -453,9 +453,9 @@ const radarHandler = {
       return json({ error: "no encontrado" }, 404);
     }
 
-    // Webhook de Telegram -> /radar abre la Mini App
+    // Webhook of Telegram -> /Radar abre the Mini App
     if (url.pathname === "/webhook" && request.method === "POST") {
-      // Seguridad: el secreto del webhook es obligatorio (el deploy siempre lo configura).
+      // Security: the secret of the webhook is obligatorio (the deploy always lo configura).
       if (!env.TELEGRAM_WEBHOOK_SECRET || request.headers.get("x-telegram-bot-api-secret-token") !== env.TELEGRAM_WEBHOOK_SECRET) return new Response("unauthorized", { status: 401 });
       const upd = await request.json().catch(() => ({}));
       const owner = env.OWNER_CHAT_ID ? String(env.OWNER_CHAT_ID) : null;
@@ -473,7 +473,7 @@ const radarHandler = {
 };
 export default radarHandler;
 
-// Puerta INTERNA del AI OS (solo alcanzable por Service Binding desde el bot único; no tiene URL pública).
+// Gate INTERNA of the AI OS (only alcanzable by Service Binding since the bot único; not tiene URL pública).
 export class OSGateway extends WorkerEntrypoint {
   async fetch(request) {
     return radarHandler.fetch(request, { ...this.env, __trustedOwner: true, __osBase: "/v/radar" });

@@ -1,7 +1,7 @@
-// os_pulse_radar.mjs — PULSE de Radar para el AI OS, desde GitHub real: issues `radar`, PRs del motor con su CI,
-// fallos del motor y ejecuciones de escaneo, groom, motor y CodeQL. Radar pide aprobación para merge.
-// Opportunity score: se estima SOLO con lo que trae el issue (prioridad y esfuerzo); no hay evidencia de impacto,
-// así que la confianza queda en "datos insuficientes" (no se inventa).
+// os_pulse_Radar.mjs — PULSE of Radar for the AI OS, since GitHub real: issues `Radar`, PRs of the engine with its CI,
+// fallos of the engine and ejecuciones of escaneo, groom, engine and CodeQL. Radar pide approval for merge.
+// Opportunity score: is estima ONLY with lo that trae the issue (prioridad and esfuerzo); not hay evidencia of impacto,
+// así that the confianza queda in "datos insuficientes" (not is inventa).
 // Uso: node pipeline/os_pulse_radar.mjs <out.json>   Env: GH_TOKEN, RADAR_REPOS (coma), MOTOR_REPO
 import fs from "node:fs";
 import { makePulse, validatePulse } from "./lib/os_contract.mjs";

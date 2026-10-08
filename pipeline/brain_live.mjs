@@ -1,9 +1,9 @@
-// brain_live.mjs — CEREBRO EN VIVO de Oddly Loop (corre cada 2 horas, 24/7).
-// 1) Revisa las decisiones vencidas del ledger contra su propio criterio (autocrítica).
-// 2) Rehace el plan de HOY (lo que queda) y de MAÑANA con lo último que sabe.
-// 3) Elige qué producir AHORA con margen (nunca a última hora) y deja las órdenes en produce_now.txt.
-// 4) Escribe la bitácora de lo que pensó y cambió.
-// Entradas (las baja el workflow): decision.json, cadence.json, best_hours.json, bank.json, state.json,
+// brain_live.mjs — BRAIN IN VIVO of Oddly Loop (corre cada 2 hours, 24/7).
+// 1) Revisa the decisiones vencidas of the ledger contra its propio criterio (autocrítica).
+// 2) Rehace the plan of TODAY (lo that queda) and of TOMORROW with lo last that sabe.
+// 3) Elige qué producir NOW with margen (never to last hour) and deja the órdenes in produce_now.txt.
+// 4) Writes the bitácora of lo that pensó and cambió.
+// Inputs (the downloads the workflow): decision.JSON, cadence.JSON, best_hours.JSON, bank.JSON, state.JSON,
 //   aggr.json, views_at_age.json, monet.json, hyps.json, claims.json, lineup_prev.json, journal.json, ledger.json
 // Salidas: lineup.json, journal.json, ledger.json, claims.json, produce_now.txt (niche|variant|slot|idea)
 import fs from "node:fs";
@@ -33,7 +33,7 @@ const dlInv = rj("dl_inv.json", {});
 const yppOd = rj("ypp_od.json", {});
 const thoughts = [];
 
-// Data Lens en PAUSA (decisión de Juan, 2026-09-14): videos publicados desde la pausa y su mejor resultado.
+// Data Lens in PAUSA (decisión of Juan, 2026-09-14): videos publicados since the pausa and its best result.
 const DAY = 86400000;
 const dlVideos = [...(dlInv.longs || []), ...(dlInv.shorts || [])].filter((v) => v && v.privacy === "public" && v.published_at);
 function dlSince(sinceIso, minAgeDays) {
@@ -66,7 +66,7 @@ for (const e of dueEntries(ledger, now)) {
   const word = { ACERTO: "acerté", FALLO: "me equivoqué", INCONCLUSO: "no puedo juzgar todavía" }[after.status];
   thoughts.push({ kind: "autocritica", text: `Revisé "${e.decision}": ${word} (${after.verdict_note}).` });
 }
-// Registro de la pausa de Data Lens (una sola vez), con criterio verificable y fecha de revisión.
+// Registro of the pausa of Data Lens (a sola vez), with criterio verificable and fecha of revisión.
 if (!ledger.some((e) => e.type === "channel_pause" && e.channel === "data-lens")) {
   ledger.push(newEntry({
     type: "channel_pause", channel: "data-lens", subject: "produccion_diaria",
@@ -79,7 +79,7 @@ if (!ledger.some((e) => e.type === "channel_pause" && e.channel === "data-lens")
   }, now));
   thoughts.push({ kind: "plan", text: "Pausé la producción diaria de The Data Lens por tu decisión. Queda 1 experimento por semana y lo reviso en 21 días contra 500 vistas a los 7 días." });
 }
-// Meta de Oddly (decisión de Juan, 2026-09-14): nivel intermedio, con revisión del ritmo real a 28 días.
+// Meta of Oddly (decisión of Juan, 2026-09-14): nivel intermedio, with revisión of the ritmo real to 28 days.
 if (!ledger.some((e) => e.id === "goal-oddly-hito-intermedio")) {
   const expOpt = ((((monet.channels || {}).auto2 || {}).ypp || {}).tiers || {}).expanded;
   const needed = expOpt && Array.isArray(expOpt.options) ? ((expOpt.options.find((o) => o.key === "shorts_views_90d") || {}).per_day_needed ?? null) : null;
@@ -92,7 +92,7 @@ if (!ledger.some((e) => e.id === "goal-oddly-hito-intermedio")) {
 ledger = trim(ledger);
 const dlPause = ledger.find((e) => e.type === "channel_pause" && e.channel === "data-lens") || null;
 
-// ---------- 2) Plan de hoy (lo que queda) y de mañana ----------
+// ---------- 2) Plan of today (lo that queda) and of tomorrow ----------
 const allocation = decision.recommended_allocation && Object.keys(decision.recommended_allocation).length ? decision.recommended_allocation : (cadence.shorts_per_category || {});
 const niches = {};
 for (const c of decision.candidates || []) niches[c.key] = { label: c.label, median_vpd: c.median_vpd, n: c.n, rel: c.rel, why: c.why };
@@ -100,18 +100,18 @@ for (const r of rankRows) if (!niches[r.key]) niches[r.key] = { label: r.label, 
 
 const perSlot = aggr && aggr.oddly && aggr.oddly.behind ? 2 : 1;
 const hoursET = Array.isArray(bestHours.hours) && bestHours.hours.length ? bestHours.hours : null;
-// Oddly es solo Shorts: se descartan ideas del banco que proponen formato largo (sembradas cuando el
-// inventario clasificaba todo como "long" por falta de duración; auditoría BR-12).
+// Oddly is only Shorts: is descartan ideas of the banco that proponen formato largo (sembradas when the
+// inventario clasificaba everything as "long" by falta of duration; auditoría BR-12).
 const bankAll = Array.isArray(bankRaw) ? bankRaw : (bankRaw.items || []);
 const bank = bankAll.filter((b) => !/\blong\b|formato largo|video largo/i.test(String((b && b.text) || "")));
 if (bankAll.length - bank.length > 0) thoughts.push({ kind: "plan", text: `Descarté ${bankAll.length - bank.length} idea(s) del banco que proponían formato largo: este canal es solo Shorts.` });
 const d7vals = Object.values(viewsAtAge).map((r) => r && r.d7).filter((x) => Number.isFinite(Number(x)));
 const d7Median = d7vals.length >= 5 ? median(d7vals) : null;
 
-// Experimento de UNA variable (gancho) mientras la hipótesis siga abierta; solo en el nicho líder.
+// Experiment of A variable (hook) mientras the hipótesis siga abierta; only in the niche líder.
 const leader = Object.entries(allocation).sort((a, b) => b[1] - a[1])[0];
-// Estrategia del hito intermedio: un par de ganchos DISTINTO cada semana ISO, solo en el nicho líder. Cada video
-// queda atado a su brazo por su franja (ledger) para juzgarlo con las vistas al día 7.
+// Estrategia of the hito intermedio: a par of hooks DISTINTO cada week ISO, only in the niche líder. Cada video
+// queda atado to its brazo by its slot (ledger) for juzgarlo with the vistas to the day 7.
 const experiment = leader ? weeklyHookExperiment(isoWeek(now), leader[0]) : null;
 if (experiment && !ledger.some((e) => e.type === "hook_experiment" && e.subject === experiment.id)) {
   const base = newEntry({
@@ -127,15 +127,15 @@ if (experiment && !ledger.some((e) => e.type === "hook_experiment" && e.subject 
   thoughts.push({ kind: "plan", text: `Esta semana pruebo ganchos en ${(niches[leader[0]] || {}).label || leader[0]}: ${experiment.labels[0]} contra ${experiment.labels[1]}. Lo juzgo con las vistas al día 7.` });
 }
 
-// Programados/publicados reales (para reconciliar el plan con lo que ya existe).
+// Programados/publicados reales (for reconciliar the plan with lo that already existe).
 const scheduled = (state.list || [])
   .map((v) => ({ video_id: v.video_id, title: v.title, niche: v.niche, publish_at: v.publish_at || (v.privacy === "public" ? v.pub_iso : null) }))
   .filter((v) => v.publish_at);
 
-// Atar a su brazo los videos del experimento que ya quedaron programados (misma franja y nicho).
+// Atar to its brazo the videos of the experiment that already quedaron programados (same slot and niche).
 ledger = ledger.map((e) => (e.type === "hook_experiment" && e.status === "PENDIENTE" && (e.pending || []).length ? attachHookVideos(e, scheduled, now) : e));
 
-// Reclamos de producción: vencen a las 3 horas si no apareció el video programado.
+// Reclamos of producción: vencen to the 3 hours if not apareció the video scheduled.
 claims = claims.filter((c) => now - Date.parse(c.claimed_at) < 3 * HOUR);
 
 const ch = (monet.channels && monet.channels.auto2) || {};
@@ -150,7 +150,7 @@ const diffT = diffLineups(prevTomorrow && prevTomorrow.date === tomorrow.date ? 
 diffT.forEach((t) => thoughts.push({ kind: "plan", text: t }));
 if (prevToday && prevToday.date === today.date) diffLineups(prevToday, today).forEach((t) => thoughts.push({ kind: "plan", text: t }));
 
-// ---------- 3) Qué producir ahora ----------
+// ---------- 3) Qué producir now ----------
 const pick = pickToProduce([today, tomorrow], now, { max: 3, minLeadHours: 3, maxLeadHours: 40 });
 const lines = [];
 for (const it of pick) {
@@ -163,7 +163,7 @@ for (const it of pick) {
   if (it.experiment) ledger = ledger.map((e) => (e.type === "hook_experiment" && e.subject === it.experiment.id ? { ...e, pending: [...(e.pending || []), { slot_utc: it.slot_utc, niche: it.niche, arm: it.experiment.arm }] } : e));
   thoughts.push({ kind: "produccion", text: `Empiezo a producir ${it.niche_label} para las ${it.slot_et} ET del ${etDate(Date.parse(it.slot_utc), 0)}${it.experiment ? ` (brazo "${it.experiment.arm}" del experimento de gancho)` : ""}${it.idea ? `: ${it.idea.text}` : ""}.` });
 }
-// Se reflejan los reclamos nuevos en los planes que se publican.
+// Is reflejan the reclamos new in the planes that is publican.
 const mark = (l) => { l.items.forEach((i) => { if (i.status === "planeado" && pick.some((p) => p.slot_utc === i.slot_utc && p.niche === i.niche)) { i.status = "produciendo"; i.record.action = "En producción ahora; sale solo en esta franja"; } }); const c = (s) => l.items.filter((x) => x.status === s).length; l.summary = { planeado: c("planeado"), produciendo: c("produciendo"), programado: c("programado"), publicado: c("publicado"), sin_tiempo: c("sin_tiempo"), vencido: c("vencido") }; };
 mark(today); mark(tomorrow);
 

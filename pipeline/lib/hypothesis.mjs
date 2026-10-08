@@ -1,7 +1,7 @@
-// hypothesis.mjs — máquina PURA del registro de hipótesis (Brain OS Fase 3, §17).
-// Cada video es un experimento; cada hipótesis acumula evidencia (+/-) y evoluciona de estado.
+// hypothesis.mjs — máquina PURA of the registro of hipótesis (Brain OS Phase 3, §17).
+// Cada video is a experiment; cada hipótesis acumula evidencia (+/-) and evoluciona of estado.
 // Estados: NEW -> TESTING -> SUPPORTED | WEAKENED | REJECTED -> ARCHIVED.
-// Anti-confirmation bias (§40): el estado sale del BALANCE de evidencia, no de la opinión.
+// Anti-confirmation bias (§40): the estado sale of the BALANCE of evidencia, not of the opinión.
 import { sampleConfidence } from "./analytics_math.mjs";
 
 export function createHypothesis(id, statement, opts = {}) {
@@ -19,7 +19,7 @@ export function createHypothesis(id, statement, opts = {}) {
   };
 }
 
-// Recalcula support (-1..+1), confianza (0..1) y estado a partir de la evidencia. NO muta.
+// Recalcula support (-1..+1), confianza (0..1) and estado to partir of the evidencia. NOT muta.
 export function recompute(hyp) {
   const ev = hyp.evidence || [];
   const n = ev.length;
@@ -38,7 +38,7 @@ export function recompute(hyp) {
   return { ...hyp, support, confidence, status };
 }
 
-// Añade una evidencia y recalcula. NO muta el original.
+// Añade a evidencia and recalcula. NOT muta the original.
 export function addEvidence(hyp, ev) {
   const item = {
     direction: (Number(ev.direction) || 0) >= 0 ? 1 : -1,
@@ -52,7 +52,7 @@ export function addEvidence(hyp, ev) {
 
 export function archive(hyp) { return { ...hyp, status: "ARCHIVED" }; }
 
-// Inserta hipótesis semilla que falten (por id), sin pisar las existentes. Devuelve el registro nuevo.
+// Inserta hipótesis semilla that falten (by id), without pisar the existentes. Devuelve the registro new.
 export function ensureSeeds(registry, seeds, opts = {}) {
   const byId = new Map((registry || []).map((h) => [h.id, h]));
   for (const s of seeds || []) {

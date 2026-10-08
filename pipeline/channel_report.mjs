@@ -1,6 +1,6 @@
-// channel_report.mjs — jala metricas REALES del canal + cada video publicado y arma el
+// channel_report.mjs — jala metricas REALES of the channel + cada video published and arma the
 // reporte de direccion: subs, vistas, likes, comentarios, progreso de monetizacion (YPP)
-// y la programacion de proximos videos. Usa el refresh token (OAuth). Actualiza el estado.
+// and the scheduling of proximos videos. Uses the refresh token (OAuth). Actualiza the estado.
 //
 // Uso: node pipeline/channel_report.mjs <state.json> <out_state.json> <report.txt>
 import fs from "node:fs";
@@ -27,7 +27,7 @@ const api = async (url) => {
   return { ok: r.ok, status: r.status, json: await r.json().catch(() => ({})) };
 };
 
-// 1) Estadisticas del canal
+// 1) Estadisticas of the channel
 const ch = await api("https://www.googleapis.com/youtube/v3/channels?part=statistics,snippet&mine=true");
 const c = (ch.json.items || [])[0] || {};
 const cs = c.statistics || {};
@@ -35,7 +35,7 @@ const subs = +cs.subscriberCount || 0;
 const totalViews = +cs.viewCount || 0;
 const vids = +cs.videoCount || 0;
 
-// 2) Horas de reproduccion (Analytics API) — puede faltar el permiso yt-analytics.
+// 2) Hours of reproduccion (Analytics API) — can faltar the permiso yt-analytics.
 let watchHours = null;
 try {
   const a = await api("https://youtubeanalytics.googleapis.com/v2/reports?ids=channel==MINE&startDate=2020-01-01&endDate=2035-01-01&metrics=estimatedMinutesWatched");
@@ -45,7 +45,7 @@ try {
   }
 } catch {}
 
-// 3) Estadisticas por video publicado
+// 3) Estadisticas by video published
 for (const v of state.published || []) {
   const r = await api(`https://www.googleapis.com/youtube/v3/videos?part=statistics,status,snippet&id=${v.video_id}`);
   const it = (r.json.items || [])[0];
@@ -71,7 +71,7 @@ state.monetization.subs_pct = subsPct;
 state.monetization.hours_pct = hoursPct;
 state.monetization.elegible = subs >= 1000 && watchHours != null && watchHours >= 4000;
 
-// Conteo de Shorts (del plan en R2, si el workflow lo bajo a shorts_plan.json).
+// Conteo of Shorts (of the plan in R2, if the workflow lo bajo to Shorts_plan.JSON).
 let shortsInfo = { total: 0, uploaded: 0, public: 0 };
 try {
   if (fs.existsSync("shorts_plan.json")) {
@@ -80,7 +80,7 @@ try {
     shortsInfo.total = arr.length;
     const withId = arr.filter((x) => x.video_id);
     shortsInfo.uploaded = withId.length;
-    // Verifica privacidad de cada short subido.
+    // Verifies privacidad of cada short uploaded.
     for (const s of withId) {
       const rr = await api(`https://www.googleapis.com/youtube/v3/videos?part=status&id=${s.video_id}`);
       const st = (rr.json.items || [])[0];
@@ -90,8 +90,8 @@ try {
 } catch {}
 state.shorts = shortsInfo;
 
-// APRENDER de los datos: velocidad (vistas/día), TOP videos y MEJORES HORAS por datos del canal
-// (para replicar lo que jala y programar donde rinde). Sin señal suficiente -> horas research.
+// LEARN of the datos: velocidad (vistas/day), TOP videos and BEST HOURS by datos of the channel
+// (for replicar lo that jala and schedule where rinde). Without señal suficiente -> hours research.
 const nowMs = Date.now();
 const etHour = (iso) => { try { return +new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hour: "2-digit", hour12: false }).format(new Date(iso)); } catch { return null; } };
 const pubv = (state.published || []).filter((v) => v.privacy === "public" && v.published_at && v.stats);
@@ -110,7 +110,7 @@ state.channel_stats = { subs, total_views: totalViews, videos: vids };
 state.updated_at = new Date().toISOString();
 fs.writeFileSync(outStatePath, JSON.stringify(state, null, 2));
 
-// 5) Reporte para el chat
+// 5) Reporte for the chat
 const anyPublic = (state.published || []).some((v) => v.privacy === "public");
 const L = [];
 L.push(`📊 *Reporte del canal — ${state.channel?.name || "The Data Lens"}*`);

@@ -1,8 +1,8 @@
-// gemini_tts.mjs — narra un texto con Gemini TTS (voz de LOCUTOR profesional, gratis).
+// Gemini_tts.mjs — narra a texto with Gemini TTS (voice of LOCUTOR profesional, free).
 // Devuelve un MP3. Gemini TTS entrega PCM 16-bit base64; se convierte a mp3 con ffmpeg.
 //
-// Uso: node pipeline/gemini_tts.mjs <texto.txt> <salida.mp3> [voz]
-// Voces de locutor recomendadas (Google): Charon (informativo), Rasalgethi (informativo),
+// Usage: node pipeline/Gemini_tts.mjs <texto.txt> <output.mp3> [voice]
+// Voices of locutor recomendadas (Google): Charon (informativo), Rasalgethi (informativo),
 // Iapetus (claro), Alnilam (firme), Orus (firme). Default: Charon.
 import fs from "node:fs";
 import { execSync } from "node:child_process";

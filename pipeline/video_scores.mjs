@@ -1,6 +1,6 @@
-// video_scores.mjs — Score universal por video + Matriz de outliers (Growth Roadmap Fase 2).
-// Lee los episodios (+ retención) de un canal, puntúa cada video con veredicto accionable y
-// detecta los outliers propios -> escribe channel/<...>/scores.json (lo consume el reporte/Mini App).
+// video_scores.mjs — Score universal by video + Matriz of outliers (Growth Roadmap Phase 2).
+// Lee the episodios (+ retención) of a channel, puntúa cada video with veredicto accionable and
+// detecta the outliers propios -> writes channel/<...>/scores.JSON (lo consume the reporte/Mini App).
 // Uso: node pipeline/video_scores.mjs <episodes.json> <retention.json> <scoresOut.json>
 import fs from "node:fs";
 import { scoreVideo, findOutliers } from "./lib/video_score.mjs";
@@ -15,7 +15,7 @@ for (const v of (read(retFile, {}).videos) || []) retById[v.video_id] = v;
 const scores = episodes.map((e) => scoreVideo(e, retById[e.video_id] || null));
 const outliers = findOutliers(episodes);
 
-// Conteo por veredicto + top por score (los maduros, para "qué escalar / qué cortar").
+// Conteo by veredicto + top by score (the maduros, for "qué escalar / qué cut").
 const counts = { SCALE: 0, ITERATE: 0, TEST_AGAIN: 0, STOP: 0 };
 for (const s of scores) counts[s.verdict] = (counts[s.verdict] || 0) + 1;
 const mature = scores.filter((s) => s.mature).sort((a, b) => b.overall - a.overall);

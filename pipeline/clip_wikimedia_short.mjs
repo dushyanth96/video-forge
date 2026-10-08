@@ -1,6 +1,6 @@
-// clip_wikimedia_short.mjs — CLIPEADOR desde Wikimedia Commons (biblioteca ENORME, CC/PD, con
-// descarga DIRECTA confiable). Busca videos, VERIFICA la licencia (solo CC0 / CC-BY / dominio
-// público; rechaza SA/NC/ND), descarga, la IA elige el mejor momento -> SHORT 9:16 + atribución.
+// clip_wikimedia_short.mjs — CLIPEADOR since Wikimedia Commons (library ENORME, CC/PD, with
+// descarga DIRECTA confiable). Search videos, VERIFIES the licencia (only CC0 / CC-BY / dominio
+// public; rechaza SA/NC/ND), descarga, the IA elige the best momento -> SHORT 9:16 + atribución.
 //
 // Uso: node pipeline/clip_wikimedia_short.mjs "<tema>" <categoria> <out.mp4>
 // Env: GEMINI_API_KEY(,2). music.mp3 opcional.
@@ -16,7 +16,7 @@ const work = "clipwork"; fs.mkdirSync(work, { recursive: true });
 const sh = (c) => execSync(c, { stdio: ["ignore", "pipe", "pipe"] }).toString();
 const strip = (s) => (s || "").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
 
-// 1) Buscar videos + su licencia/atribución.
+// 1) Search videos + its licencia/atribución.
 console.log(`Buscando en Wikimedia Commons: "${topic}"…`);
 const api = `https://commons.wikimedia.org/w/api.php?action=query&format=json&prop=imageinfo&generator=search&gsrsearch=${encodeURIComponent(topic + " filetype:video")}&gsrnamespace=6&gsrlimit=25&iiprop=url|size|extmetadata`;
 const j = await (await tf(api)).json();
@@ -38,7 +38,7 @@ if (!src) { console.error("Wikimedia: sin video con licencia usable (CC0/CC-BY/P
 console.log(`Elegido: "${src.title}" · ${src.author} · ${src.licName}`);
 const attribution = `${src.title} · ${src.author} · Wikimedia Commons · ${src.licName}`;
 
-// 2) Descargar (directo, confiable). Puede ser .webm/.ogv/.mp4 -> ffmpeg lo maneja.
+// 2) Descargar (directo, confiable). Can ser .webm/.ogv/.mp4 -> ffmpeg lo maneja.
 const film = `${work}/film`;
 const r = await tf(src.url, {}, 600000);
 if (!r.ok) { console.error("descarga falló " + r.status); process.exit(1); }
@@ -46,7 +46,7 @@ fs.writeFileSync(film, Buffer.from(await r.arrayBuffer()));
 const dur = parseFloat(sh(`ffprobe -v error -show_entries format=duration -of csv=p=0 "${film}"`).trim()) || 0;
 if (dur < 6) { console.error("video muy corto"); process.exit(1); }
 
-// 3) Miniaturas + IA (adaptativo a la duración).
+// 3) Thumbnails + IA (adaptativo to the duration).
 const a0 = dur * 0.06, a1 = Math.max(a0 + 1, dur * 0.9), N = Math.min(14, Math.max(3, Math.floor(dur / 4))), step = (a1 - a0) / N, thumbs = [];
 for (let i = 0; i < N; i++) { const t = Math.round(a0 + i * step), p = `${work}/th${i}.jpg`; try { execSync(`ffmpeg -y -ss ${t} -i "${film}" -frames:v 1 -vf "scale=320:-1" "${p}"`, { stdio: "ignore" }); if (fs.existsSync(p)) thumbs.push({ t, p }); } catch {} }
 async function pick() {
@@ -60,14 +60,14 @@ let mo = await pick(); if (!mo || !isFinite(+mo.start)) mo = { start: Math.round
 const clipLen = Math.min(CLIP, Math.max(6, dur - 1));
 const start = Math.max(0, Math.min(+mo.start, dur - clipLen));
 
-// 4) Corte PRECISO + 9:16 profesional con sujeto centrado (smart crop) + música.
+// 4) Cut PRECISO + 9:16 profesional with sujeto centrado (smart crop) + music.
 const { w: srcW, h: srcH } = sourceWH(film);
 const sx = isFinite(+mo.subject_x) ? +mo.subject_x : 0.5;
 const vf = smartCropVf(W, H, srcW, srcH, sx, "eq=contrast=1.06:saturation=1.06");
 const pre = Math.max(0, start - 3), fine = (start - pre).toFixed(2), raw = `${work}/raw.mp4`;
-// Corte conservando el AUDIO ORIGINAL del video (sin -an).
+// Cut conservando the AUDIO ORIGINAL of the video (without -an).
 execSync(`ffmpeg -y -ss ${pre} -i "${film}" -ss ${fine} -t ${clipLen} -vf "${vf}" -r 30 -c:v libx264 -preset medium -crf 19 -pix_fmt yuv420p -profile:v high -c:a aac -b:a 160k "${raw}"`, { stdio: "inherit" });
-// AUDIO ORIGINAL protagonista + música muy suave de fondo (o música si el video no tiene audio).
+// AUDIO ORIGINAL protagonista + music very suave of background (or music if the video not tiene audio).
 const hadAudio = finishClip(raw, outPath);
 console.log("audio original: " + (hadAudio ? "sí" : "no (solo música)"));
 

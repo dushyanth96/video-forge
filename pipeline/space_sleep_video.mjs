@@ -1,8 +1,8 @@
-// space_sleep_video.mjs — Ensambla un video LARGO 16:9 (1920x1080) de relajación/sueño para Oddly:
-// imágenes REALES de la NASA (dominio público) con Ken Burns MUY lento y fundidos largos, un lecho
-// AMBIENTAL generado con ffmpeg (pad de acorde menor + brisa cósmica + eco — 100% original y legal),
-// la narración calmada por encima, tarjeta de título elegante y fundidos de entrada/salida suaves.
-// Sin subtítulos (visual limpio para dormir). Calidad alta pero encode ágil (video largo).
+// space_sleep_video.mjs — Ensambla a video LARGO 16:9 (1920x1080) of relajación/sueño for Oddly:
+// images REALES of the NASA (dominio public) with Ken Burns VERY slow and fundidos largos, a lecho
+// AMBIENTAL generated with ffmpeg (pad of acorde menor + brisa cósmica + eco — 100% original and legal),
+// the narration calmada by encima, tarjeta of title elegante and fundidos of input/output suaves.
+// Without subtitles (visual limpio for dormir). Quality alta but encode ágil (video largo).
 //
 // Uso: node pipeline/space_sleep_video.mjs <script.json> <narration.mp3> <out.mp4>
 import fs from "node:fs";
@@ -20,14 +20,14 @@ const narrDur = parseFloat(sh(`ffprobe -v error -show_entries format=duration -o
 const DUR = +(narrDur + 3).toFixed(2); // cola suave de 3 s al final (queda ambiente + estrellas)
 console.log(`Narración: ${narrDur.toFixed(1)}s -> video ${DUR.toFixed(1)}s · datos: ${facts.length}`);
 
-// Cuántas imágenes: ~1 cada ~30-40 s. Entre 8 y 20.
+// Cuántas images: ~1 cada ~30-40 s. Between 8 and 20.
 const N = Math.max(8, Math.min(20, Math.round(DUR / 34)));
 const FALLBACK_QUERIES = ["Orion Nebula", "Andromeda Galaxy", "Saturn Cassini", "Pillars of Creation Hubble", "Carina Nebula", "Jupiter", "Milky Way core", "Earth from space", "Hubble deep field", "Helix Nebula", "Whirlpool Galaxy", "solar flare Sun"];
 
 const usedImg = new Set();
 const credits = [];
 
-// ---------- NASA images-api: imagen real de alta resolución (dominio público) ----------
+// ---------- NASA images-API: image real of alta resolución (dominio public) ----------
 async function nasaImage(query) {
   let items = [];
   try {
@@ -40,7 +40,7 @@ async function nasaImage(query) {
     let assets = [];
     try { assets = await (await tf(it.href, {}, 30000)).json(); } catch { assets = []; }
     const jpgs = (Array.isArray(assets) ? assets : []).filter((u) => /\.jpe?g$/i.test(u) && !/~thumb\./i.test(u));
-    // Preferir "large" (buena calidad, peso manejable); evitar "orig" (puede pesar decenas de MB).
+    // Preferir "large" (buena quality, peso manejable); avoid "orig" (can pesar decenas of MB).
     const pick = jpgs.find((u) => /~large\./i.test(u)) || jpgs.find((u) => /~medium\./i.test(u)) || jpgs.find((u) => /~orig\./i.test(u)) || (it.links && it.links[0] && it.links[0].href);
     if (!pick) continue;
     usedImg.add(nasaId);
@@ -49,7 +49,7 @@ async function nasaImage(query) {
   return null;
 }
 
-// Fondo de espacio profundo generado (última red: nunca aborta el video).
+// Background of espacio profundo generated (last red: never aborta the video).
 function starfield(dur, idx) {
   const seg = `${work}/seg${idx}.mp4`;
   const c0 = ["0x05070f", "0x0a0612", "0x060a12"][idx % 3];
@@ -61,7 +61,7 @@ function starfield(dur, idx) {
   return { seg, kind: "generated" };
 }
 
-// Ken Burns 16:9 MUY lento (zoom suave, paneo mínimo) -> sensación de deriva calmada.
+// Ken Burns 16:9 VERY slow (zoom suave, paneo mínimo) -> sensación of deriva calmada.
 function kenBurns(imgPath, dur, idx) {
   const frames = Math.max(2, Math.round(dur * FPS));
   const zoomIn = idx % 2 === 0;
@@ -85,7 +85,7 @@ async function buildSegment(query, dur, idx) {
       const r = await tf(img.url, {}, 180000);
       if (!r.ok) continue;
       fs.writeFileSync(ip, Buffer.from(await r.arrayBuffer()));
-      // Verificar que ffmpeg pueda leerla (algunas NASA vienen corruptas/enormes).
+      // Verify that ffmpeg pueda leerla (algunas NASA vienen corruptas/enormes).
       try { sh(`ffprobe -v error -select_streams v:0 -show_entries stream=width -of csv=p=0 "${ip}"`); } catch { continue; }
       const seg = kenBurns(ip, dur, idx);
       console.log(`  seg ${idx}: NASA "${img.title}"`);
@@ -97,7 +97,7 @@ async function buildSegment(query, dur, idx) {
   return starfield(dur, idx);
 }
 
-// Repartir N imágenes a lo largo de la narración (usa las queries de los datos, en orden, ciclando).
+// Repartir N images to lo largo of the narration (uses the queries of the datos, in orden, ciclando).
 const TD = 1.4; // fundido largo entre imágenes (disolvencia onírica)
 const segDur = +(((DUR + TD * (N - 1)) / N) + 0.3).toFixed(2);
 const built = [];
@@ -106,7 +106,7 @@ for (let i = 0; i < N; i++) {
   built.push(await buildSegment(q, segDur, i));
 }
 
-// Concatenar con xfade -> fondo del largo total.
+// Concatenar with xfade -> background of the largo total.
 const bg = `${work}/bg.mp4`;
 if (built.length === 1) {
   execSync(`ffmpeg -y -stream_loop -1 -i "${built[0].seg}" -t ${DUR.toFixed(2)} -r ${FPS} -c:v libx264 -preset veryfast -crf 20 -pix_fmt yuv420p "${bg}"`, { stdio: "ignore" });
@@ -122,8 +122,8 @@ if (built.length === 1) {
   execSync(`ffmpeg -y ${inputs} -filter_complex "${filter}" -map "${acc}" -t ${DUR.toFixed(2)} -r ${FPS} -c:v libx264 -preset veryfast -crf 20 -pix_fmt yuv420p "${bg}"`, { stdio: "ignore" });
 }
 
-// ---------- Lecho ambiental generado (pad de La menor + brisa cósmica + eco). Legal y original. ----------
-// tremolo exige f>=0.1 Hz. Envuelto en try/catch: un ambiente que falla NO debe tumbar el render.
+// ---------- Lecho ambiental generated (pad of The menor + brisa cósmica + eco). Legal and original. ----------
+// tremolo exige f>=0.1 Hz. Envuelto in try/catch: a ambiente that fails NOT must tumbar the render.
 const amb = `${work}/ambient.m4a`;
 try {
   execSync(`ffmpeg -y ` +
@@ -158,7 +158,7 @@ try {
   }
 }
 
-// ---------- Tarjeta de título elegante (primeros ~7 s, con fundido) ----------
+// ---------- Tarjeta of title elegante (primeros ~7 s, with fundido) ----------
 const FONTS = ["/usr/share/fonts/truetype/liberation/LiberationSerif-Bold.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"];
 const FONT = FONTS.find((f) => fs.existsSync(f)) || "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf";
 const cardText = (script.card_title || "Space Facts to Fall Asleep To").replace(/[^A-Za-z0-9 ,'’&|-]/g, "").slice(0, 60);
@@ -167,7 +167,7 @@ const titleVf = `drawtext=textfile='${work}/title.txt':fontfile='${FONT}':fontco
   `x=(w-text_w)/2:y=(h-text_h)/2:shadowcolor=black@0.6:shadowx=2:shadowy=2:` +
   `alpha='if(lt(t\\,1)\\,t\\,if(lt(t\\,6)\\,1\\,if(lt(t\\,7)\\,7-t\\,0)))':enable='between(t\\,0\\,7)'`;
 
-// ---------- Mezcla final: fondo + título + narración calmada + ambiente + fundidos ----------
+// ---------- Mezcla final: background + title + narration calmada + ambiente + fundidos ----------
 execSync(`ffmpeg -y -i "${bg}" -i "${narrPath}" -i "${amb}" ` +
   `-filter_complex "` +
   `[0:v]${titleVf},fade=t=in:d=2.5,fade=t=out:st=${(DUR - 3).toFixed(2)}:d=3[v];` +

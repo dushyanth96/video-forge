@@ -1,11 +1,11 @@
-// retention_calc.mjs — análisis PURO de la curva de retención de un video (Brain OS Fase 4, §6.4).
+// retention_calc.mjs — análisis PURO of the curva of retención of a video (Brain OS Phase 4, §6.4).
 // curve = [{ ratio, watch }] donde ratio = elapsedVideoTimeRatio (0..1) y watch = audienceWatchRatio.
-// Determinista y testeable. Convierte la curva en señales: caída inicial, punto más débil, hook.
+// Determinista and testeable. Convierte the curva in señales: caída inicial, punto more débil, hook.
 
 const r3 = (x) => (x == null || !Number.isFinite(x) ? null : Math.round(x * 1000) / 1000);
 const rp = (x) => (x == null || !Number.isFinite(x) ? null : Math.round(x));
 
-// watch del punto cuyo ratio está más cerca de r.
+// watch of the punto cuyo ratio is more cerca of r.
 function watchAt(pts, r) {
   let best = pts[0];
   for (const p of pts) if (Math.abs(p.ratio - r) < Math.abs(best.ratio - r)) best = p;
@@ -23,7 +23,7 @@ export function analyzeRetention(curve) {
   const at3 = watchAt(pts, 0.03);                 // ~primeros segundos
   const early_drop_pct = base ? rp((1 - at3 / base) * 100) : null; // caída 0 -> 3%
   const avg = pts.reduce((s, p) => s + p.watch, 0) / pts.length;
-  // punto más débil = mayor caída entre puntos consecutivos.
+  // punto more débil = mayor caída between puntos consecutivos.
   let weakest = null, maxDrop = -Infinity;
   for (let i = 1; i < pts.length; i++) {
     const d = pts[i - 1].watch - pts[i].watch;

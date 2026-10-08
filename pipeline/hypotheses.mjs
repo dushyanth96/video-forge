@@ -1,10 +1,10 @@
-// hypotheses.mjs — mantiene el registro de hipótesis en channel/brain/hypotheses.json (Fase 3).
-// Idempotente: asegura las hipótesis semilla (sin pisar las existentes) y recalcula sus estados.
+// hypotheses.mjs — mantiene the registro of hipótesis in channel/brain/hypotheses.JSON (Phase 3).
+// Idempotente: asegura the hipótesis semilla (without pisar the existentes) and recalcula its estados.
 // Uso: node pipeline/hypotheses.mjs [registro.json] [salida.json]
 import fs from "node:fs";
 import { ensureSeeds, recompute } from "./lib/hypothesis.mjs";
 
-// Semillas reales (grounded en lo que sabemos). Empiezan en NEW; las fases futuras añaden evidencia.
+// Semillas reales (grounded in lo that sabemos). Empiezan in NEW; the phases futuras añaden evidencia.
 const SEEDS = [
   { id: "dl-money-niche", channel_scope: "data_lens", statement: "El nicho de DINERO/economía rinde por encima de la mediana en The Data Lens (pico histórico de 666 vistas/semana en esa era)." },
   { id: "global-question-hook", channel_scope: "global", statement: "Los hooks que abren con una PREGUNTA en los primeros 3s mejoran la retención inicial." },

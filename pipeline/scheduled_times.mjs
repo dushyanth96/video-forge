@@ -1,6 +1,6 @@
-// scheduled_times.mjs — imprime (CSV) los publishAt FUTUROS ya programados del canal, para que
-// best_slot NO repita franja (así los videos quedan escalonados, no todos a la misma hora).
-// Usa YT_* (en Oddly Loop, el workflow mapea YT2_* -> YT_*). Silencioso ante cualquier fallo.
+// scheduled_times.mjs — imprime (CSV) the publishAt FUTUROS already programados of the channel, for that
+// best_slot NOT repita slot (así the videos quedan escalonados, not all to the same hour).
+// Uses YT_* (in Oddly Loop, the workflow mapea YT2_* -> YT_*). Silencioso ante cualquier failure.
 const { YT_CLIENT_ID, YT_CLIENT_SECRET, YT_REFRESH_TOKEN } = process.env;
 const tf = (u, o = {}, ms = 12000) => fetch(u, { ...o, signal: AbortSignal.timeout(ms) });
 if (!YT_REFRESH_TOKEN) { process.stdout.write(""); process.exit(0); }

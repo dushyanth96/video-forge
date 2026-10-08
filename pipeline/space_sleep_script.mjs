@@ -1,10 +1,10 @@
-// space_sleep_script.mjs — GUION de un video LARGO de relajación/sueño para Oddly Loop:
-// "Space Facts to Fall Asleep To". Voz de locutor CALMADO (sleep), datos reales del espacio,
-// cada dato con una QUERY concreta para buscar imagen REAL de la NASA (dominio público).
-// Nada de ganchos agresivos: tono suave, pausado, hipnótico, para dejar sonando y dormir.
+// space_sleep_script.mjs — SCRIPT of a video LARGO of relajación/sueño for Oddly Loop:
+// "Space Facts to Fall Asleep To". Voice of locutor CALMADO (sleep), datos reales of the espacio,
+// cada dato with a QUERY concreta for search image REAL of the NASA (dominio public).
+// Nothing of hooks agresivos: tono suave, pausado, hipnótico, for dejar sonando and dormir.
 //
 // Uso: node pipeline/space_sleep_script.mjs <script.json> <narration.txt>
-// Env: GEMINI_API_KEY(,2), MINUTES (duración objetivo, def 10). Lee space_sleep_used.json (de R2).
+// Env: GEMINI_API_KEY(,2), MINUTES (duration objetivo, def 10). Lee space_sleep_used.JSON (of R2).
 import fs from "node:fs";
 import { TEXT_MODELS } from "./_models.mjs";
 
@@ -60,7 +60,7 @@ let out = null;
 const raw = await gemini(PROMPT);
 if (raw) { try { out = JSON.parse(raw); } catch {} }
 
-// Fallback mínimo (para no romper el pipeline si la IA falla).
+// Fallback mínimo (for not romper the pipeline if the IA fails).
 if (!out || !Array.isArray(out.facts) || out.facts.length < 4) {
   console.error("Gemini falló o JSON inválido -> fallback mínimo");
   const seed = [
@@ -88,8 +88,8 @@ if (!Array.isArray(out.hashtags) || !out.hashtags.length) out.hashtags = ["#slee
 out.card_title = "Space Facts to Fall Asleep To"; // título corto y elegante para la tarjeta en pantalla
 out.minutes = MINUTES;
 
-// Narración: intro + datos (con pausas suaves entre ellos) + outro. Las pausas (líneas en blanco + "...")
-// ayudan a la voz TTS a respirar y a dar el ritmo lento de sueño.
+// Narration: intro + datos (with pausas suaves between ellos) + outro. The pausas (lines in blanco + "...")
+// ayudan to the voice TTS to respirar and to dar the ritmo slow of sueño.
 const PAUSE = "\n\n...\n\n";
 const narration = [out.intro, ...out.facts.map((f) => f.text), out.outro]
   .filter(Boolean).join(PAUSE).replace(/[ \t]+/g, " ").trim();

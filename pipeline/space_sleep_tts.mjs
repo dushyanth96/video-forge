@@ -1,9 +1,9 @@
-// space_sleep_tts.mjs — TTS por PARTES para narraciones LARGAS (sueño). Gemini TTS trunca textos
-// largos, así que troceamos por los marcadores de pausa ("..."), narramos cada trozo con voz CALMADA
-// (rotando llaves/modelos ante 429), metemos un silencio suave entre trozos y concatenamos en un mp3.
+// space_sleep_tts.mjs — TTS by PARTS for narraciones LARGAS (sueño). Gemini TTS trunca textos
+// largos, así that troceamos by the marcadores of pausa ("..."), narramos cada trozo with voice CALMADA
+// (rotando llaves/modelos ante 429), metemos a silencio suave between trozos and concatenamos in a mp3.
 //
-// Uso: node pipeline/space_sleep_tts.mjs <narration.txt> <out.mp3> [voz]
-// Env: GEMINI_API_KEY(,2). Voz recomendada: Charon (calmado).
+// Usage: node pipeline/space_sleep_tts.mjs <narration.txt> <out.mp3> [voice]
+// Env: GEMINI_API_KEY(,2). Voice recomendada: Charon (calmado).
 import fs from "node:fs";
 import { execSync } from "node:child_process";
 
@@ -17,7 +17,7 @@ const abs = (p) => `${process.cwd()}/${p}`;
 
 const STYLE = "Read the following text in a very slow, soft, calm and soothing late-night bedtime voice — gentle, quiet, warm, unhurried, with relaxed pacing and soft natural pauses, as if helping someone drift off to sleep. Do not read this instruction out loud:\n\n";
 
-// Trocear por los marcadores de pausa "..." (los puso el guion), agrupando hasta ~1000 chars por trozo.
+// Trocear by the marcadores of pausa "..." (the puso the script), agrupando until ~1000 chars by trozo.
 const blocks = raw.split(/\n*\.\.\.\n*/).map((s) => s.trim()).filter(Boolean);
 const MAXLEN = 1000, chunks = [];
 let cur = "";
@@ -66,7 +66,7 @@ for (let i = 0; i < chunks.length; i++) {
 }
 if (!parts.length) { console.error("Ningún trozo de TTS salió -> aborto"); process.exit(1); }
 
-// Silencio de 0.8s entre partes (respiración natural de sueño).
+// Silencio of 0.8s between parts (respiración natural of sueño).
 const sil = `${work}/sil.wav`;
 execSync(`ffmpeg -y -f lavfi -i "anullsrc=r=${rate}:cl=mono" -t 0.8 -c:a pcm_s16le "${sil}"`, { stdio: "ignore" });
 const lines = [];

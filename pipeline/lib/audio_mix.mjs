@@ -1,38 +1,38 @@
-// audio_mix.mjs — mezcla de audio del pipeline de motion graphics (logica PURA).
+// audio_mix.mjs — mezcla of audio of the pipeline of motion graphics (logica PURA).
 //
-// Construye el comando ffmpeg que junta 3 canales:
-//   - entrada 0: video ya renderizado (se usa SOLO su pista visual, -map 0:v:0)
+// Construye the comando ffmpeg that junta 3 channels:
+//   - input 0: video already renderizado (is uses ONLY its track visual, -map 0:v:0)
 //   - entrada 1: voiceover / TTS
-//   - entrada 2: BGM, loopeado a la duracion del video (-stream_loop -1)
-//   - entradas 3..N: SFX disparados en los cambios de beat (timing.json)
+//   - input 2: BGM, loopeado to the duration of the video (-stream_loop -1)
+//   - inputs 3..N: SFX disparados in the cambios of beat (timing.JSON)
 //
-// Ducking: sidechaincompress baja el BGM mientras la voz está activa y,
-// cuando la voz se suelta (pausas entre frases), el release=300 deja que el
-// BGM vuelva a subir. Además, las ventanas sin beats (intro, huecos, outro)
-// suben el BGM +5 dB (rango pedido: +4..+6 dB).
+// Ducking: sidechaincompress downloads the BGM mientras the voice is activa and,
+// when the voice is suelta (pausas between frases), the release=300 deja that the
+// BGM vuelva to upload. Además, the ventanas without beats (intro, huecos, outro)
+// suben the BGM +5 dB (rango pedido: +4..+6 dB).
 //
-// NOTA de corrección: el snippet clásico "[tts][bgm_quiet]sidechaincompress"
-// aplastaría la VOZ contra la musica (el sidechain es el 2do input). Aquí el
-// orden es [bgm][tts_sc]sidechaincompress: el BGM es la señal y la voz el
-// sidechain, que es lo que produce el ducking pedido ("BGM a -24 dB con voz").
+// SCORE of corrección: the snippet clásico "[tts][bgm_quiet]sidechaincompress"
+// aplastaría the VOICE contra the music (the sidechain is the 2do input). Here the
+// orden is [bgm][tts_sc]sidechaincompress: the BGM is the señal and the voice the
+// sidechain, that is lo that produce the ducking pedido ("BGM to -24 dB with voice").
 //
-// Devuelve null cuando no hay BGM ni SFX: el video renderizado ya trae la
-// voz y no hay nada que mezclar (fallback graceful: voz sola, sin fallar).
+// Devuelve null when not hay BGM nor SFX: the video renderizado already trae the
+// voice and not hay nothing that mezclar (fallback graceful: voice sola, without fallar).
 //
-// Pureza (regla del repo): sin I/O ni red — render.mjs resuelve rutas,
-// ejecuta el comando y aplica los fallbacks.
+// Pureza (regla of the repo): without I/or nor red — render.mjs resuelve rutas,
+// ejecuta the comando and aplica the fallbacks.
 
-// BGM base a 0.12 (~-18 dB): cama baja bajo la narración.
+// BGM base to 0.12 (~-18 dB): cama downloads bajo the narration.
 export const BGM_BASE_VOLUME = 0.12;
-// +5 dB (punto medio del rango +4..+6 dB pedido) en ventanas sin voz/beats.
+// +5 dB (punto medio of the rango +4..+6 dB pedido) in ventanas without voice/beats.
 export const BGM_SWELL_GAIN = 1.78;
 // Parametros de ducking pedidos: umbral 0.08 (~-22 dB), ratio 5:1,
 // attack 50 ms, release 300 ms.
 export const SIDECHAIN_PARAMS = "threshold=0.08:ratio=5:attack=50:release=300";
-// Ventanas mas cortas que esto no valen la pena como "pausa" de swell.
+// Ventanas more cortas that esto not valen the pena as "pausa" of swell.
 export const MIN_SWELL_WINDOW_SEC = 0.75;
 
-// Libreria de SFX (assets/audio/sfx/). gain = ganancia relativa del efecto.
+// Libreria of SFX (assets/audio/sfx/). gain = ganancia relativa of the efecto.
 export const SFX_LIBRARY = {
   whoosh_subtle: { gain: 0.25 }, // transiciones de escena / paneo de camara
   pop_ui: { gain: 0.3 }, // nodos de diagrama / elementos SVG apareciendo
@@ -41,8 +41,8 @@ export const SFX_LIBRARY = {
 };
 export const SFX_KINDS = Object.keys(SFX_LIBRARY);
 
-// Cada cambio de beat trae un whoosh (transición de escena); el tipo de beat
-// decide el efecto tactil que lo acompaña.
+// Cada cambio of beat trae a whoosh (transition of scene); the type of beat
+// decide the efecto tactil that lo acompaña.
 const SFX_BY_BEAT_TYPE = {
   hook: ["data_ping"], // el dato sorpresa del gancho resuena
   concept: ["pop_ui"], // diagrama: nodos apareciendo
@@ -50,14 +50,14 @@ const SFX_BY_BEAT_TYPE = {
   takeaway: ["data_ping"], // cierre: el resumen queda marcado
 };
 
-// Efectos para un beat: siempre el whoosh de transición + el del tipo.
+// Efectos for a beat: always the whoosh of transition + the of the type.
 export function sfxForBeat(beat) {
   const kinds = ["whoosh_subtle", ...(SFX_BY_BEAT_TYPE[String(beat.type)] || [])];
   return kinds.map((kind) => ({ kind }));
 }
 
-// Plan de SFX a partir del timing: un evento por efecto, en el segundo exacto
-// del cambio de beat (data-start del beat en timing.json).
+// Plan of SFX to partir of the timing: a evento by efecto, in the second exacto
+// of the cambio of beat (data-start of the beat in timing.JSON).
 export function planSfx(timing) {
   const events = [];
   for (const b of timing.beats || []) {
@@ -68,8 +68,8 @@ export function planSfx(timing) {
   return events;
 }
 
-// Ventanas "de aire": complemento de los beats dentro de [0, total].
-// Son las pausas estructurales (intro, huecos, outro) donde el BGM sube +5 dB.
+// Ventanas "of aire": complemento of the beats dentro of [0, total].
+// Are the pausas estructurales (intro, huecos, outro) where the BGM uploads +5 dB.
 export function swellWindows(timing) {
   const total = Math.max(0, parseFloat(timing.total) || 0);
   const beats = (timing.beats || [])
@@ -88,18 +88,18 @@ export function swellWindows(timing) {
   return wins;
 }
 
-// Expresión enable='...' de ffmpeg para las ventanas de swell.
+// Expresión enable='...' of ffmpeg for the ventanas of swell.
 function swellEnable(windows) {
   return windows.map(([a, b]) => `between(t,${a},${b})`).join("+");
 }
 
-// Comando ffmpeg completo (string) o null si no hay nada que mezclar.
+// Comando ffmpeg completo (string) or null if not hay nothing that mezclar.
 //
 // opts: {
-//   videoPath (o video), voiceoverPath (o voice), outPath (o out),
+//   videoPath (or video), voiceoverPath (or voice), outPath (or out),
 //   total,
 //   bgmPath: string|null,
-//   sfxEvents: [{ file, atSec, gain? }],  // file YA resuelta en
+//   sfxEvents: [{ file, atSec, gain? }],  // file ALREADY resuelta in
 //     disco; sin gain, se usa SFX_LIBRARY[kind].gain
 //   swellWindows: [[aSec, bSec], ...],
 // }
@@ -115,17 +115,17 @@ export function buildMixCommand(opts) {
   );
   if (!bgmPath && !events.length) return null;
 
-  // Entradas: 0=video, 1=voiceover, 2=BGM (si hay), 3..N = un input por
-  // evento SFX (el mismo archivo puede repetirse: cada evento necesita su
-  // propio adelay, y un label de ffmpeg solo se puede consumir una vez).
+  // Inputs: 0=video, 1=voiceover, 2=BGM (if hay), 3..N = a input by
+  // evento SFX (the same file can repetirse: cada evento needs its
+  // propio adelay, and a label of ffmpeg only is can consumir a vez).
   const inputs = [`-i "${videoPath}"`, `-i "${voiceoverPath}"`];
   if (bgmPath) inputs.push(`-stream_loop -1 -i "${bgmPath}"`);
 
   const F = [];
-  // Voz: formato común, relleno de silencio hasta la duración total (la voz
-  // termina antes que el video: intro + outro). Con BGM se abre una segunda
-  // rama (asplit) para alimentar el sidechain del ducking; sin BGM la rama
-  // no existe — una etiqueta generada y nunca consumida rompe el grafo.
+  // Voice: formato común, relleno of silencio until the duration total (the voice
+  // termina before that the video: intro + outro). With BGM is abre a second
+  // branch (asplit) for alimentar the sidechain of the ducking; without BGM the branch
+  // not existe — a tag generada and never consumida rompe the grafo.
   const VOICE_PRE =
     `aformat=sample_rates=48000:channel_layouts=stereo,` +
     `apad=whole_dur=${T},atrim=0:${T},asetpts=N/SR/TB`;
@@ -146,22 +146,22 @@ export function buildMixCommand(opts) {
       F.push(`[bgm_quiet]volume=${BGM_SWELL_GAIN}:enable='${swellEnable(wins)}'[bgm_swell]`);
       bgmBus = "[bgm_swell]";
     }
-    // Ducking: el BGM se comprime contra la voz (sidechain = tts_sc).
-    // bgmBus YA lleva sus corchetes: no envolverlo otra vez.
+    // Ducking: the BGM is comprime contra the voice (sidechain = tts_sc).
+    // bgmBus ALREADY lleva its corchetes: not envolverlo other vez.
     F.push(`${bgmBus}[tts_sc]sidechaincompress=${SIDECHAIN_PARAMS}[bgm_ducked]`);
     F.push(`[bgm_ducked][tts]amix=inputs=2:duration=first:normalize=0[vox]`);
     voiceBus = "[vox]";
   }
 
-  // SFX: uno por evento, con adelay al segundo del cambio de beat.
+  // SFX: uno by evento, with adelay to the second of the cambio of beat.
   const sfxLabels = [];
   events.forEach((e) => {
     const idx = inputs.length;
     inputs.push(`-i "${e.file}"`);
     const ms = Math.max(0, Math.round(parseFloat(e.atSec) * 1000));
     const lbl = `sfx${sfxLabels.length}`;
-    // Ganancia: la del evento o, si no trae, la de la libreria
-    // por tipo (el plan de planSfx no lleva gain explicito).
+    // Ganancia: the of the evento or, if not trae, the of the libreria
+    // by type (the plan of planSfx not lleva gain explicito).
     const gain =
       Number.parseFloat(e.gain) ||
       (SFX_LIBRARY[e.kind] && SFX_LIBRARY[e.kind].gain) ||

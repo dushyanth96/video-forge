@@ -1,19 +1,19 @@
-// publish_atoplay.mjs — publica en AtoPlay automatizando el navegador con
-// Playwright (EN LA NUBE: GitHub Actions, Chromium headless).
+// publish_AtoPlay.mjs — publishes in AtoPlay automatizando the navegador with
+// Playwright (IN THE NUBE: GitHub Actions, Chromium headless).
 //
-// AtoPlay no tiene API pública documentada, así que replicamos el flujo web
+// AtoPlay not tiene API pública documentada, así that replicamos the flujo web
 // humano: login → upload → metadatos → publicar.
 //
-// Uso: node pipeline/publish_atoplay.mjs <video.mp4> <review.json> <out atoplay.json>
+// Usage: node pipeline/publish_AtoPlay.mjs <video.mp4> <review.JSON> <out AtoPlay.JSON>
 //
 // Env:
 //   ATOPLAY_EMAIL         usuario/email de AtoPlay (requerido)
-//   ATOPLAY_PASSWORD      contraseña de AtoPlay (requerido)
-//   ATOPLAY_CHANNEL_NAME  canal destino (default: "skillgrox")
+//   ATOPLAY_PASSWORD      contraseña of AtoPlay (required)
+//   ATOPLAY_CHANNEL_NAME  channel destino (default: "skillgrox")
 //   ATOPLAY_CATEGORY      categoría (default: "Technology")
 //
-// Sin ATOPLAY_EMAIL / ATOPLAY_PASSWORD -> SKIP limpio (exit 0); nunca
-// bloquea la publicación de YouTube.
+// Without ATOPLAY_EMAIL / ATOPLAY_PASSWORD -> SKIP limpio (exit 0); never
+// bloquea the publishing of YouTube.
 import fs from "node:fs";
 
 const [videoPath, reviewPath, outPath] = process.argv.slice(2);
@@ -26,7 +26,7 @@ const EMAIL = (process.env.ATOPLAY_EMAIL || "").trim();
 const PASSWORD = process.env.ATOPLAY_PASSWORD || "";
 const CHANNEL = (process.env.ATOPLAY_CHANNEL_NAME || "").trim() || "skillgrox";
 const CATEGORY = (process.env.ATOPLAY_CATEGORY || "").trim() || "Technology";
-// Base URL anulable (default https://atoplay.com) — útil para tests locales.
+// Base URL anulable (default https://AtoPlay.com) — útil for tests locales.
 const BASE = (process.env.ATOPLAY_BASE_URL || "").trim().replace(/\/$/, "") || "https://atoplay.com";
 const LOGIN_URL = `${BASE}/login`;
 const UPLOAD_URL = `${BASE}/video-upload`;
@@ -37,8 +37,8 @@ const write = (obj) => {
   fs.writeFileSync(outPath, JSON.stringify(obj, null, 2));
 };
 
-// Sin credenciales -> SKIP limpio. Se evalúa ANTES de importar Playwright
-// para que el skip no dependa de que el paquete esté instalado.
+// Without credenciales -> SKIP limpio. Is evalúa BEFORE of importar Playwright
+// for that the skip not dependa of that the paquete esté instalado.
 if (!EMAIL || !PASSWORD) {
   console.log("ATOPLAY no configurado (ATOPLAY_EMAIL / ATOPLAY_PASSWORD) — SKIP");
   write({ ok: false, skipped: true, reason: "not configured", at: new Date().toISOString() });
@@ -49,7 +49,7 @@ if (!fs.existsSync(videoPath) || fs.statSync(videoPath).size < 10000) {
   process.exit(1);
 }
 
-// Metadatos del review (title / description / tags).
+// Metadatos of the review (title / description / tags).
 let review = {};
 try { review = JSON.parse(fs.readFileSync(reviewPath, "utf8")); } catch { review = {}; }
 const TITLE = String(review.title || "Video Forge").slice(0, 100);
@@ -68,7 +68,7 @@ const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, l
 const page = await ctx.newPage();
 page.setDefaultTimeout(45000);
 
-// Evidencia para depurar: capturas bajo work/ (el workflow las borra al final).
+// Evidencia for depurar: capturas bajo work/ (the workflow the deletes to the final).
 let step = 0;
 const shot = async (label) => {
   try {
@@ -76,7 +76,7 @@ const shot = async (label) => {
   } catch {}
 };
 
-// Rellena el PRIMER campo que exista entre los selectores dados.
+// Rellena the PRIMER campo that exista between the selectores dados.
 const fillFirst = async (selectors, value) => {
   for (const sel of selectors) {
     const el = page.locator(sel).first();
@@ -88,7 +88,7 @@ const fillFirst = async (selectors, value) => {
   return false;
 };
 
-// Elige un <option> (por texto exacto) en el primer <select> que la tenga.
+// Elige a <option> (by texto exacto) in the primer <select> that the tenga.
 const pickInSelects = async (text) => {
   const selects = page.locator("select");
   const n = await selects.count();
@@ -103,7 +103,7 @@ const pickInSelects = async (text) => {
   return false;
 };
 
-// Abre un dropdown custom (combobox / botón) y pincha la opción por texto.
+// Abre a dropdown custom (combobox / button) and pincha the option by texto.
 const pickInDropdown = async (text) => {
   const trigger = page
     .locator('[role="combobox"], [data-testid*="channel" i], button:has-text("channel" i), div[role="button"]:has-text("channel" i)')
@@ -158,7 +158,7 @@ try {
     'input[placeholder*="description" i]',
   ], DESCRIPTION);
 
-  // Canal: primero un <select> nativo, luego un dropdown custom.
+  // Channel: first a <select> nativo, then a dropdown custom.
   log(`→ Setting channel to ${CHANNEL}…`);
   let channelSet = await pickInSelects(CHANNEL);
   if (!channelSet) channelSet = await pickInDropdown(CHANNEL);
@@ -188,7 +188,7 @@ try {
   await pubBtn.scrollIntoViewIfNeeded().catch(() => {});
   await pubBtn.click();
 
-  // Esperar de verdad: barra de progreso -> toast/navegación de éxito.
+  // Esperar of true: barra of progreso -> toast/navegación of éxito.
   const deadline = Date.now() + 12 * 60 * 1000; // videos grandes: hasta 12 min
   let success = false;
   while (Date.now() < deadline) {

@@ -1,4 +1,4 @@
-# Oddly Clipper - RUN. Corre TODO el flujo (buscar/descargar CC -> IA -> editar -> QA -> R2).
+# Oddly Clipper - RUN. Corre EVERYTHING the flujo (search/descargar CC -> IA -> editar -> QA -> R2).
 # Uso:  .\run.ps1                 (usa config.json: busca o 'sources')
 #       .\run.ps1 "URL_CC"        (procesa esa URL)
 $ErrorActionPreference = "Stop"

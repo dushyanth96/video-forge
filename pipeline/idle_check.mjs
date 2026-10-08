@@ -1,17 +1,17 @@
-// idle_check.mjs — para el video diario del canal principal (The Data Lens). Imprime "IDLE PEND":
-//   IDLE = horas desde el ULTIMO video LARGO subido al canal (cualquier privacidad).
-//   PEND = cuantos videos LARGOS hay PRIVADOS sin programar (esperando que Juan los apruebe).
+// idle_check.mjs — for the video diario of the channel principal (The Data Lens). Imprime "IDLE PEND":
+//   IDLE = hours since the LAST video LARGO uploaded to the channel (cualquier privacidad).
+//   PEND = cuantos videos LARGOS hay PRIVADOS without schedule (esperando that Juan the apruebe).
 //
-// Los Shorts NO cuentan en ninguno de los dos, y ese era el bug: se miraba cualquier video,
-// asi que los Shorts diarios mantenian IDLE por debajo de 18h y la fabrica de largos nunca
-// arrancaba (`produce_video.yml` dejo de correr el 2026-08-21).
-// El cron produce solo si IDLE > 18h Y PEND < tope -> trabaja solo cuando Juan no ha producido en
-// 18h, acumula un par para aprobar, y NO produce 'a lo loco'. Ante error, imprime "999 0" (deja producir).
+// The Shorts NOT cuentan in ninguno of the dos, and ese era the bug: is miraba cualquier video,
+// asi that the Shorts diarios mantenian IDLE by debajo of 18h and the fabrica of largos never
+// arrancaba (`produce_video.yml` dejo of correr the 2026-08-21).
+// The cron produce only if IDLE > 18h and PEND < tope -> trabaja only when Juan not ha producido in
+// 18h, acumula a par for approve, and NOT produce 'to lo loco'. Ante error, imprime "999 0" (deja producir).
 import fs from "node:fs";
 import { segundosISO, esLargo, SEGUNDOS_SHORT } from "./lib/duracion.mjs";
 const { YT_CLIENT_ID, YT_CLIENT_SECRET, YT_REFRESH_TOKEN } = process.env;
 const tf = (u, o = {}, ms = 12000) => fetch(u, { ...o, signal: AbortSignal.timeout(ms) });
-// Videos OCULTOS (retirados) NO cuentan como "pendientes por aprobar" -> no bloquean la produccion.
+// Videos OCULTOS (retirados) NOT cuentan as "pendientes by approve" -> not bloquean the produccion.
 let hidden = new Set();
 try { hidden = new Set(JSON.parse(fs.readFileSync("hidden.json", "utf8"))); } catch {}
 if (!YT_REFRESH_TOKEN) { process.stdout.write("999 0"); process.exit(0); }
@@ -28,7 +28,7 @@ try {
   for (let i = 0; i < ids.length; i += 50) {
     const j = await (await tf(`https://www.googleapis.com/youtube/v3/videos?part=snippet,status,contentDetails&id=${ids.slice(i, i + 50).join(",")}`, { headers: H })).json();
     for (const v of j.items || []) {
-      // Solo los LARGOS deciden si toca producir: un Short de hace 2h no significa que la
+      // Only the LARGOS deciden if toca producir: a Short of hace 2h not significa that the
       // fabrica de largos tenga trabajo hecho.
       if (!esLargo(segundosISO((v.contentDetails || {}).duration))) continue;
       const t = Date.parse(v.snippet.publishedAt) || 0; if (t > newest) newest = t;

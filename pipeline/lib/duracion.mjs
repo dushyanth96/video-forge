@@ -1,11 +1,11 @@
-// duracion.mjs — leer la duracion ISO8601 de YouTube y distinguir Short de largo.
+// duration.mjs — leer the duration ISO8601 of YouTube and distinguir Short of largo.
 //
-// Por que existe: `idle_check.mjs` decidia si tocaba producir un video largo mirando
-// "horas desde el ULTIMO video subido al canal", sin filtrar por tipo. Desde que The Data
-// Lens publica Shorts a diario, siempre habia un video de hace pocas horas, asi que la
-// guarda de 18h nunca se abria y `produce_video.yml` dejo de correr el 2026-08-21.
-// La guarda preguntaba "se subio algo?" cuando queria preguntar "hace rato que no hay un
-// LARGO?". Los Shorts la satisfacian siempre.
+// By that existe: `idle_check.mjs` decidia if tocaba producir a video largo mirando
+// "hours since the LAST video uploaded to the channel", without filtrar by type. Since that The Data
+// Lens publishes Shorts to diario, always habia a video of hace pocas hours, asi that the
+// stores of 18h never is abria and `produce_video.yml` dejo of correr the 2026-08-21.
+// The stores preguntaba "is subio something?" when queria preguntar "hace rato that not hay a
+// LARGO?". The Shorts the satisfacian always.
 
 /** Segundos de una duracion ISO8601 de la API de YouTube ("PT1M30S", "P1DT2H"). */
 export function segundosISO(d) {
@@ -14,8 +14,8 @@ export function segundosISO(d) {
   return (+m[1] || 0) * 86400 + (+m[2] || 0) * 3600 + (+m[3] || 0) * 60 + (+m[4] || 0);
 }
 
-// YouTube admite Shorts de hasta 3 minutos. Se usa ese corte, no uno propio, para que
-// "largo" signifique aqui lo mismo que para la plataforma.
+// YouTube admite Shorts of until 3 minutes. Is uses ese cut, not uno propio, for that
+// "largo" signifique here lo same that for the plataforma.
 export const SEGUNDOS_SHORT = 180;
 
 /** ¿Es un video largo (no un Short)? Duracion 0/desconocida -> NO cuenta como largo. */

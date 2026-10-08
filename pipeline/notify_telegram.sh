@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Manda un mensaje (y opcionalmente un archivo) al chat de Telegram desde Actions.
+# Sends a message (and optionally a file) to the Telegram chat from Actions.
 # Uso: notify_telegram.sh "mensaje" [ruta_archivo]
 # Requiere env: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID.
-# Si faltan los secrets, no falla el workflow (solo avisa y sale 0).
+# If the secrets are missing, the workflow does not fail (it only warns and exits 0).
 set -uo pipefail
 
 MSG="${1:-}"
@@ -14,7 +14,7 @@ if [ -z "${TELEGRAM_BOT_TOKEN:-}" ] || [ -z "${TELEGRAM_CHAT_ID:-}" ]; then
   exit 0
 fi
 
-# Truncar MSG a ~4000 caracteres para evitar error 400 de Telegram (limite 4096)
+# Truncate MSG to ~4000 chars to avoid Telegram error 400 (limit 4096)
 if [ -n "$MSG" ] && [ ${#MSG} -gt 4000 ]; then
   MSG="${MSG:0:4000}...";
 fi
@@ -23,8 +23,8 @@ API="https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}"
 MK_ARGS=()
 [ -n "$MARKUP" ] && MK_ARGS=(-F "reply_markup=$MARKUP")
 
-# HORAS DE SILENCIO (no despertar a Juan). Bogotá = UTC-5. Sueño 11pm-5am Bogotá = 04:00-10:00 UTC.
-# En esa franja el mensaje SIGUE llegando pero SILENCIOSO (sin sonido/vibración).
+# HOURS OF SILENCIO (not despertar to Juan). Bogotá = UTC-5. Sueño 11pm-5am Bogotá = 04:00-10:00 UTC.
+# In that window the message STILL arrives but SILENT (no sound/vibration).
 H=$((10#$(date -u +%H)))
 SILENT_F=(); SILENT_D=()
 if [ "$H" -ge 4 ] && [ "$H" -lt 10 ]; then SILENT_F=(-F "disable_notification=true"); SILENT_D=(--data-urlencode "disable_notification=true"); fi
@@ -44,7 +44,7 @@ send_request() {
       return 0
     fi
     
-    # Si es error 429 (rate limit) o 5xx, reintentar con backoff
+    # If it is error 429 (rate limit) or 5xx, retry with backoff
     if [[ "$http_code" == "429" ]] || [[ "$http_code" =~ ^5[0-9]{2}$ ]]; then
       if [ $attempt -lt $max_attempts ]; then
         sleep $((attempt * 2))
@@ -53,7 +53,7 @@ send_request() {
       fi
     fi
     
-    # Si es otro error (ej 400, 401, 404), no reintentar más
+    # If it is another error (e.g. 400, 401, 404), no more retries
     break
   done
   

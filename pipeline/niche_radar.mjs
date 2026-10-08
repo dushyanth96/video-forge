@@ -1,12 +1,12 @@
-// niche_radar.mjs — RADAR DE NICHOS del canal automático #2.
-// Cada semana agrupa los videos por NICHO, los ranquea por rendimiento (vistas/video +
-// retención + subs) y recomienda por nicho: SEGUIR / ESCALAR / PIVOTAR — así sabemos si
-// seguimos con lo mismo o cambiamos. Scaffolding: si el canal auto aún no publica (sin
-// YT2 OAuth o sin niche_map), deja el portafolio y estado "recolectando datos".
+// niche_Radar.mjs — RADAR OF NICHES of the channel automático #2.
+// Cada week agrupa the videos by NICHE, the ranquea by performance (vistas/video +
+// retención + subs) and recomienda by niche: SEGUIR / ESCALAR / PIVOTAR — así sabemos if
+// seguimos with lo same or cambiamos. Scaffolding: if the channel auto still not publishes (without
+// YT2 OAuth or without niche_map), deja the portafolio and estado "recolectando datos".
 //
 // Uso: node pipeline/niche_radar.mjs <radar_in.json> <radar_out.json>
-// Env: GEMINI_API_KEY (recomendación IA), YT2_CLIENT_ID/SECRET/REFRESH (canal auto, opcional)
-//      niche_map.json (mapa video_id -> nicho, lo escribe la producción del canal auto)
+// Env: GEMINI_API_KEY (recomendación IA), YT2_CLIENT_ID/SECRET/REFRESH (channel auto, optional)
+//      niche_map.JSON (mapa video_id -> niche, lo writes the producción of the channel auto)
 import fs from "node:fs";
 import { TEXT_MODELS } from "./_models.mjs";
 
@@ -18,7 +18,7 @@ let radar = {};
 try { radar = JSON.parse(fs.readFileSync(inPath, "utf8")); } catch {}
 radar.portfolio = Array.isArray(radar.portfolio) ? radar.portfolio : [];
 
-// --- Recolectar rendimiento por nicho (requiere el canal auto: YT2 OAuth + niche_map) ---
+// --- Recolectar performance by niche (requires the channel auto: YT2 OAuth + niche_map) ---
 async function collect() {
   if (!YT2_REFRESH_TOKEN || !fs.existsSync("niche_map.json")) return null;
   let map = {};
@@ -43,7 +43,7 @@ async function collect() {
   } catch { return null; }
 }
 
-// --- Recomendación IA por nicho (SEGUIR/ESCALAR/PIVOTAR) ---
+// --- Recomendación IA by niche (SEGUIR/ESCALAR/PIVOTAR) ---
 async function gemini(prompt) {
   if (!GEMINI_API_KEY) return null;
   for (const m of TEXT_MODELS) {
@@ -68,7 +68,7 @@ if (!perf) {
   process.exit(0);
 }
 
-// Etiquetar cada nicho con su label del portafolio y ordenar.
+// Etiquetar cada niche with its label of the portafolio and ordenar.
 const lbl = Object.fromEntries(radar.portfolio.map((p) => [p.key, p.label]));
 radar.ranking = perf.map((r, i) => ({ rank: i + 1, key: r.key, label: lbl[r.key] || r.key, videos: r.videos, views: r.views, avg_views: r.avg_views }));
 

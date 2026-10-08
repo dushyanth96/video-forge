@@ -1,13 +1,13 @@
-// fix_shorts_plan.mjs — corrige el plan de shorts para que apunte a los video_id
-// PUBLICOS reales (los que se publicaron), no a los duplicados privados. Empareja
-// por un trozo distintivo del titulo.
+// fix_Shorts_plan.mjs — corrige the plan of Shorts for that apunte to the video_id
+// PUBLICOS reales (the that is publicaron), not to the duplicados privados. Empareja
+// by a trozo distintivo of the title.
 // Uso: node pipeline/fix_shorts_plan.mjs <plan.json>
 import fs from "node:fs";
 
 const planPath = process.argv[2] || "plan.json";
 const plan = JSON.parse(fs.readFileSync(planPath, "utf8"));
 
-// Los 3 shorts que quedaron PUBLICOS en el canal (inventario del 2026-07-30).
+// The 3 Shorts that quedaron PUBLICOS in the channel (inventario of the 2026-07-30).
 const MAP = [
   { match: "Earns Every Single Second", id: "A8xhmMKMenY" },
   { match: "Secret $10 Billion", id: "NwsTwl_8HT8" },

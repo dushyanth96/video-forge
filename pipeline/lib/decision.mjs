@@ -1,12 +1,12 @@
-// decision.mjs — Motor de decisión del Brain OS (Fase 5). PURO y testeable.
-// Convierte lo que las neuronas ya midieron (vistas/día, retención/hook, subs) en una
-// RECOMPENSA rica en [0,1], puntúa cada candidato (expected_value/confidence/risk/cost/
-// learning_value) y reparte los slots con un bandit Thompson (Beta) sembrado — así la
-// exploración es principiada (los nichos con pocos datos tienen posterior ancho y se
+// decision.mjs — Engine of decisión of the Brain OS (Phase 5). PURO and testeable.
+// Convierte lo that the neuronas already midieron (vistas/day, retención/hook, subs) in a
+// RECOMPENSA rica in [0,1], puntúa cada candidato (expected_value/confidence/risk/cost/
+// learning_value) and reparte the slots with a bandit Thompson (Beta) sembrado — así the
+// exploración is principiada (the niches with pocos datos tienen posterior ancho and is
 // prueban solos) en vez de proporcional-ganador ciego. Sin dependencias, determinista.
 import { sampleConfidence } from "./analytics_math.mjs";
 
-// --- RNG sembrado (mulberry32): determinista para tests y para estabilidad semanal. ---
+// --- RNG sembrado (mulberry32): determinista for tests and for estabilidad semanal. ---
 export function rng(seed) {
   let a = (seed >>> 0) || 1;
   return function () {
@@ -17,7 +17,7 @@ export function rng(seed) {
   };
 }
 
-// Semilla estable a partir de un texto (p. ej. la ISO-week): misma semana -> mismo reparto.
+// Semilla estable to partir of a texto (p. e.g.. the ISO-week): same week -> same reparto.
 export function seedFrom(str) {
   let h = 2166136261 >>> 0;
   for (const ch of String(str || "")) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); }
@@ -25,12 +25,12 @@ export function seedFrom(str) {
 }
 
 function clamp01(x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
-// Saturación suave x/(x+1): ninguna métrica cruda domina; ref evita dividir por sí misma.
+// Saturación suave x/(x+1): ninguna métrica cruda domina; ref avoids dividir by yes same.
 function sat(x, ref) { const v = Math.max(0, (+x || 0)) / (ref > 0 ? ref : 1); return v / (v + 1) * 2; }
 
-// Recompensa rica en [0,1]: NO solo vistas — retención (hook) y crecimiento (subs) cuentan.
-// m: { vpd, hook_score, subs_per_day }. ref: escalas del canal { vpd, subs_per_day }.
-// Renormaliza los pesos entre las señales presentes (robusto a campos faltantes).
+// Recompensa rica in [0,1]: NOT only vistas — retención (hook) and crecimiento (subs) cuentan.
+// m: { vpd, hook_score, subs_per_day }. ref: escalas of the channel { vpd, subs_per_day }.
+// Renormaliza the pesos between the señales presentes (robusto to campos faltantes).
 export function richReward(m = {}, ref = {}) {
   const W = { vpd: 0.5, hook: 0.3, subs: 0.2 };
   const parts = [];
@@ -43,20 +43,20 @@ export function richReward(m = {}, ref = {}) {
 }
 
 // Posterior Beta a partir de (recompensa media, nº de muestras): pseudo-conteos.
-// n=0 -> Beta(1,1) uniforme (máxima incertidumbre -> el bandit lo explora).
+// n=0 -> Beta(1,1) uniforme (máxima incertidumbre -> the bandit lo explora).
 export function posterior(reward, samples) {
   const n = Math.max(0, +samples || 0);
   const r = clamp01(+reward || 0);
   return { alpha: 1 + r * n, beta: 1 + (1 - r) * n };
 }
 
-// Gamma(k,1) por Marsaglia-Tsang (válido k>=1; aquí alpha,beta>=1 siempre). u1,u2 del RNG.
+// Gamma(k,1) by Marsaglia-Tsang (valid k>=1; here alpha,beta>=1 always). or1,or2 of the RNG.
 function gamma1(k, rand) {
   const d = k - 1 / 3, c = 1 / Math.sqrt(9 * d);
   for (;;) {
     let x, v;
     do {
-      // normal estándar por Box-Muller con el RNG sembrado
+      // normal estándar by Box-Muller with the RNG sembrado
       const u1 = Math.max(1e-12, rand()), u2 = rand();
       x = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
       v = 1 + c * x;
@@ -73,7 +73,7 @@ export function sampleBeta(alpha, beta, rand) {
   return ga / (ga + gb || 1);
 }
 
-// Puntúa un candidato de forma explicable (para logging/decision.json), sin azar.
+// Puntúa a candidato of way explicable (for logging/decision.JSON), without azar.
 // c: { key, reward, samples, cost? }
 export function scoreCandidate(c = {}) {
   const reward = clamp01(+c.reward || 0);
@@ -94,10 +94,10 @@ export function scoreCandidate(c = {}) {
   };
 }
 
-// Reparto PORTFOLIO (para cadencia de contenido): proporcional al score = reward*confidence.
-// Descuenta la incertidumbre (un nicho con 1 video con suerte NO infla su cuota) pero mantiene
-// DIVERSIDAD — no colapsa al #1 como el Thompson argmax. Determinista. Suma exacta por mayor-resto
-// (Hamilton). minPerArm garantiza piso a los brazos elegibles.
+// Reparto PORTFOLIO (for cadencia of contenido): proporcional to the score = reward*confidence.
+// Descuenta the incertidumbre (a niche with 1 video with suerte NOT infla its cuota) but mantiene
+// DIVERSIDAD — not colapsa to the #1 as the Thompson argmax. Determinista. Suma exacta by mayor-resto
+// (Hamilton). minPerArm garantiza piso to the brazos elegibles.
 // candidates: [{ key, reward, samples, cost?, eligible? }]. Devuelve { alloc, scores }.
 export function proportionalByScore(candidates, total, opts = {}) {
   const cands = (candidates || []).filter((c) => c && c.key && c.eligible !== false);
@@ -124,8 +124,8 @@ export function proportionalByScore(candidates, total, opts = {}) {
   return { alloc, scores: cands.map(scoreCandidate) };
 }
 
-// Reparte `total` slots entre candidatos por Thompson sampling (una muestra Beta por ronda,
-// el mayor θ se lleva el slot). Determinista con `seed`. minPerArm garantiza piso a los vivos.
+// Reparte `total` slots between candidatos by Thompson sampling (a muestra Beta by ronda,
+// the mayor θ is lleva the slot). Determinista with `seed`. minPerArm garantiza piso to the vivos.
 // candidates: [{ key, reward, samples, eligible? }]. Devuelve { alloc, picks, scores }.
 export function thompsonAllocate(candidates, total, opts = {}) {
   const cands = (candidates || []).filter((c) => c && c.key && c.eligible !== false);
@@ -143,7 +143,7 @@ export function thompsonAllocate(candidates, total, opts = {}) {
     }
     alloc[best]++; picks.push(best);
   }
-  // Piso mínimo por brazo elegible: roba slots al que más tiene.
+  // Piso mínimo by brazo elegible: roba slots to the that more tiene.
   const minPer = Math.max(0, Math.floor(+opts.minPerArm || 0));
   if (minPer > 0) {
     for (const c of cands) {

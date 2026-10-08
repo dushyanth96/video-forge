@@ -1,7 +1,7 @@
-// build_asmr_library.mjs — construye la BIBLIOTECA CURADA de sonidos ASMR del canal auto.
-// Por cada PALETA (sources.seed.json) baja de Freesound los MEJORES sonidos CC0 (orden por
-// descargas + rating) para la cama y los acentos, y escribe asmr_lib/ + manifest.json. El
-// workflow sube todo a R2; cada video usa la biblioteca (calidad consistente, sin buscar en vivo).
+// build_asmr_library.mjs — construye the LIBRARY CURADA of sounds ASMR of the channel auto.
+// By cada PALETA (sources.seed.JSON) downloads of Freesound the BEST sounds CC0 (orden by
+// descargas + rating) for the cama and the acentos, and writes asmr_lib/ + manifest.JSON. The
+// workflow uploads everything to R2; cada video uses the library (quality consistente, without search in vivo).
 //
 // Uso: node pipeline/build_asmr_library.mjs   ·   Env: FREESOUND_API_KEY
 import fs from "node:fs";
@@ -13,7 +13,7 @@ const sources = JSON.parse(fs.readFileSync("channel/auto2/sources.seed.json", "u
 fs.mkdirSync("asmr_lib", { recursive: true });
 const slug = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
 
-// El mejor sonido CC0 para un término: bien valorado; si no, el más descargado.
+// The best sound CC0 for a término: bien valorado; if not, the more descargado.
 async function best(term) {
   const params = new URLSearchParams({ query: term, filter: 'license:"Creative Commons 0" duration:[2 TO 90]', sort: "downloads_desc", fields: "id,name,previews,avg_rating,num_downloads", page_size: "15", token: FREESOUND });
   const r = await tf(`https://freesound.org/apiv2/search/text/?${params}`);
@@ -41,7 +41,7 @@ for (const [niche, cfg] of Object.entries(sources.niches || {})) {
   const snd = cfg.sound;
   if (!pals.length && !snd) continue;
   manifest[niche] = {};
-  // Nichos ASMR/relax: paletas (cama + acentos que combinan).
+  // Niches ASMR/relax: paletas (cama + acentos that combinan).
   for (const pal of pals) {
     const entry = { bed: null, accents: [], credits: [] };
     const bed = await grab(pal.bed, `${niche}_${slug(pal.name)}_bed`);
@@ -54,7 +54,7 @@ for (const [niche, cfg] of Object.entries(sources.niches || {})) {
     paletas++;
     console.log(`  ${niche}/${pal.name}: cama ${entry.bed ? "ok" : "—"} + ${entry.accents.length} acentos`);
   }
-  // Nichos narrados (narrativas/ciencia): cama atmosférica opcional + STINGERS de énfasis.
+  // Niches narrados (narrativas/ciencia): cama atmosférica optional + STINGERS of énfasis.
   if (snd) {
     const entry = { bed: null, stingers: [], credits: [] };
     if (snd.bed) { const b = await grab(snd.bed, `${niche}_narr_bed`); if (b) { entry.bed = b.file; entry.credits.push(b); sonidos++; } }
@@ -69,9 +69,9 @@ for (const [niche, cfg] of Object.entries(sources.niches || {})) {
 fs.writeFileSync("asmr_lib/manifest.json", JSON.stringify(manifest, null, 2));
 console.log(`Biblioteca ASMR lista: ${paletas} paletas, ${sonidos} sonidos CC0 -> asmr_lib/`);
 
-// --- PACK DE SFX DE EDICION (para el creador de videos del canal principal) ---
-// Whooshes/transiciones/pops CC0 para dar terminacion PRO a los videos de datos, sin
-// depender de material ajeno. Se sube aparte (sfx_edit.tgz) para que el render lo baje ligero.
+// --- PACK OF SFX OF EDICION (for the creador of videos of the channel principal) ---
+// Whooshes/transiciones/pops CC0 for dar terminacion PRO to the videos of datos, without
+// depender of material ajeno. Is uploads aparte (sfx_edit.tgz) for that the render lo baje ligero.
 const EDIT = { whoosh: ["whoosh transition", "swoosh cinematic", "whoosh subtle"], pop: ["pop ui click"], riser: ["riser cinematic short"] };
 fs.mkdirSync("sfx_edit", { recursive: true });
 const editMan = { whoosh: [], pop: [], riser: [], credits: [] };

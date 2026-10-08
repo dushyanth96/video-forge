@@ -1,6 +1,6 @@
-// episodes.mjs — Episodic Memory (Fase 2). Construye un episodio por video desde el inventario del
-// canal (el que ya vive en R2) + baseline por-video (mediana de vpd), y escribe episodes.json.
-// El workflow lo sube a channel/episodes.json (Data Lens) o channel/auto2/episodes.json (Oddly).
+// episodes.mjs — Episodic Memory (Phase 2). Construye a episodio by video since the inventario of the
+// channel (the that already vive in R2) + baseline by-video (mediana of vpd), and writes episodes.JSON.
+// The workflow lo uploads to channel/episodes.JSON (Data Lens) or channel/auto2/episodes.JSON (Oddly).
 // Uso: node pipeline/episodes.mjs <inventarioR2.json> <salida.json> [niche_map.json]
 import fs from "node:fs";
 import { medianVpd, buildEpisode } from "./lib/episode_calc.mjs";
@@ -13,8 +13,8 @@ let data = {};
 try { data = JSON.parse(fs.readFileSync(src, "utf8")); }
 catch (e) { console.error("episodes: no pude leer", src, "-", e.message); process.exit(0); }
 
-// Mapa video -> categoria/variante (solo Oddly lo tiene). Sin el, los episodios salen
-// igual que antes pero sin variante: el A/B de formato simplemente no mide, no falla.
+// Mapa video -> categoria/variante (only Oddly lo tiene). Without the, the episodios salen
+// igual that before but without variante: the to/B of formato simplemente not mide, not fails.
 const mapaF = process.argv[4];
 let mapa = {};
 if (mapaF) { try { mapa = JSON.parse(fs.readFileSync(mapaF, "utf8")); } catch { mapa = {}; } }

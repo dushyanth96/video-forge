@@ -1,9 +1,9 @@
-// baseline_calc.mjs — cálculo PURO del baseline de un canal a partir de sus semanas
-// (formato de weekly_stats.json). Determinista y testeable. Base del juicio RELATIVO del cerebro.
+// baseline_calc.mjs — cálculo PURO of the baseline of a channel to partir of its weeks
+// (formato of weekly_stats.JSON). Determinista and testeable. Base of the juicio RELATIVO of the brain.
 import { median, pctVsBaseline } from "./analytics_math.mjs";
 
-// Baseline de un canal. Usa SOLO semanas completas (days >= 7) y con señal (views > 0),
-// para no contaminar la mediana con semanas parciales o de arranque en cero.
+// Baseline of a channel. Uses ONLY weeks completas (days >= 7) and with señal (views > 0),
+// for not contaminar the mediana with weeks parciales or of arranque in cero.
 export function computeBaseline(weeks) {
   const full = (weeks || []).filter((w) => w && (w.days == null || w.days >= 7) && (w.views || 0) > 0);
   const views = full.map((w) => w.views || 0);

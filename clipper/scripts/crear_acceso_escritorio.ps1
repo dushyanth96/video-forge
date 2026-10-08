@@ -1,10 +1,10 @@
-# Deja en el ESCRITORIO: (1) el lanzador de UN CLIC y (2) un LEEME que te guia.
+# Deja in the ESCRITORIO: (1) the lanzador of A CLIC and (2) a LEEME that te guia.
 $ErrorActionPreference = "Stop"
 $clipper = Split-Path -Parent $PSScriptRoot
 $desktop = [Environment]::GetFolderPath("Desktop")
 $iniciar = Join-Path $clipper "INICIAR.ps1"
 
-# 1) Lanzador de un clic (doble clic -> corre TODO automatico)
+# 1) Lanzador of a clic (double clic -> corre EVERYTHING automatico)
 $bat = @"
 @echo off
 title Oddly Clipper

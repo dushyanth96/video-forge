@@ -1,8 +1,8 @@
-// distribute.mjs — utilidades PURAS de distribución multiplataforma (repostear a más superficies
-// gratis para multiplicar vistas). Compartidas por los repostadores (Telegram, Tumblr, ...).
-// Todo gratis y automático; nada de spam ni comentar en canales ajenos (eso quema la cuenta).
+// distribute.mjs — utilidades PURAS of distribución multiplataforma (repostear to more superficies
+// free for multiplicar vistas). Compartidas by the repostadores (Telegram, Tumblr, ...).
+// Everything free and automático; nothing of spam nor comentar in channels ajenos (eso quema the account).
 
-// Videos PÚBLICOS con id que aún NO se repostaron a esta superficie (anti-duplicado por ledger).
+// Videos PÚBLICOS with id that still NOT is repostaron to esta superficie (anti-duplicado by ledger).
 export function pickNew(list, doneIds, max = 5) {
   const done = doneIds instanceof Set ? doneIds : new Set(doneIds || []);
   const out = [];
@@ -13,19 +13,19 @@ export function pickNew(list, doneIds, max = 5) {
   return out;
 }
 
-// URL pública del video (Short o largo).
+// URL pública of the video (Short or largo).
 export function youtubeUrl(v) {
   const id = v && v.video_id;
   const isShort = !v || v.format === "short" || (Number(v.seconds) > 0 && Number(v.seconds) <= 90) || v.is_short;
   return isShort ? `https://www.youtube.com/shorts/${id}` : `https://www.youtube.com/watch?v=${id}`;
 }
 
-// Limpia el título (sin hashtags quemados) y lo acota.
+// Cleans the title (without hashtags quemados) and lo acota.
 export function cleanTitle(t, max = 100) {
   return String(t || "").replace(/#\w+/g, "").replace(/\s+/g, " ").trim().slice(0, max);
 }
 
-// Hashtags por canal/nicho (discovery). Devuelve string "#a #b".
+// Hashtags by channel/niche (discovery). Devuelve string "#to #b".
 export function hashtagsFor(v, channel) {
   if (channel === "data-lens") return "#shorts #history #facts #dataviz";
   const label = String((v && v.niche_label) || "").toLowerCase();
@@ -35,7 +35,7 @@ export function hashtagsFor(v, channel) {
   return "#shorts #satisfying #oddlysatisfying";
 }
 
-// Caption listo para repostear (título + url + hashtags), acotado a `max`.
+// Caption ready for repostear (title + url + hashtags), acotado to `max`.
 export function caption(v, channel, opts = {}) {
   const title = cleanTitle(v && v.title);
   const url = youtubeUrl(v);

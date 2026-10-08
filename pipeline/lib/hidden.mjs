@@ -1,5 +1,5 @@
-// hidden.mjs — lista de videos OCULTOS: nunca se programan ni se publican. Regla de Juan: lo oculto no sale.
-// Falla CERRADO: si la lista no se puede leer o no es válida devuelve null, y quien la usa NO programa nada.
+// hidden.mjs — ready of videos OCULTOS: never is programan nor is publican. Regla of Juan: lo oculto not sale.
+// Fails CERRADO: if the ready not is can leer or not is valid devuelve null, and quien the uses NOT schedules nothing.
 import fs from "node:fs";
 
 export function parseHidden(text) {
@@ -13,7 +13,7 @@ export function readHiddenFile(path) {
   try { return parseHidden(fs.readFileSync(path, "utf8")); } catch { return null; }
 }
 
-// Videos privados, sin fecha de publicación futura y que no estén ocultos. Sin lista válida: ninguno.
+// Videos privados, without fecha of publishing futura and that not estén ocultos. Without ready valid: ninguno.
 export function backlogToSchedule(videos, hidden, nowMs = Date.now()) {
   if (!(hidden instanceof Set)) return [];
   return (videos || []).filter((v) => {

@@ -1,7 +1,7 @@
 // build_short.mjs — SHORT profesional vertical 9:16 estilo "logo audio-reactivo":
-// el logo de The Data Lens PULSA con la voz (amplitud pre-calculada con ffmpeg y
-// horneada como keyframes, porque HyperFrames renderiza con timeline congelada),
-// sobre un fondo de b-roll del tema DESENFOCADO + subtitulos GRANDES bien puestos.
+// the logo of The Data Lens PULSA with the voice (amplitud pre-calculada with ffmpeg and
+// horneada as keyframes, because HyperFrames renders with timeline congelada),
+// about a background of b-roll of the topic DESENFOCADO + subtitles GRANDES bien puestos.
 //
 // Uso: node pipeline/build_short.mjs <beats.json> <out.html> <audio.mp3> <style> [bg_queries]
 //   style: logo (default) | broll | animation
@@ -19,7 +19,7 @@ const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replac
 const f2 = (n) => Number(n).toFixed(2);
 const isLogo = style === "logo" || style === "animation" ? true : style === "broll" ? false : true;
 
-// Fondo b-roll: para el estilo logo va MUY desenfocado y oscuro (que resalte el logo/texto).
+// Background b-roll: for the estilo logo va VERY desenfocado and oscuro (that resalte the logo/texto).
 const GRADE = isLogo
   ? "boxblur=24:3,eq=contrast=1.04:saturation=0.85:brightness=-0.08,curves=preset=darker"
   : "eq=contrast=1.08:saturation=1.1:brightness=0.02,curves=preset=lighter,unsharp=3:3:0.3";
@@ -45,7 +45,7 @@ async function aiImage(prompt, dest, seed) {
   await dl(url, dest);
 }
 
-// ---- Fondo vertical (b-roll con cortes, desenfocado para el logo) ----
+// ---- Background vertical (b-roll with cuts, desenfocado for the logo) ----
 async function buildBg() {
   const queries = bgQueriesArg ? bgQueriesArg.split("|").map((s) => s.trim()).filter(Boolean)
     : ["money cash counting", "modern city skyline day", "stock market data screen", "server room data center", "gold coins wealth"];
@@ -89,7 +89,7 @@ async function buildBg() {
     filter = filter.replace(/;$/, "");
     execSync(`ffmpeg -y ${inputs} -filter_complex "${filter}" -map "${acc}" -t ${f2(total)} -r ${FPS} -c:v libx264 -preset veryfast -pix_fmt yuv420p "${bg}"`, { stdio: "ignore" });
   }
-  // Pista de audio en silencio (HyperFrames exige audio en el clip de video).
+  // Track of audio in silencio (HyperFrames exige audio in the clip of video).
   try {
     execSync(`ffmpeg -y -i "${bg}" -f lavfi -t ${f2(total)} -i anullsrc=r=44100:cl=stereo -map 0:v:0 -map 1:a:0 -c:v copy -c:a aac -shortest short_bg_a.mp4`, { stdio: "ignore" });
     fs.rmSync(bg, { force: true }); fs.renameSync("short_bg_a.mp4", bg);
@@ -97,13 +97,13 @@ async function buildBg() {
   return bg;
 }
 
-// ---- Envolvente de amplitud de la voz (para que el logo PULSE con la voz) ----
+// ---- Envolvente of amplitud of the voice (for that the logo PULSE with the voice) ----
 function amplitudeEnvelope() {
-  // RMS por ventana de 0.1s (10 muestras/seg) con ffmpeg astats.
+  // RMS by ventana of 0.1s (10 muestras/seg) with ffmpeg astats.
   try {
     execSync(`ffmpeg -y -i "${audioFile}" -af "asetnsamples=4410:p=0,astats=metadata=1:reset=1,ametadata=print:key=lavfi.astats.Overall.RMS_level:file=amp.txt" -f null - `, { stdio: "ignore" });
     const txt = fs.readFileSync("amp.txt", "utf8");
-    // Captura cada RMS_level (incluye "-inf" en silencios -> amplitud 0, sin desalinear).
+    // Captura cada RMS_level (incluye "-inf" in silencios -> amplitud 0, without desalinear).
     const lin = [...txt.matchAll(/RMS_level=(\S+)/g)].map((m) => {
       const db = parseFloat(m[1]);
       return isFinite(db) ? Math.pow(10, db / 20) : 0;
@@ -121,9 +121,9 @@ const amp = amplitudeEnvelope();
 
 // ---- Composicion HTML ----
 const els = [], tw = [];
-// SUBTITULOS -> se generan como .ass y se QUEMAN con ffmpeg despues del render.
-// (GSAP no ocultaba bien el texto al saltar de frame en HyperFrames -> se encimaban
-// todos. ffmpeg/libass muestra exactamente UNO a la vez por su timing: a prueba de balas.)
+// SUBTITLES -> is generan as .ass and is QUEMAN with ffmpeg after of the render.
+// (GSAP not ocultaba bien the texto to the saltar of frame in HyperFrames -> is encimaban
+// all. ffmpeg/libass muestra exactamente UNO to the vez by its timing: to test of balas.)
 function assTime(s) {
   const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
   return `${h}:${String(m).padStart(2, "0")}:${sec.toFixed(2).padStart(5, "0")}`;
@@ -132,8 +132,8 @@ const dia = [];
 const asc = (s) => String(s).replace(/[{}\\]/g, "").replace(/[\r\n]+/g, " ");
 
 if (fs.existsSync("words.json")) {
-  // KARAOKE con \k NATIVO de libass: la palabra que se dice se pinta de cyan (PrimaryColour
-  // del estilo Kar) y las que faltan quedan en blanco (SecondaryColour). Timestamps de Whisper.
+  // KARAOKE with \k NATIVO of libass: the palabra that is dice is pinta of cyan (PrimaryColour
+  // of the estilo Kar) and the that faltan quedan in blanco (SecondaryColour). Timestamps of Whisper.
   const words = JSON.parse(fs.readFileSync("words.json", "utf8")).filter((w) => w && w.word);
   const LINE = 4;
   for (let i = 0; i < words.length; i += LINE) {
@@ -142,8 +142,8 @@ if (fs.existsSync("words.json")) {
     const start = +line[0].start;
     const end = +line[last].end;
     if (!(end > start)) continue;
-    // \k por palabra en centisegundos; cada palabra se "canta" desde su inicio hasta el de la
-    // siguiente (absorbe los huecos), asi el resaltado avanza sincronizado con la voz.
+    // \k by palabra in centisegundos; cada palabra is "canta" since its inicio until the of the
+    // siguiente (absorbe the huecos), asi the resaltado avanza sincronizado with the voice.
     const parts = line.map((w, k) => {
       const nextT = k < last ? +line[k + 1].start : +w.end;
       const kdur = Math.max(1, Math.round((nextT - +w.start) * 100));
@@ -153,7 +153,7 @@ if (fs.existsSync("words.json")) {
   }
   console.log(`karaoke: ${words.length} palabras, ${dia.length} lineas`);
 } else {
-  // Fallback: trozos de 3-4 palabras (sin timestamps por palabra).
+  // Fallback: trozos of 3-4 palabras (without timestamps by palabra).
   beats.forEach((b) => {
     const start = +b.start || 0;
     const end = Math.min(+b.end || start + 2, total);
@@ -172,7 +172,7 @@ if (fs.existsSync("words.json")) {
     });
   });
 }
-// Estilo: grande, blanco, borde negro grueso, negrita, centrado abajo (bajo el logo).
+// Estilo: grande, blanco, borde negro grueso, negrita, centrado abajo (bajo the logo).
 const ass = `[Script Info]
 ScriptType: v4.00+
 PlayResX: ${W}
@@ -190,7 +190,7 @@ ${dia.join("\n")}
 `;
 fs.writeFileSync("captions.ass", ass);
 console.log(`captions.ass: ${dia.length} trozos`);
-// Logo audio-reactivo: escala del logo + glow segun la amplitud (horneado, seek-safe).
+// Logo audio-reactivo: escala of the logo + glow segun the amplitud (horneado, seek-safe).
 amp.forEach((a, i) => {
   const t = f2(i * 0.1);
   tw.push(`tl.to("#logo",{scale:${(1 + a * 0.20).toFixed(3)},duration:0.1,ease:"power1.out"},${t});`);
@@ -198,7 +198,7 @@ amp.forEach((a, i) => {
 });
 tw.push(`tl.fromTo("#prog",{width:"0%"},{width:"100%",duration:${f2(total)},ease:"none"},0);`);
 
-// Logo SVG de The Data Lens (lente/ojo con linea de tendencia + pupila en el pico).
+// Logo SVG of The Data Lens (lente/ojo with line of tendencia + pupila in the pico).
 const LOGO_SVG = `<svg viewBox="0 0 220 220" width="100%" height="100%">
   <defs><linearGradient id="lg" x1="0" y1="1" x2="1" y2="0">
     <stop offset="0" stop-color="#22d3ee"/><stop offset="1" stop-color="#34d399"/></linearGradient></defs>

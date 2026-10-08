@@ -1,24 +1,24 @@
 // build_composition.mjs — composicion HyperFrames 100% CODE-RENDERED (ingles).
 //
 // Diseño: docs/design_system.md (SkillGrox Design System v1.0), integrado
-// con UNA adaptacion explicita: el lienzo 9:16 vertical (1080x1920) del
-// spec se adapta a 16:9 LANDSCAPE (1920x1080) para AtoPlay y YouTube
-// long-form. Misma area de pixeles, asi las tallas de tipografia del spec
-// se conservan; los margenes de safe-area se re-escalan proporcionalmente.
+// with A adaptacion explicita: the lienzo 9:16 vertical (1080x1920) of the
+// spec is adapta to 16:9 LANDSCAPE (1920x1080) for AtoPlay and YouTube
+// long-form. Same area of pixeles, asi the tallas of tipografia of the spec
+// is conservan; the margenes of safe-area is re-escalan proporcionalmente.
 //
-// Reglas del sistema que aplica aqui:
-//   - Tipografias (SOLO 3, via Google Fonts): League Spartan ExtraBold
+// Reglas of the sistema that aplica here:
+//   - Tipografias (ONLY 3, via Google Fonts): League Spartan ExtraBold
 //     (ganchos, statements, numeros), Alex Brush (keywords, visibilidad
-//     minima 1.2s), Inter Regular (texto de apoyo/caption). Nada mas.
+//     minima 1.2s), Inter Regular (texto of apoyo/caption). Nothing more.
 //   - Color 70/20/10: #0B0B0B fondo (70%) / #FFFFFF texto primario (20%)
-//     / #FF6B00 acento (10%, solo ganchos, keywords, numeros, progreso).
-//   - Lineas cortas: 4-8 palabras por linea; "un frame = una idea".
-//   - Beats 2 y 3 (concept/deep_dive): PANTALLA DIVIDIDA — captions a la
-//     izquierda, diagrama/code SVG animado a la derecha (adaptacion 16:9).
-//   - Alex Brush: fade + micro subida 250-500ms, nunca < 1.2s visible.
+//     / #FF6B00 acento (10%, only hooks, keywords, numeros, progreso).
+//   - Lines cortas: 4-8 palabras by line; "a frame = a idea".
+//   - Beats 2 and 3 (concept/deep_dive): PANTALLA DIVIDIDA — captions to the
+//     izquierda, diagrama/code SVG animated to the derecha (adaptacion 16:9).
+//   - Alex Brush: fade + micro upload 250-500ms, never < 1.2s visible.
 //   - Animaciones cortas (150-350ms de entrada, 200ms de salida), cortes
-//     duros con fades breves (100-250ms) entre escenas.
-//   - Safe area, jerarquia de 4 niveles, progreso "0X / 0N", marca pequeña.
+//     duros with fades breves (100-250ms) between scenes.
+//   - Safe area, jerarquia of 4 niveles, progreso "0X / 0N", marca pequeña.
 //
 // Uso: node pipeline/motiongfx/build_composition.mjs <timing.json> <out.html> [audio]
 // En tests se importa buildComposition(timing) — pura, sin disco (tests/build_composition.test.mjs).
@@ -30,16 +30,16 @@ const f2 = (n) => Number(n).toFixed(2);
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 // ============================ Builder (puro) ============================
-// Toma un timing ({ title, subtitle, total, beats[] }) y devuelve el HTML
-// de la composicion. Sin disco ni red: la E/S vive en el CLI de abajo.
+// Toma a timing ({ title, subtitle, total, beats[] }) and devuelve the HTML
+// of the composicion. Without disco nor red: the and/S vive in the CLI of abajo.
 export function buildComposition(timing, { audioFile = "voiceover.mp3" } = {}) {
 const total = Math.max(1, parseFloat(timing.total) || 0);
 const beats = (timing.beats || []).filter((b) => b.start < total);
 
 // ======================== Design system (docs/design_system.md) ========================
-// Lienzo: adaptacion 16:9 del spec 9:16 (1080x1920 -> 1920x1080).
+// Lienzo: adaptacion 16:9 of the spec 9:16 (1080x1920 -> 1920x1080).
 const W = 1920, H = 1080;
-// Safe-area del spec (80/120/300 sobre lienzo de 1080 de ancho) re-escalada
+// Safe-area of the spec (80/120/300 about lienzo of 1080 of ancho) re-escalada
 // proporcionalmente: horizontal x(1920/1080), vertical x(1080/1920).
 const MX = 140, MT = 90, MB = 170;
 const MAX_TEXT_W = 1160;                       // el texto nunca cruza toda la pantalla
@@ -49,7 +49,7 @@ const SZ = { hook: 100, headline: 88, keyword: 110, caption: 48, captionSmall: 4
 const KEYWORD_MIN = 1.2, KEYWORD_PREF_MAX = 2.5, CTA_MIN = 1.5;
 const A = { in: 0.25, out: 0.2, keywordIn: 0.4, trans: 0.25 }; // segundos (spec §20-23)
 
-// ---- Cifras gigantes (detector del canal principal, en ingles) ----
+// ---- Cifras gigantes (detector of the channel principal, in ingles) ----
 const WORDNUM = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70, eighty: 80, ninety: 90, hundred: 100 };
 const COUNT = "views|users|subscribers|people|customers|stores|employees|downloads|followers|queries|dollars";
 const magAbbr = { trillion: "T", billion: "B", million: "M", thousand: "K" };
@@ -82,7 +82,7 @@ function extractFigure(text) {
   return null;
 }
 
-// ---- Envoltura de lineas: 4-8 palabras por linea (spec §13) ----
+// ---- Envoltura of lines: 4-8 palabras by line (spec §13) ----
 function wrapLines(text, minW = 4, maxW = 8) {
   const words = String(text).split(/\s+/).filter(Boolean);
   if (words.length <= maxW) return [words.join(" ")];
@@ -104,7 +104,7 @@ function wrapLines(text, minW = 4, maxW = 8) {
 
 // ---- Seleccion automatica de keywords (spec §43) ----
 // Prioriza conceptos (palabras largas y con contenido); ignora articulos,
-// preposiciones, pronombres y relleno. 1-2 por escena, nunca todas.
+// preposiciones, pronombres and relleno. 1-2 by scene, never all.
 const STOP = new Set(("a an the and or but if then else when at by for with about against between into through during before after above below to from up down in out on off over under again further once here there all any both each few more most other some such no nor not only own same so than too very can will just should now is are was were be been being have has had having do does did doing would could ought i you he she it we they them his her its our their this that these those what which who whom how why dont doesnt didnt youre were isnt wasnt youve youll weve well theyll lets let us one two three first second also may might must shall").split(" "));
 function pickKeywords(text, n = 1) {
   const seen = new Set();
@@ -119,7 +119,7 @@ function pickKeywords(text, n = 1) {
 // ---- Statement con keyword inline (spec §15/§16/§25) ----
 // mode "hook": keyword naranja dentro de League Spartan.
 // mode "brush": keyword en Alex Brush dentro de League Spartan (+subrayado opcional,
-// activado por el caller para la keyword del takeaway, §38).
+// activado by the caller for the keyword of the takeaway, §38).
 function statementHtml(text, kw, mode, underlined) {
   const words = String(text).split(/\s+/);
   const kwLower = String(kw || "").toLowerCase();
@@ -131,18 +131,18 @@ function statementHtml(text, kw, mode, underlined) {
       words[idx] = `<span class="kw-orange">${esc(words[idx])}</span>`;
     }
   }
-  // La keyword ya es HTML (su <span>): solo escapar el resto de las palabras.
+  // The keyword already is HTML (its <span>): only escapar the resto of the palabras.
   return words.map((w, j) => (j === idx ? w : esc(w))).join(" ");
 }
 
-// ---- Layout por beat (spec §40: HOOK/PROBLEM/INSIGHT/EXPLANATION/TAKEAWAY) ----
+// ---- Layout by beat (spec §40: HOOK/PROBLEM/INSIGHT/EXPLANATION/TAKEAWAY) ----
 function layoutFor(b, i) {
   const t = String(b.type || "").toLowerCase();
   if (t === "hook") return "hook";
   if (t === "concept") return "split-diagram";
   if (t === "deep_dive") return "split-code";
   if (t === "takeaway" || t === "cta") return "takeaway";
-  // Fallback por indice: beats 2 y 3 (1-based) -> pantalla dividida (16:9).
+  // Fallback by indice: beats 2 and 3 (1-based) -> pantalla dividida (16:9).
   if (i === 1) return "split-diagram";
   if (i === 2) return "split-code";
   return "headline";
@@ -256,7 +256,7 @@ beats.forEach((b, i) => {
       </div>
     </div>`);
     // Tiempos: kicker +0.10, captions +0.15 (stagger 100ms), keyword +0.45
-    // (fade+subida 400ms, visible desde +0.85), panel +0.10.
+    // (fade+upload 400ms, visible since +0.85), panel +0.10.
     tw.push(`tl.fromTo("${tr} .kicker",{opacity:0,x:-24},{opacity:1,x:0,duration:${A.in},ease:"power3.out"},${f2(start + 0.1)});`);
     tw.push(`tl.fromTo("${tr} .cap-line",{opacity:0,y:16},{opacity:1,y:0,duration:0.2,ease:"power2.out",stagger:0.1},${f2(start + 0.15)});`);
     tw.push(`tl.fromTo("#panel${i}",{opacity:0,scale:0.985},{opacity:1,scale:1,duration:0.3,ease:"power2.out",transformOrigin:"50% 50%"},${f2(start + 0.1)});`);
@@ -268,12 +268,12 @@ beats.forEach((b, i) => {
     }
     if (kw) {
       // Regla de visibilidad minima de Alex Brush (spec §3): >= 1.2s,
-      // preferido 1.2-2.5s. La keyword entra a +0.45 y se apaga a los
-      // 2.5s o con la escena (lo que ocurra primero).
+      // preferido 1.2-2.5s. The keyword entra to +0.45 and is apaga to the
+      // 2.5s or with the scene (lo that ocurra first).
       const kwFull = start + 0.85;
       const kwFade = Math.min(end - A.out, kwFull + KEYWORD_PREF_MAX);
       if (kwFade - kwFull < KEYWORD_MIN) {
-        // Beat demasiado corto: se extiende la escena para cumplir 1.2s.
+        // Beat demasiado corto: is extiende the scene for cumplir 1.2s.
         const needEnd = kwFull + KEYWORD_MIN + A.out;
         console.warn(`build_composition: beat ${i + 1} @${f2(start)}s demasiado corto — escena extendida a ${f2(needEnd)}s para cumplir la regla de 1.2s de Alex Brush`);
         dur = needEnd - start;
@@ -300,7 +300,7 @@ beats.forEach((b, i) => {
       ${showHero ? `<div class="hero"><div class="hero-big">${esc(fig.big)}</div>${fig.sub ? `<div class="hero-sub">${esc(fig.sub)}</div>` : ""}</div>` : ""}
       <div class="statement${layout === "hook" ? " hook" : ""}">${stmt}</div>
     </div>`);
-    // Hook (§20): fondo 0.00s, statement entra 0.05-0.15s, estable hasta 1.5s.
+    // Hook (§20): background 0.00s, statement entra 0.05-0.15s, estable until 1.5s.
     tw.push(`tl.fromTo("${tr} .kicker",{opacity:0,x:-24},{opacity:1,x:0,duration:${A.in},ease:"power3.out"},${f2(start + 0.08)});`);
     tw.push(`tl.fromTo("${tr} .statement",{opacity:0,y:26},{opacity:1,y:0,duration:0.3,ease:"power3.out"},${f2(start + 0.12)});`);
     if (isTakeaway && kw) {
@@ -426,8 +426,8 @@ const html = `<!doctype html>
     const tl = gsap.timeline({ paused: true });
     const T = ${f2(total)};
 
-    // Partículas en Canvas: LCG determinista (seed fija = mismos frames en
-    // cada render y cada seek). Paleta del sistema: blanco (20%) con un
+    // Partículas in Canvas: LCG determinista (seed fija = mismos frames in
+    // cada render and cada seek). Paleta of the sistema: blanco (20%) with a
     // 15% de puntos naranja de acento (10%).
     (function () {
       const cv = document.getElementById("particles"), cx = cv.getContext("2d");
@@ -459,8 +459,8 @@ const html = `<!doctype html>
   return html;
 }
 
-// CLI: solo cuando se ejecuta directamente (en tests, importar la
-// funcion sin escribir nada).
+// CLI: only when is ejecuta directamente (in tests, importar the
+// function without write nothing).
 const isCli = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isCli) {
   const [timingPath, outPath, audioFile = "voiceover.mp3"] = process.argv.slice(2);

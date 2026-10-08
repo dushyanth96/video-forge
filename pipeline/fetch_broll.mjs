@@ -1,6 +1,6 @@
-// fetch_broll.mjs — baja footage real (b-roll) de Pexels segun el tema de cada
-// tramo del video, lo recorta/loopea al largo exacto y lo deja listo para el fondo.
-// Requiere env PEXELS_API_KEY. Sin key -> no hace nada (el video sale sin b-roll).
+// fetch_broll.mjs — downloads footage real (b-roll) of Pexels segun the topic of cada
+// tramo of the video, lo recorta/loopea to the largo exacto and lo deja ready for the background.
+// Requires env PEXELS_API_KEY. Without key -> not hace nothing (the video sale without b-roll).
 //
 // Uso: node pipeline/fetch_broll.mjs <timing.json> [outDir=broll] [maxSeconds]
 import fs from "node:fs";
@@ -15,7 +15,7 @@ const maxSeconds = maxSecondsArg && parseFloat(maxSecondsArg) > 0 ? parseFloat(m
 const total = Math.min(timing.total, maxSeconds);
 fs.mkdirSync(outDir, { recursive: true });
 
-// Anclas: frase de la narracion -> tema de footage. Cada clip cubre hasta la siguiente.
+// Anclas: frase of the narration -> topic of footage. Cada clip cubre until the siguiente.
 const ANCHORS = [
   { at: 0, kw: "counting cash money" },
   { m: "sixty billion dollars in a single year", kw: "money falling bills" },
@@ -66,7 +66,7 @@ for (let i = 0; i < cues.length; i++) {
     const raw = `${outDir}/raw${i}.mp4`;
     await download(link, raw);
     const out = `${outDir}/clip${i}.mp4`;
-    // loop/recorta al largo exacto, escala+crop a 1920x1080, baja brillo/saturacion, sin audio
+    // loop/recorta to the largo exacto, escala+crop to 1920x1080, downloads brillo/saturacion, without audio
     execSync(
       `ffmpeg -y -stream_loop -1 -i "${raw}" -t ${dur} ` +
       `-vf "scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,eq=brightness=-0.18:saturation=0.85,gblur=sigma=1.2" ` +

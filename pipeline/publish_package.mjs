@@ -1,8 +1,8 @@
-// publish_package.mjs — arma y VALIDA con IA el paquete de publicacion de YouTube
-// ANTES de subir. Genera: titulo (alto CTR + SEO), descripcion, tags, capitulos,
-// comentario fijado, texto de miniatura, subtitulos (.srt) desde el guion, y una
-// VALIDACION de Gemini de todo el paquete (para maximas vistas). Nada se publica
-// aqui: solo se prepara y se manda a Telegram para que Juan lo apruebe.
+// publish_package.mjs — arma and VALIDATES with IA the paquete of publishing of YouTube
+// BEFORE of upload. Generates: title (alto CTR + SEO), description, tags, capitulos,
+// comentario fijado, texto of thumbnail, subtitles (.srt) since the script, and a
+// VALIDACION of Gemini of everything the paquete (for maximas vistas). Nothing is publishes
+// here: only is prepara and is sends to Telegram for that Juan lo apruebe.
 //
 // Uso: node pipeline/publish_package.mjs <voicemap.json> <timing.json> "<tema>" [outDir=publish]
 import fs from "node:fs";
@@ -13,7 +13,7 @@ fs.mkdirSync(outDir, { recursive: true });
 
 function readJSON(p) { try { return JSON.parse(fs.readFileSync(p, "utf8")); } catch { return null; } }
 
-// --- Guion (voicemap) + tiempos (timing) alineados por indice ---
+// --- Script (voicemap) + tiempos (timing) alineados by indice ---
 const vm = readJSON(voicemapPath);
 const vmBeats = vm ? (vm.beats || vm) : [];
 const timing = readJSON(timingPath);
@@ -31,7 +31,7 @@ for (const b of beats) {
 }
 const transcript = beats.map((b) => b.text).filter(Boolean).join(" ");
 
-// --- Subtitulos .srt desde el guion + tiempos ---
+// --- Subtitles .srt since the script + tiempos ---
 function srtTime(s) {
   const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = Math.floor(s % 60), ms = Math.round((s - Math.floor(s)) * 1000);
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")},${String(ms).padStart(3, "0")}`;
@@ -40,7 +40,7 @@ const srt = beats.filter((b) => b.text).map((b, i) => `${i + 1}\n${srtTime(b.sta
 fs.writeFileSync(`${outDir}/captions.srt`, srt);
 
 // --- Gemini helper: modelos REALES + reintento con backoff en 429/503 ---
-// (el SEO corre justo despues de la voz/shorts, que agotan la cuota gratis: hay que esperar)
+// (the SEO corre justo after of the voice/Shorts, that agotan the cuota free: hay that esperar)
 import { TEXT_MODELS as MODELS } from "./_models.mjs";
 const sleep = (ms) => new Promise((s) => setTimeout(s, ms));
 async function gemini(prompt) {
@@ -69,7 +69,7 @@ async function gemini(prompt) {
   return null;
 }
 
-// --- TONO de crecimiento (para SUSCRIPTORES) + videos anteriores (encadenar "watch next" que ELIGE la IA) ---
+// --- TONO of crecimiento (for SUSCRIPTORES) + videos anteriores (encadenar "watch next" that ELIGE the IA) ---
 const TONE = (process.env.GROWTH_TONE || "retador").toLowerCase();
 const CTA_TONE = {
   retador: "RETADOR CON AUTORIDAD: punzante, reta al espectador a suscribirse ('quien siga de largo se lo pierde'), SIN clickbait falso ni mentiras",
@@ -83,7 +83,7 @@ const prevBlock = prevVideos.length
   ? `\n\nVIDEOS ANTERIORES del canal (elige el MAS RELACIONADO con este tema para recomendar como "watch next"):\n${prevVideos.map((v, i) => `${i + 1}. [${v.video_id}] ${v.title}`).join("\n")}`
   : "";
 
-// --- 1) Generar el paquete de publicacion (SEO + CTR), en INGLES ---
+// --- 1) Generate the paquete of publishing (SEO + CTR), in INGLES ---
 const pkgPrompt = `Eres experto en SEO y packaging de YouTube para un canal faceless de DATOS/DINERO, en INGLES, mercado EE.UU. Tema del video: "${topic}".
 Transcripcion del video: """${transcript.slice(0, 4500)}"""${prevBlock}
 Meta: VISTAS y SUSCRIPTORES. Devuelve SOLO un JSON con un paquete de publicacion OPTIMIZADO, TODO en INGLES:
@@ -99,18 +99,18 @@ Meta: VISTAS y SUSCRIPTORES. Devuelve SOLO un JSON con un paquete de publicacion
  "category": "Education",
  "language": "en"
 }`;
-// Al REGENERAR, toma en cuenta los comentarios/sugerencias de la vez anterior y hazlo MEJOR y distinto.
+// To the REGENERAR, toma in account the comentarios/sugerencias of the vez anterior and hazlo BEST and distinto.
 const improve = (process.env.SEO_IMPROVE || "").trim();
 const pkg = (await gemini(improve
   ? pkgPrompt + `\n\nESTA ES UNA REGENERACION. El auditor pidio mejorar: "${improve}". Corrige eso, haz el TITULO mas fuerte y CLARAMENTE DISTINTO al anterior, y sube el CTR y el SEO.`
   : pkgPrompt)) || {};
 
-// --- Bloque de LINKS profesionales, SIEMPRE en la descripcion (canal, suscribir, redes) ---
-// Enlaces internos = mas vistas por sesion y canal mas profesional. Las redes se toman de
+// --- Bloque of LINKS profesionales, ALWAYS in the description (channel, suscribir, redes) ---
+// Enlaces internos = more vistas by sesion and channel more profesional. The redes is toman of
 // env (SOCIAL_TIKTOK / SOCIAL_IG) si existen; si no, no se ponen enlaces vacios.
 const CHANNEL_URL = process.env.CHANNEL_URL || "https://youtube.com/@TheDataLensHQ";
 const SUB_URL = CHANNEL_URL.replace(/\/$/, "") + "?sub_confirmation=1";
-// Respaldo: si la IA no respondio, NO dejar un paquete vacio (titulo "-"). Usar el tema real.
+// Respaldo: if the IA not respondio, NOT dejar a paquete vacio (title "-"). Use the topic real.
 if (!pkg.title) pkg.title = topic;
 if (!pkg.description) pkg.description = `${topic}\n\nThe numbers behind how this really works — explained with data.\n\nThis video uses an AI-generated voice.`;
 if (!pkg.tags || !pkg.tags.length) pkg.tags = ["data", "money", "youtube", "finance", "business", "explained"];
@@ -118,11 +118,11 @@ if (!pkg.hashtags || !pkg.hashtags.length) pkg.hashtags = ["#data", "#money", "#
 const links = [
   `▶️ Subscribe for more: ${SUB_URL}`,
   `📺 More videos: ${CHANNEL_URL}/videos`,
-  // Playlist de la serie -> auto-reproduce el siguiente = más watch-time de sesión (señal que YouTube premia).
-  // Si el productor pasó la playlist exacta del nicho (PLAYLIST_URL), se linkea esa; si no, la página de playlists.
+  // Playlist of the serie -> auto-reproduce the siguiente = more watch-time of sesión (señal that YouTube premia).
+  // If the productor pasó the playlist exacta of the niche (PLAYLIST_URL), is linkea esa; if not, the page of playlists.
   process.env.PLAYLIST_URL ? `📚 Full playlist: ${process.env.PLAYLIST_URL}` : `📚 Playlists (binge the series): ${CHANNEL_URL}/playlists`,
 ];
-// "WATCH NEXT" encadenado: la IA eligio el video anterior mas relacionado; si no, el mas reciente.
+// "WATCH NEXT" encadenado: the IA eligio the video anterior more relacionado; if not, the more reciente.
 const wn = pkg.watch_next || {};
 const wnId = (wn.video_id && prevVideos.some((v) => v.video_id === wn.video_id)) ? wn.video_id : ((prevVideos[0] || {}).video_id || null);
 if (wnId) {
@@ -132,14 +132,14 @@ if (wnId) {
 if (process.env.SOCIAL_TIKTOK) links.push(`🎵 TikTok: ${process.env.SOCIAL_TIKTOK}`);
 if (process.env.SOCIAL_IG) links.push(`📸 Instagram: ${process.env.SOCIAL_IG}`);
 const linkBlock = "\n\n— — —\n" + links.join("\n");
-// Anexa los links a la descripcion (sin duplicar el disclosure de voz IA, que ya lo trae).
+// Anexa the links to the description (without duplicar the disclosure of voice IA, that already lo trae).
 if (pkg && typeof pkg.description === "string" && !pkg.description.includes("Subscribe for more")) {
   pkg.description = pkg.description + linkBlock;
 }
 
-// --- CREDITOS de metraje CC-BY (OBLIGATORIO por licencia) ---
-// Si el b-roll uso metraje CC-BY (Wikimedia/Internet Archive), la licencia EXIGE atribucion en la
-// descripcion. build_background.mjs los deja en bg/attributions.json (credits_required, ya formateados).
+// --- CREDITOS of metraje CC-BY (OBLIGATORIO by licencia) ---
+// If the b-roll uso metraje CC-BY (Wikimedia/Internet Archive), the licencia EXIGE atribucion in the
+// description. build_background.mjs the deja in bg/attributions.JSON (credits_required, already formateados).
 try {
   const attr = readJSON("bg/attributions.json");
   const credits = (attr && Array.isArray(attr.credits_required)) ? attr.credits_required : [];
@@ -157,7 +157,7 @@ try {
   }
 } catch {}
 
-// --- 2) VALIDAR el paquete (auditor de publicacion) ---
+// --- 2) VALIDAR the paquete (auditor of publishing) ---
 const valPrompt = `Eres un auditor estricto de publicaciones de YouTube (meta: maximas vistas Y SUSCRIPTORES). Valida este paquete: ${JSON.stringify(pkg)}.
 Devuelve SOLO JSON:
 {"ctr_titulo": X, "seo_descripcion": X, "sub_pull": X, "tags_ok": true, "problemas": ["..."], "sugerencias": ["..."], "listo": true, "nota_global": X}
@@ -166,7 +166,7 @@ const val = (await gemini(valPrompt)) || {};
 
 fs.writeFileSync(`${outDir}/package.json`, JSON.stringify({ topic, ...pkg, validation: val }, null, 2));
 
-// --- Resumen para Telegram (aprobacion de Juan) ---
+// --- Resumen for Telegram (approval of Juan) ---
 const chaptersTxt = (pkg.chapters || []).map((c) => `${c.time} ${c.label}`).join("\n") || "-";
 const summary = [
   `📦 Paquete de publicacion (validado por IA) — nota ${val.nota_global ?? "?"}/10`,

@@ -1,12 +1,12 @@
 // experiment_report.mjs — Reporte semanal de experimentos (Growth Roadmap Fase 3). PURO.
-// NO recalcula nada: ENSAMBLA lo que las neuronas ya escribieron (scores/outliers, hipótesis,
-// hooks, monetización, decisión, banco de creativos) en un reporte accionable + su texto para
-// Telegram. Cada sección responde: qué ganó, qué cortar, qué probar y qué decidir. Sin deps.
+// NOT recalcula nothing: ENSAMBLA lo that the neuronas already escribieron (scores/outliers, hipótesis,
+// hooks, monetization, decisión, banco of creativos) in a reporte accionable + its texto for
+// Telegram. Cada section responde: qué ganó, qué cut, qué probar and qué decidir. Without deps.
 import { rankBank, nextToTest, bucket } from "./creative_bank.mjs";
 
 const arr = (x) => (Array.isArray(x) ? x : []);
 
-// Construye el reporte de un canal a partir de los registros ya calculados (todos opcionales).
+// Construye the reporte of a channel to partir of the registros already calculados (all opcionales).
 export function buildReport(input = {}) {
   const { channel, scores, hypotheses, monetization, decision, bank, ab } = input;
   const sc = scores || {};
@@ -21,7 +21,7 @@ export function buildReport(input = {}) {
 
   const toTest = nextToTest(arr(bank), 3).map((i) => ({ text: i.text, bucket: bucket(i), priority: i.priority, source: i.source }));
 
-  // Monetización del canal (readiness + war room) si viene el reporte de ambos canales.
+  // Monetization of the channel (readiness + war room) if viene the reporte of both channels.
   let monet = null;
   if (monetization && monetization.channels && monetization.channels[channel]) {
     const c = monetization.channels[channel];
@@ -35,7 +35,7 @@ export function buildReport(input = {}) {
   const abTests = arr(ab && ab.experiments).map((e) => ({ id: e.id, variable: e.variable, verdict: e.verdict, leader: e.leader, lift: e.lift, measured: e.measured }));
   const abWinners = abTests.filter((e) => String(e.verdict || "").startsWith("WINNER"));
 
-  // Plan: acciones que salen de los datos (no opinión).
+  // Plan: acciones that salen of the datos (not opinión).
   const plan = [];
   if (monet && monet.next_action) plan.push(`Monetización: ${monet.next_action}`);
   for (const w of abWinners) plan.push(`A/B: gana "${w.leader}" en ${w.variable} (+${w.lift}). Estandarizarlo.`);
@@ -58,7 +58,7 @@ export function buildReport(input = {}) {
   };
 }
 
-// Texto compacto para Telegram (un canal).
+// Texto compacto for Telegram (a channel).
 export function formatReport(r, name) {
   if (!r) return `${name || ""}: sin datos.`;
   const L = [`📈 ${name || r.channel} — Reporte semanal`];

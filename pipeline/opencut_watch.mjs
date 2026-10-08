@@ -1,10 +1,10 @@
-// opencut_watch.mjs — Vigila OpenCut-app/OpenCut por señales de que llega lo que interesa para
-// integrarlo a video-forge: modo HEADLESS/AUTOMATIZACIÓN + MCP server + Editor API + scripting/CLI.
-// Avisa a Telegram SOLO cuando aparece una señal NUEVA (anti-repetición vía estado en R2).
-// Primera corrida = solo fija la línea base (no avisa), para no llenar de ruido con menciones ya existentes.
+// opencut_watch.mjs — Vigila OpenCut-app/OpenCut by señales of that llega lo that interesa for
+// integrarlo to video-forge: mode HEADLESS/AUTOMATIZACIÓN + MCP server + Editor API + scripting/CLI.
+// Avisa to Telegram ONLY when aparece a señal NEW (anti-repetición vía estado in R2).
+// First corrida = only fija the line base (not avisa), for not llenar of ruido with menciones already existentes.
 //
-// Lee (cwd): opencut_watch.json (estado previo). Escribe: opencut_watch_new.json + opencut_alert.txt (si hay señal).
-// Env: GH_TOKEN (o GITHUB_TOKEN) para la API de GitHub.
+// Lee (cwd): opencut_watch.JSON (estado previo). Writes: opencut_watch_new.JSON + opencut_alert.txt (if hay señal).
+// Env: GH_TOKEN (or GITHUB_TOKEN) for the API of GitHub.
 import fs from "node:fs";
 
 const REPO = "OpenCut-app/OpenCut";
@@ -12,7 +12,7 @@ const TOKEN = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || "";
 const H = { Accept: "application/vnd.github+json", "User-Agent": "opencut-watch" };
 if (TOKEN) H.Authorization = `Bearer ${TOKEN}`;
 
-// Señales fuertes de automatización/integración (evito términos ambiguos para no dar falsos positivos).
+// Señales fuertes of automatización/integración (evito términos ambiguos for not dar falsos positivos).
 const KW = /\b(mcp server|mcp\b|headless|editor api|render api|node api|programmatic|batch render|automation mode|scripting api|\bcli\b|command[- ]line)\b/i;
 
 const rj = (p, d) => { try { return JSON.parse(fs.readFileSync(p, "utf8")); } catch { return d; } };
@@ -31,7 +31,7 @@ try {
   }
 } catch (e) { console.error("releases:", e.message); }
 
-// 2) Commits recientes (main) con keyword en el mensaje.
+// 2) Commits recientes (main) with keyword in the message.
 try {
   for (const c of await jget(`https://api.github.com/repos/${REPO}/commits?per_page=50`)) {
     const msg = c.commit?.message || "";
@@ -39,7 +39,7 @@ try {
   }
 } catch (e) { console.error("commits:", e.message); }
 
-// 3) Paths reveladores (que aparezca un dir/archivo de mcp, headless, cli, editor-api…).
+// 3) Paths reveladores (that aparezca a dir/file of mcp, headless, cli, editor-API…).
 try {
   const tree = await jget(`https://api.github.com/repos/${REPO}/git/trees/main?recursive=1`);
   for (const p of (tree.tree || []).map((t) => t.path)) {

@@ -1,18 +1,18 @@
-// radar_implement.mjs — MOTOR del radar: implementa un GitHub Issue `radar` con GEMINI (sin Claude).
-// Flujo VALIDADO (v2, 2026-09-14): la revisión de 46 PRs mostró código muerto, paquetes sin declarar,
-// APIs inventadas, archivos rotos y diffs gigantes. Ahora el motor NO abre un PR hasta que el cambio pasa:
-//   1) sintaxis de cada archivo tocado (JSON, JS, Python, TOML, YAML)
-//   2) dependencias declaradas (package.json / requirements / pyproject)
-//   3) todo archivo de código nuevo queda en uso (nada muerto)
-//   4) tamaño acotado
-//   5) build/tests del proyecto, contando solo fallas NUEVAS frente a main
-//   6) revisión estricta por un segundo modelo (APIs reales, cambio conectado, sin afirmaciones falsas)
-// Si algo falla, el motor le devuelve los errores a Gemini y repara (hasta 2 rondas). Resultados:
-//   ok -> PR listo · sin revisión -> PR borrador · no valida -> sin PR y el issue explica por qué ·
-//   rechazado -> sin PR y el issue queda marcado como descartado. El workflow crea rama + PR (nunca merge).
+// radar_implement.mjs — ENGINE of the Radar: implements a GitHub issue `radar` with GEMINI (no Claude).
+// Validated flow (v2, 2026-09-14): the review of 46 PRs showed dead code, undeclared packages,
+// invented APIs, broken files and giant diffs. Now the engine does NOT open a PR until the change passes:
+//   1) syntax of every touched file (JSON, JS, Python, TOML, YAML)
+//   2) declared dependencies (package.json / requirements / pyproject)
+//   3) every new code file is in use (nothing dead)
+//   4) bounded size
+//   5) project build/tests, counting only NEW failures vs main
+//   6) strict review by a second model (real APIs, connected change, no false claims)
+// If something fails, the engine returns the errors to Gemini and repairs (up to 2 rounds). Outcomes:
+//   ok -> PR ready · no review -> draft PR · does not validate -> no PR and the issue explains why ·
+//   rejected -> no PR and the issue is marked discarded. The workflow creates branch + PR (never merge).
 //
 // Uso: node pipeline/radar_implement.mjs <numero_de_issue>
-// Env: GEMINI_API_KEY(,2), GH_TOKEN (para `gh`), RADAR_REPO (owner/repo), CLOUDFLARE_* (respaldo gratis).
+// Env: GEMINI_API_KEY(,2), GH_TOKEN (for `gh`), RADAR_REPO (owner/repo), CLOUDFLARE_* (free fallback).
 import fs from "node:fs";
 import path from "node:path";
 import { execSync, execFileSync } from "node:child_process";
@@ -24,15 +24,15 @@ const KEYS = [process.env.GEMINI_API_KEY, process.env.GEMINI_API_KEY2].filter(Bo
 if (!/^\d+$/.test(issueNo)) { console.error("Falta el número de issue."); process.exit(2); }
 if (!KEYS.length) { console.error("Falta GEMINI_API_KEY."); process.exit(2); }
 const tf = (u, o = {}, ms = 120000) => fetch(u, { ...o, signal: AbortSignal.timeout(ms) });
-// Todo lo que lleva rutas o datos va SIN shell (argumentos separados): las rutas las propone el modelo.
+// Everything that takes paths or data runs WITHOUT shell (separate args): the model proposes the paths.
 const run = (bin, args) => execFileSync(bin, args, { stdio: ["ignore", "pipe", "pipe"], maxBuffer: 64 * 1024 * 1024 }).toString();
 const readSafe = (p) => { try { return fs.readFileSync(p, "utf8"); } catch { return ""; } };
 
-// 1) Leer el issue (título + cuerpo).
+// 1) Leer the issue (title + cuerpo).
 const issue = JSON.parse(run("gh", ["issue", "view", issueNo, "-R", REPO, "--json", "title,body"]));
 console.log(`Issue #${issueNo}: ${issue.title}`);
 
-// 2) Contexto para Gemini.
+// 2) Contexto for Gemini.
 const tracked = run("git", ["ls-files"]).split("\n").filter(Boolean);
 const mentioned = [...new Set((issue.body.match(/`([^`]+?\.[A-Za-z0-9]+)(?::\d+)?`/g) || [])
   .map((s) => s.replace(/`/g, "").replace(/:\d+$/, "")))]
@@ -93,7 +93,7 @@ ${issue.body}
 ## Archivos mencionados y manifiestos (contenido actual)
 ${fileCtx || "(ninguno adjuntado; usa las rutas del issue)"}
 
-## Rutas válidas del repo (git ls-files, muestra)
+## Rutas válidas of the repo (git ls-files, muestra)
 ${tracked.slice(0, 400).join("\n")}`;
 
 // ---------- Modelos ----------
@@ -116,7 +116,7 @@ async function discoverModels() {
   console.log("No pude listar modelos; uso la lista por defecto:", MODELS.join(", "));
 }
 
-// Llama al LLM y devuelve el primer JSON que cumpla `accept`. Espera creciente ante 429 y respaldo en Workers AI.
+// Llama to the LLM and devuelve the primer JSON that cumpla `accept`. Espera creciente ante 429 and respaldo in Workers AI.
 async function callLLM(promptText, accept, label = "") {
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   for (let r = 0; r < 5; r++) {
@@ -179,7 +179,7 @@ function expandGlob(p) {
 const changed = new Set();
 const created = new Set();
 const blocked = [];
-// GUARDA DE RUTAS (seguridad): solo dentro del repo y nunca CI, git, secretos, lockfiles ni despliegue.
+// STORES OF RUTAS (security): only dentro of the repo and never CI, git, secrets, lockfiles nor despliegue.
 const REPO_ROOT = path.resolve(".");
 const DENY = [/^\.github(\/|$)/i, /^\.git(\/|$)/i, /(^|\/)\.env(\.|$)/i, /(^|\/)\.npmrc$/i, /(^|\/)wrangler\.toml$/i, /(^|\/)\.dev\.vars$/i, /\.(pem|key|p12|pfx)$/i, /(^|\/)(package-lock\.json|pnpm-lock\.yaml|yarn\.lock)$/i];
 function safePath(p) {
@@ -192,7 +192,7 @@ function safePath(p) {
   if (DENY.some((re) => re.test(rel))) return null;
   return rel;
 }
-// ÚNICO punto donde el contenido propuesto por el modelo llega a disco (ruta ya pasada por safePath).
+// ÚNICO punto where the contenido propuesto by the modelo llega to disco (ruta already pasada by safePath).
 function writeModelFile(p, content) {
   fs.mkdirSync(path.dirname(p), { recursive: true });
   fs.writeFileSync(p, content);
@@ -223,7 +223,7 @@ function applyEdits(edits) {
 }
 let missed = applyEdits(plan.edits);
 
-// Si TODO lo que pidió tocar son archivos protegidos (CI/despliegue), no es un fallo: es configuración manual.
+// If EVERYTHING lo that pidió tocar are files protegidos (CI/despliegue), not is a failure: is configuración manual.
 if (!changed.size && blocked.length && missed.every((m) => blocked.includes(m))) {
   writeSkip("manual", "requiere cambiar archivos protegidos (CI o despliegue)", blocked.map((b) => b.path).join(", "),
     blocked.map((b) => `Edita a mano ${b.path}: ${String(b.replace ?? b.content ?? "").slice(0, 160).replace(/\s+/g, " ")}`));
@@ -231,7 +231,7 @@ if (!changed.size && blocked.length && missed.every((m) => blocked.includes(m)))
   process.exit(0);
 }
 
-// 3b) Autocorrección de "find" inexistentes (hasta 2 rondas).
+// 3b) Autocorrección of "find" inexistentes (until 2 rondas).
 function contentsOf(paths) {
   return [...new Set(paths)].filter((p) => p && !p.includes("*")).map((p) => {
     const c = readSafe(p); return c ? `### ${p}\n\`\`\`\n${c.slice(0, 48000)}\n\`\`\`` : `### ${p} (no existe aún — créalo con "content")`;
@@ -243,7 +243,7 @@ for (let round = 1; missed.filter((m) => !blocked.includes(m)).length && round <
   const corr = await callGemini(`Estas ediciones NO se aplicaron porque su "find" NO existe literalmente en el archivo actual. Corrígelas. Devuelve SOLO JSON: {"edits":[...]}.
 - Para AGREGAR: ancla en un texto que EXISTA (cópialo del contenido de abajo) y repítelo en "replace" seguido de lo nuevo; o "content" completo si es pequeño o nuevo.
 - Para MODIFICAR: "find" debe ser un substring EXACTO de hoy.
-## Ediciones que fallaron
+## Ediciones that fallaron
 ${fails.map((m) => `- path: ${m.path}\n  find (NO existe): ${JSON.stringify(m.find ?? null)}\n  intención: ${JSON.stringify(String(m.replace ?? m.content ?? "").slice(0, 500))}`).join("\n")}
 ## Contenido ACTUAL
 ${contentsOf(fails.map((m) => m.path)) || "(sin contenido)"}
@@ -276,7 +276,7 @@ function nearestPkgDir(file) {
   return fs.existsSync("package.json") ? "." : null;
 }
 const pkgOf = (d) => { try { return JSON.parse(readSafe(path.join(d, "package.json"))); } catch { return null; } };
-// Si cambió un package.json con lockfile, el motor regenera el lockfile (Gemini no puede tocarlo).
+// If cambió a package.JSON with lockfile, the engine regenera the lockfile (Gemini not can tocarlo).
 function syncLockfiles() {
   for (const p of [...changed].filter((x) => /(^|\/)package\.json$/.test(x))) {
     const d = path.dirname(p) || ".";
@@ -334,8 +334,8 @@ const ran = [];
 function projectProblems(cmds) {
   if (!cmds.length) return [];
   if (baseline === null) {
-    // Estado de main SIN el cambio: solo cuentan las fallas que el cambio introduce.
-    // Se mide en un worktree limpio de HEAD (no stash: los archivos nuevos del cambio no se tocan).
+    // Estado of main WITHOUT the cambio: only cuentan the failures that the cambio introduce.
+    // Is mide in a worktree limpio of HEAD (not stash: the files new of the cambio not is tocan).
     baseline = new Set();
     const baseDir = path.resolve(REPO_ROOT, "..", "radar_base");
     try {
@@ -382,7 +382,7 @@ for (let round = 0; round <= 2; round++) {
 Reglas: declara en el manifiesto todo paquete importado; conecta todo archivo nuevo al código existente; no inventes APIs; no toques .github, wrangler.toml ni lockfiles.
 ## Problemas
 ${all.map((a, i) => `${i + 1}. [${a.kind}]${a.file ? " " + a.file : ""}: ${a.detail}`).join("\n")}
-## Contenido ACTUAL de los archivos cambiados y manifiestos
+## Contenido ACTUAL of the files cambiados and manifiestos
 ${contentsOf([...changed, ...Object.keys({ "package.json": 1, "requirements.txt": 1, "pyproject.toml": 1 }).filter((p) => tracked.includes(p))])}
 ## Issue #${issueNo}: ${issue.title}
 ${String(issue.body).slice(0, 4000)}`);
@@ -391,7 +391,7 @@ ${String(issue.body).slice(0, 4000)}`);
   applyEdits(fix.edits);
 }
 
-// ---------- 5) Resultado para el workflow ----------
+// ---------- 5) Result for the workflow ----------
 if (outcome === "no_valida" || outcome === "rechazado") {
   const report = { outcome, problems: finalProblems.slice(0, 12).map((p) => ({ kind: p.kind, file: p.file || null, detail: String(p.detail).slice(0, 700) })), review: review ? review.summary || null : null, impact: review ? review.impact || null : null };
   fs.writeFileSync(outcome === "rechazado" ? "radar_rejected.json" : "radar_invalid.json", JSON.stringify(report, null, 2));

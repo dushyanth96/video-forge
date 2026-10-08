@@ -1,6 +1,6 @@
-// video_script.mjs — guionista IA: dado un TEMA, Gemini escribe el guion completo del
-// video (faceless, datos/dinero, ingles, alta retencion) en el formato de voicemap que
-// usan la voz (Chatterbox dirigido) y el render. Salida: voicemap_full.json.
+// video_script.mjs — guionista IA: dado a TOPIC, Gemini writes the script completo of the
+// video (faceless, datos/money, ingles, alta retencion) in the formato of voicemap that
+// usan the voice (Chatterbox dirigido) and the render. Output: voicemap_full.JSON.
 //
 // Uso: node pipeline/video_script.mjs "<tema>" <out.json>
 import fs from "node:fs";
@@ -12,10 +12,10 @@ if (!topic) { console.error("Falta el tema"); process.exit(1); }
 
 const sleep = (ms) => new Promise((s) => setTimeout(s, ms));
 async function gemini(prompt) {
-  // Multi-llave (respaldo = doble cuota) + reintento con backoff CRECIENTE si todo esta saturado
-  // (429/503). ROBUSTEZ: solo damos por bueno un JSON que TRAE beats -> una respuesta vacia o rara
-  // (JSON sin beats) YA NO aborta la produccion, se reintenta. Antes se rendia en ~12s y un 429
-  // pasajero (o un JSON basura) tumbaba el video entero.
+  // Multi-llave (respaldo = double cuota) + retry with backoff CRECIENTE if everything esta saturado
+  // (429/503). ROBUSTEZ: only damos by bueno a JSON that TRAE beats -> a respuesta vacia or rara
+  // (JSON without beats) ALREADY NOT aborta the produccion, is retries. Before is rendia in ~12s and a 429
+  // pasajero (or a JSON basura) tumbaba the video entero.
   const ROUNDS = 5;
   for (let round = 0; round < ROUNDS; round++) {
     for (let k = 0; k < KEYS.length; k++) {
@@ -36,28 +36,28 @@ async function gemini(prompt) {
         } catch (e) { console.error(`key${k + 1}/${m}: ${e.message}`); }
       }
     }
-    // Backoff creciente (20s, 40s, 60s, 80s): da tiempo a que se libere la cuota por minuto.
+    // Backoff creciente (20s, 40s, 60s, 80s): da tiempo to that is libere the cuota by minute.
     if (round < ROUNDS - 1) { const wait = Math.min(20000 * (round + 1), 80000); console.error(`Gemini saturado (ronda ${round + 1}/${ROUNDS}); espero ${wait / 1000}s…`); await sleep(wait); }
   }
   console.error("Gemini no respondio tras varios reintentos (guion).");
   return null;
 }
 
-// MEJORA CONTINUA: aprendizajes de lo ya publicado (métricas reales + tendencias). Los inyecta
-// produce_video.yml via env LEARNINGS (de pipeline/learnings.mjs). Si viene, el guion los aplica.
+// MEJORA CONTINUA: learnings of lo already published (métricas reales + tendencias). The inyecta
+// produce_video.yml via env LEARNINGS (of pipeline/learnings.mjs). If viene, the script the aplica.
 const LEARN = (process.env.LEARNINGS || "").trim();
 const learnBlock = LEARN
   ? `\n\nAPRENDIZAJES DE ESTE CANAL (rendimiento real + tendencias) — APLÍCALOS en este guion (ángulo, tipo de gancho, formato de título, ritmo):\n${LEARN}\n`
   : "";
 
-// DURACION OBJETIVO (experimento de la fabrica): produce_video inyecta TARGET_MIN desde channel/experiments.json.
-// La fabrica sube la duracion poco a poco; el guionista apunta a esa duracion (~7 beats por minuto).
+// DURATION OBJETIVO (experiment of the fabrica): produce_video inyecta TARGET_MIN since channel/experiments.JSON.
+// The fabrica uploads the duration little to little; the guionista apunta to esa duration (~7 beats by minute).
 const TARGET_MIN = Math.max(4, parseInt(process.env.TARGET_MIN || "8", 10) || 8);
 const BEATS = Math.round(TARGET_MIN * 7);
 const BEATS_MIN = Math.max(28, BEATS - 8), BEATS_MAX = BEATS + 10;
 
-// CONTROL DE DURACION REAL: el largo del video lo determinan las PALABRAS habladas, no el nº de beats
-// (un beat corto dura ~2s; el "~7 beats/min" subestimaba y el video salia corto). Ritmo efectivo del TTS
+// CONTROL OF DURATION REAL: the largo of the video lo determinan the PALABRAS habladas, not the nº of beats
+// (a beat corto dura ~2s; the "~7 beats/min" subestimaba and the video salia corto). Ritmo efectivo of the TTS
 // dirigido, con pausas, ~135 palabras/min (medido). Apuntamos a esas palabras y EXTENDEMOS si queda corto.
 const WPM = 135;
 const TARGET_WORDS = Math.round(TARGET_MIN * WPM);
@@ -65,7 +65,7 @@ const MIN_WORDS = Math.round(TARGET_WORDS * 0.9);          // aceptamos desde el
 const words = (bs) => (bs || []).reduce((n, b) => n + String(b.text || "").trim().split(/\s+/).filter(Boolean).length, 0);
 const estMin = (bs) => (words(bs) / WPM).toFixed(1);
 
-// TONO DE CRECIMIENTO (para conseguir SUSCRIPTORES): channel/growth.json -> GROWTH_TONE.
+// TONO OF CRECIMIENTO (for conseguir SUSCRIPTORES): channel/growth.JSON -> GROWTH_TONE.
 const TONE = (process.env.GROWTH_TONE || "retador").toLowerCase();
 const TONES = {
   retador: `El GANCHO inicial y el CTA final deben ser RETADORES CON AUTORIDAD: directos y punzantes, que reten al espectador ("quien siga de largo se queda sin saberlo") y lo empujen a SUSCRIBIRSE ya — SIN mentir ni clickbait falso; manten la credibilidad de un canal de datos.`,
@@ -91,8 +91,8 @@ const prompt =
 const scr = await gemini(prompt);
 if (!scr || !Array.isArray(scr.beats) || !scr.beats.length) { console.error("Gemini no devolvio guion"); process.exit(1); }
 
-// CONTROL DE DURACION: si el guion quedo corto (menos palabras de las que llenan TARGET_MIN),
-// le pedimos a Gemini que lo EXTIENDA con contenido real. Hasta 3 rondas; si no crece, cortamos.
+// CONTROL OF DURATION: if the script quedo corto (less palabras of the that llenan TARGET_MIN),
+// le pedimos to Gemini that lo EXTIENDA with contenido real. Until 3 rondas; if not crece, cortamos.
 let beats = scr.beats;
 console.log(`Guion inicial: ${words(beats)} palabras (~${estMin(beats)} min), objetivo ~${TARGET_WORDS} (${TARGET_MIN} min).`);
 for (let round = 1; round <= 3 && words(beats) < MIN_WORDS; round++) {
@@ -110,7 +110,7 @@ for (let round = 1; round <= 3 && words(beats) < MIN_WORDS; round++) {
 if (words(beats) < MIN_WORDS) console.log(`⚠️ Guion final ~${estMin(beats)} min (objetivo ${TARGET_MIN}); quedo algo corto pero es lo mejor tras 3 rondas.`);
 else console.log(`✓ Guion final: ${words(beats)} palabras (~${estMin(beats)} min) — cumple el objetivo.`);
 
-// Direccion de voz por tipo (energia/ritmo/pausa) para el TTS dirigido.
+// Direccion of voice by type (energia/ritmo/pausa) for the TTS dirigido.
 const DIR = {
   hook: { exaggeration: 0.7, cfg: 0.55, pause_after: 0.35 },
   dato: { exaggeration: 0.55, cfg: 0.45, pause_after: 0.28 },

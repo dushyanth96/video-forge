@@ -1,7 +1,7 @@
-// thumb_text.mjs — saca un TEXTO de miniatura corto y punchy (2-4 palabras) desde el
+// thumb_text.mjs — saca a TEXTO of thumbnail corto and punchy (2-4 palabras) since the
 import { TEXT_MODELS } from "./_models.mjs";
-// titulo de un video (Gemini; si falla, usa las primeras palabras del titulo).
-// Uso: node pipeline/thumb_text.mjs "<titulo del video>"
+// title of a video (Gemini; if fails, uses the primeras palabras of the title).
+// Usage: node pipeline/thumb_text.mjs "<title of the video>"
 const title = (process.argv[2] || "").trim();
 const KEY = process.env.GEMINI_API_KEY;
 

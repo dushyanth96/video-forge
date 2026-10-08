@@ -1,7 +1,7 @@
-// ledger.mjs — Registro de DECISIONES con predicción y AUTOCRÍTICA (auditoría BR-06). PURO.
-// Cada decisión se guarda ANTES de actuar con: razón, evidencia, acción, métrica, criterio de éxito y fecha
-// de revisión. Un revisor la juzga en su fecha (ACERTÓ / FALLÓ / INCONCLUSO) contra su PROPIO criterio,
-// y dos fallos seguidos del mismo tipo piden revertir la regla. Sin I/O, fechas inyectadas.
+// ledger.mjs — Registro of DECISIONES with predicción and AUTOCRÍTICA (auditoría BR-06). PURO.
+// Cada decisión is stores BEFORE of actuar with: razón, evidencia, acción, métrica, criterio of éxito and fecha
+// of revisión. A revisor the juzga in its fecha (ACERTÓ / FAILED / INCONCLUSO) contra its PROPIO criterio,
+// and dos fallos seguidos of the same type piden revertir the regla. Without I/or, fechas inyectadas.
 
 const DAY = 86400000;
 export const OPS = { ">=": (a, b) => a >= b, ">": (a, b) => a > b, "<=": (a, b) => a <= b, "<": (a, b) => a < b };
@@ -39,7 +39,7 @@ export function dueEntries(ledger, nowMs = Date.now()) {
   return (ledger || []).filter((e) => e && e.status === "PENDIENTE" && Date.parse(e.review_at) <= nowMs);
 }
 
-// Juicio contra el criterio propio. Sin dato observado -> INCONCLUSO (nunca se da por bueno ni por malo).
+// Juicio contra the criterio propio. Without dato observado -> INCONCLUSO (never is da by bueno nor by malo).
 export function judge(entry, observed) {
   const v = observed === null || observed === undefined || !Number.isFinite(Number(observed)) ? null : Number(observed);
   if (v === null) return { status: "INCONCLUSO", note: `sin dato de ${entry.metric} al revisar` };
@@ -55,7 +55,7 @@ export function applyReview(ledger, id, observed, nowMs = Date.now()) {
   });
 }
 
-// Fallos consecutivos más recientes de un tipo/canal (los INCONCLUSO no rompen ni suman la racha).
+// Fallos consecutivos more recientes of a type/channel (the INCONCLUSO not rompen nor suman the racha).
 export function consecutiveFailures(ledger, type, channel = null) {
   const judged = (ledger || [])
     .filter((e) => e.type === type && (channel == null || e.channel === channel) && (e.status === "ACERTO" || e.status === "FALLO"))
@@ -69,7 +69,7 @@ export function shouldRevert(ledger, type, channel = null, threshold = 2) {
   return consecutiveFailures(ledger, type, channel) >= threshold;
 }
 
-// Tasa de acierto (solo juzgadas) para mostrar la calidad del propio cerebro.
+// Tasa of acierto (only juzgadas) for mostrar the quality of the propio brain.
 export function hitRate(ledger, type = null) {
   const judged = (ledger || []).filter((e) => (type == null || e.type === type) && (e.status === "ACERTO" || e.status === "FALLO"));
   if (!judged.length) return { judged: 0, hits: 0, rate: null };
@@ -77,7 +77,7 @@ export function hitRate(ledger, type = null) {
   return { judged: judged.length, hits, rate: Math.round((hits / judged.length) * 100) / 100 };
 }
 
-// Conserva todo lo pendiente y las últimas `keep` revisadas.
+// Conserva everything lo pendiente and the últimas `keep` revisadas.
 export function trim(ledger, keep = 200) {
   const pend = (ledger || []).filter((e) => e.status === "PENDIENTE");
   const done = (ledger || []).filter((e) => e.status !== "PENDIENTE").sort((a, b) => Date.parse(b.reviewed_at || b.at) - Date.parse(a.reviewed_at || a.at)).slice(0, keep);

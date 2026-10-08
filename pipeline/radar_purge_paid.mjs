@@ -1,7 +1,7 @@
-// radar_purge_paid.mjs — limpieza ONE-SHOT: cierra los issues `radar` ABIERTOS cuya solución
-// DEPENDE de algo de PAGO. Clasifica con la cadena de IA GRATIS (llm.mjs). CONSERVADOR: solo cierra
-// si es imposible hacerlo gratis. Deja comentario y cierra como "not planned". Reporta a Telegram.
-// Env: GH_TOKEN (PAT con acceso a los repos), keys de IA (GEMINI/GROQ/…), TELEGRAM_* (resumen).
+// Radar_purge_paid.mjs — limpieza ONE-SHOT: cierra the issues `Radar` ABIERTOS cuya solución
+// DEPENDE of something of PAGO. Clasifica with the cadena of IA FREE (llm.mjs). CONSERVADOR: only cierra
+// if is imposible hacerlo free. Deja comentario and cierra as "not planned". Reporta to Telegram.
+// Env: GH_TOKEN (PAT with acceso to the repos), keys of IA (GEMINI/GROQ/…), TELEGRAM_* (resumen).
 import { genText } from "./llm.mjs";
 import fs from "node:fs";
 

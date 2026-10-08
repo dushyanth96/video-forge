@@ -1,7 +1,7 @@
-// monetization_report.mjs — Monetization Readiness Dashboard + Brain Report (corregido por la auditoría).
-// Lee el historial de métricas YPP por VENTANA (ypp_history.json, lo escribe ypp_metrics.mjs) de ambos
-// canales -> readiness + War Room + niveles del programa (intermedio/completo) + viabilidad, y escribe
-// channel/brain/monetization_report.json. Lo que no se pudo medir aparece como "sin dato".
+// monetization_report.mjs — Monetization Readiness Dashboard + Brain Report (corregido by the auditoría).
+// Lee the historial of métricas YPP by VENTANA (ypp_history.JSON, lo writes ypp_metrics.mjs) of both
+// channels -> readiness + War Room + niveles of the schedules (intermedio/completo) + viabilidad, and writes
+// channel/brain/monetization_report.JSON. Lo that not is pudo medir aparece as "without dato".
 // Uso: node pipeline/monetization_report.mjs <ypp_hist_datalens.json> <ypp_hist_oddly.json> <out.json> [ypp_dl.json] [ypp_od.json]
 import fs from "node:fs";
 import { MONET_GOALS, readiness, warRoom, reportChannel } from "./lib/monetization.mjs";

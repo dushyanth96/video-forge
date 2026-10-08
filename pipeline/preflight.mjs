@@ -1,7 +1,7 @@
-// preflight.mjs — PRE-VUELO antes de producir: valida que las herramientas CRITICAS esten OK.
-// Reintenta lo transitorio (429/blips) unas veces; si algo CRITICO sigue caido, sale 1 (ABORTA)
-// para NO arrancar una produccion que fallaria a mitad. Asi "en produccion no hay errores".
-// Guarda tools_health.json (para la app) y preflight.json (motivo).
+// preflight.mjs — PRE-VUELO before of producir: validates that the herramientas CRITICAS esten OK.
+// Retries lo transitorio (429/blips) some veces; if something CRITICO sigue caido, sale 1 (ABORTA)
+// for NOT arrancar a produccion that fallaria to half. Asi "in produccion not hay errores".
+// Stores tools_health.JSON (for the app) and preflight.JSON (motivo).
 // Uso: node pipeline/preflight.mjs
 // Env: GEMINI_API_KEY, PEXELS_API_KEY, YT_CLIENT_ID/SECRET/REFRESH
 import fs from "node:fs";
@@ -11,7 +11,7 @@ const { GEMINI_API_KEY, PEXELS_API_KEY, YT_CLIENT_ID, YT_CLIENT_SECRET, YT_REFRE
 const sleep = (ms) => new Promise((s) => setTimeout(s, ms));
 const tools = [];
 
-// Chequeo con reintentos para lo transitorio. critical=true -> puede abortar la produccion.
+// Chequeo with retries for lo transitorio. critical=true -> can abortar the produccion.
 async function check(name, critical, fn, { retries = 3, wait = 20000 } = {}) {
   let detail = "";
   for (let i = 0; i <= retries; i++) {
@@ -25,11 +25,11 @@ async function check(name, critical, fn, { retries = 3, wait = 20000 } = {}) {
   tools.push({ name, ok: false, detail, critical });
 }
 
-// ---- CRITICOS (sin esto la produccion falla) ----
+// ---- CRITICOS (without esto the produccion fails) ----
 await check("Gemini (guion/SEO)", true, async () => {
   if (!GEMINI_API_KEY) return { ok: false, detail: "sin API key" };
-  // Prueba VARIOS modelos (auto-adapta al que responda), igual que los scripts reales -> no marca
-  // caido solo porque un nombre de modelo dio 404. Si alguno responde, Gemini esta OK.
+  // Test SEVERAL modelos (auto-adapta to the that responda), igual that the scripts reales -> not marca
+  // caido only because a nombre of modelo dio 404. If alguno responde, Gemini esta OK.
   let saw429 = false;
   for (const m of TEXT_MODELS) {
     const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${GEMINI_API_KEY}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ contents: [{ parts: [{ text: "ping" }] }] }) });

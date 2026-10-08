@@ -1,12 +1,12 @@
-// recipe_assemble.mjs — arma el REEL vertical 9:16 de la receta.
-// Toma TUS fotos/videos EN EL ORDEN que los mandaste (uno por beat), embellece cada
-// toma (luz/color apetitoso + encuadre 9:16 + Ken Burns en las fotos), y para los pasos
-// que te falten mete b-roll de cocina de Pexels (o una imagen IA) relacionado al paso.
-// Sincroniza cada toma con la narracion (voz clonada), quema el subtitulo del paso,
-// une todo con transiciones y mezcla voz + musica suave. Salida: reel 1080x1920.
+// recipe_assemble.mjs — arma the REEL vertical 9:16 of the recipe.
+// Toma TUS photos/videos IN THE ORDEN that the mandaste (uno by beat), embellece cada
+// toma (luz/color apetitoso + encuadre 9:16 + Ken Burns in the photos), and for the steps
+// that te falten mete b-roll of cocina of Pexels (or a image IA) relacionado to the step.
+// Sincroniza cada toma with the narration (voice clonada), quema the subtitulo of the step,
+// joins everything with transiciones and mezcla voice + music suave. Output: reel 1080x1920.
 //
-// Uso: node pipeline/recipe_assemble.mjs <plan.json> <timing.json> <mediaDir> <voz.wav> <out.mp4>
-// Env: PEXELS_API_KEY, PIXABAY_API_KEY (opcionales). Si existe music.mp3 en el cwd, se mezcla.
+// Usage: node pipeline/recipe_assemble.mjs <plan.JSON> <timing.JSON> <mediaDir> <voice.wav> <out.mp4>
+// Env: PEXELS_API_KEY, PIXABAY_API_KEY (opcionales). If existe music.mp3 in the cwd, is mezcla.
 import fs from "node:fs";
 import path from "node:path";
 import { execSync } from "node:child_process";
@@ -21,8 +21,8 @@ const FONT = [
   "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
 ].find((f) => fs.existsSync(f)) || "";
 
-// Grade "apetitoso" para comida: mas luz, color vivo y calido, micro-nitidez. Se aplica
-// a TODA toma (tuya, Pexels o IA) para que el reel se vea parejo y bonito.
+// Grade "apetitoso" for comida: more luz, color vivo and calido, micro-nitidez. Is aplica
+// to ALL toma (tuya, Pexels or IA) for that the reel is vea parejo and bonito.
 const GRADE = "eq=brightness=0.03:saturation=1.2:contrast=1.06,curves=preset=lighter,unsharp=3:3:0.4";
 const COVER = `scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H}`;
 
@@ -34,7 +34,7 @@ const durOf = (i) => {
   return Math.max(1.4, (b && b.dur ? +b.dur : 3.5));
 };
 
-// Tus medios, en el ORDEN que los mandaste (000, 001, ...).
+// Tus medios, in the ORDEN that the mandaste (000, 001, ...).
 const media = fs.existsSync(mediaDir)
   ? fs.readdirSync(mediaDir).filter((f) => /\.(jpg|jpeg|png|mp4|mov)$/i.test(f)).sort()
   : [];
@@ -80,7 +80,7 @@ async function aiImage(prompt, dest, seed) {
   await dl(url, dest);
 }
 
-// Parte el subtitulo en <=2 lineas para que quepa a lo ancho.
+// Part the subtitulo in <=2 lines for that quepa to lo ancho.
 function wrap(text, per = 18) {
   const words = (text || "").split(/\s+/).filter(Boolean);
   const lines = []; let cur = "";
@@ -92,7 +92,7 @@ function wrap(text, per = 18) {
   return lines.slice(0, 2).join("\n");
 }
 
-// Filtro de subtitulo (caja legible abajo). Usa textfile para no pelear con el escapado.
+// Filtro of subtitulo (caja legible abajo). Uses textfile for not pelear with the escapado.
 function subtitleFilter(i, text) {
   if (!FONT || !text) return "";
   const tf = path.resolve(`${work}/sub${i}.txt`).replace(/\\/g, "/");
@@ -100,8 +100,8 @@ function subtitleFilter(i, text) {
   return `,drawtext=fontfile='${FONT}':textfile='${tf}':fontcolor=white:fontsize=54:line_spacing=10:box=1:boxcolor=black@0.55:boxborderw=26:x=(w-text_w)/2:y=h-460`;
 }
 
-// Genera el clip de un beat: fuente (tu medio / Pexels / IA) -> 9:16 + grade + Ken Burns
-// (si es foto) + subtitulo quemado, con duracion = narracion del beat (+ cola para fundir).
+// Generates the clip of a beat: fuente (tu medio / Pexels / IA) -> 9:16 + grade + Ken Burns
+// (if is photo) + subtitulo quemado, with duration = narration of the beat (+ queue for fundir).
 async function makeBeat(i) {
   const dur = +(durOf(i) + TD).toFixed(2);
   const out = `${work}/beat${String(i).padStart(3, "0")}.mp4`;
@@ -109,7 +109,7 @@ async function makeBeat(i) {
   const mine = media[i] ? path.join(mediaDir, media[i]) : null;
   const isVideo = (p) => /\.(mp4|mov)$/i.test(p);
 
-  // 1) Tu medio, si mandaste uno para este beat.
+  // 1) Tu medio, if mandaste uno for este beat.
   if (mine && fs.existsSync(mine)) {
     if (isVideo(mine)) {
       execSync(`ffmpeg -y -stream_loop -1 -i "${mine}" -t ${dur} -vf "${COVER},${GRADE}${sub}" -an -r ${FPS} -c:v libx264 -preset veryfast -pix_fmt yuv420p "${out}"`, { stdio: "ignore" });
@@ -119,7 +119,7 @@ async function makeBeat(i) {
     return { out, dur, src: "tuyo" };
   }
 
-  // 2) Relleno: b-roll de cocina de Pexels/Pixabay relacionado al paso.
+  // 2) Relleno: b-roll of cocina of Pexels/Pixabay relacionado to the step.
   let link = await pexelsVideo(beats[i].query);
   if (!link) link = await pixabayVideo(beats[i].query);
   if (link) {
@@ -137,7 +137,7 @@ async function makeBeat(i) {
   return { out, dur, src: "ia" };
 }
 
-// Foto -> video con movimiento suave (Ken Burns) para que no se sienta estatico.
+// Photo -> video with movimiento suave (Ken Burns) for that not is sienta estatico.
 function kenBurns(img, out, dur, i, sub) {
   const frames = Math.round(dur * FPS);
   const zin = i % 2 === 0;
@@ -145,7 +145,7 @@ function kenBurns(img, out, dur, i, sub) {
   execSync(`ffmpeg -y -loop 1 -i "${img}" -t ${dur} -vf "scale=${W * 1.4}:${H * 1.4},zoompan=z='${z}':d=${frames}:s=${W}x${H}:fps=${FPS},${GRADE}${sub}" -r ${FPS} -c:v libx264 -preset veryfast -pix_fmt yuv420p "${out}"`, { stdio: "ignore" });
 }
 
-// Construye todos los beats en orden.
+// Construye all the beats in orden.
 const parts = [], durs = [];
 for (let i = 0; i < beats.length; i++) {
   try {
@@ -159,7 +159,7 @@ for (let i = 0; i < beats.length; i++) {
 }
 if (!parts.length) { console.error("Sin clips -> no puedo armar el reel."); process.exit(1); }
 
-// Une los clips con transiciones (cadena xfade), como el fondo del canal.
+// Joins the clips with transiciones (cadena xfade), as the background of the channel.
 const silent = `${work}/silent.mp4`;
 if (parts.length === 1) {
   execSync(`ffmpeg -y -i "${parts[0]}" -r ${FPS} -c:v libx264 -preset veryfast -pix_fmt yuv420p "${silent}"`, { stdio: "inherit" });
@@ -177,7 +177,7 @@ if (parts.length === 1) {
   execSync(`ffmpeg -y ${inputs} -filter_complex "${filter}" -map "${acc}" -r ${FPS} -c:v libx264 -preset veryfast -pix_fmt yuv420p "${silent}"`, { stdio: "inherit" });
 }
 
-// Mezcla voz (narracion clonada) + musica suave si hay music.mp3.
+// Mezcla voice (narration clonada) + music suave if hay music.mp3.
 const hasMusic = fs.existsSync("music.mp3");
 if (hasMusic) {
   execSync(`ffmpeg -y -i "${silent}" -i "${voicePath}" -stream_loop -1 -i music.mp3 -filter_complex "[1:a]volume=1.0[v];[2:a]volume=0.10[m];[v][m]amix=inputs=2:duration=first:dropout_transition=0[a]" -map 0:v -map "[a]" -c:v libx264 -preset medium -crf 20 -pix_fmt yuv420p -c:a aac -b:a 160k -shortest "${outPath}"`, { stdio: "inherit" });

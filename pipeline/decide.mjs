@@ -1,8 +1,8 @@
-// decide.mjs — DecisionNeuron (Brain OS Fase 5). Lee lo que las neuronas ya midieron para un
-// canal y escribe un REGISTRO de decisión explicable (channel/brain/decision.json): candidatos
-// con recompensa rica + score (expected_value/confidence/risk/learning_value) + el reparto de
-// slots recomendado por el bandit Thompson, sembrado por ISO-week (estable dentro de la semana).
-// Es la fuente que consumen el rebalance del canal, la Mini App y el dashboard (Fase 6).
+// decide.mjs — DecisionNeuron (Brain OS Phase 5). Lee lo that the neuronas already midieron for a
+// channel and writes a REGISTRO of decisión explicable (channel/brain/decision.JSON): candidatos
+// with recompensa rica + score (expected_value/confidence/risk/learning_value) + the reparto of
+// slots recomendado by the bandit Thompson, sembrado by ISO-week (estable dentro of the week).
+// Is the fuente that consumen the rebalance of the channel, the Mini App and the dashboard (Phase 6).
 // Uso: node pipeline/decide.mjs <state.json> <decisionOut.json> [total] [weekTag]
 import fs from "node:fs";
 import { richReward, scoreCandidate, proportionalByScore } from "./lib/decision.mjs";
@@ -10,7 +10,7 @@ import { richReward, scoreCandidate, proportionalByScore } from "./lib/decision.
 const [stateFile, outFile, totalArg, weekArg] = process.argv.slice(2);
 const read = (f, d) => { try { return JSON.parse(fs.readFileSync(f, "utf8")); } catch { return d; } };
 
-// ISO-week (misma semana -> misma semilla -> mismo reparto; no salta en cada corrida).
+// ISO-week (same week -> same semilla -> same reparto; not salta in cada corrida).
 function isoWeek(d = new Date()) {
   const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
   const day = (t.getUTCDay() + 6) % 7; t.setUTCDate(t.getUTCDate() - day + 3);
@@ -22,8 +22,8 @@ function isoWeek(d = new Date()) {
 const state = read(stateFile, {});
 const week = weekArg || isoWeek(new Date());
 
-// Construye candidatos desde el ranking de nichos (vistas/día + nº de videos = muestras).
-// Soporta la forma de Oddly (niche_ranking:[{label,avg_vpd,videos}]) y una genérica (ranking:[{key,vpd,samples}]).
+// Construye candidatos since the ranking of niches (vistas/day + nº of videos = muestras).
+// Soporta the way of Oddly (niche_ranking:[{label,avg_vpd,videos}]) and a genérica (ranking:[{key,vpd,samples}]).
 const rows = state.niche_ranking || state.ranking || [];
 const rawCands = rows.map((r) => ({
   key: r.key || r.label,
@@ -50,7 +50,7 @@ const decision = {
   at: new Date().toISOString(),
   week, engine: "score(reward*confidence)", total,
   ref: { vpd: refVpd },
-  // FACT: vpd/samples medidos. INFERENCE: reward/score/alloc del motor (no opinión).
+  // FACT: vpd/samples medidos. INFERENCE: reward/score/alloc of the engine (not opinión).
   candidates: candidates.sort((a, b) => b.score - a.score),
   recommended_allocation: alloc,
   note: "Reparto por confianza (score = vistas/dia * confianza), no proporcional-ciego. Nada de producción está obligado a seguirlo; el rebalance del canal lo consume con fallback.",

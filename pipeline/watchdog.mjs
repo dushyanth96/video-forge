@@ -1,9 +1,9 @@
-// watchdog.mjs — vigila la INFRAESTRUCTURA crítica del sistema: tokens de YouTube (los 2 canales) y
-// acceso a R2 (almacenamiento). Si un token de YouTube muere o R2 se cae, TODO falla en silencio
-// (no se publica ni se agenda nada). Este chequeo lo detecta y el workflow avisa a Telegram.
+// watchdog.mjs — vigila the INFRAESTRUCTURA crítica of the sistema: tokens of YouTube (the 2 channels) and
+// acceso to R2 (almacenamiento). If a token of YouTube muere or R2 is cae, EVERYTHING fails in silencio
+// (not is publishes nor is agenda nothing). Este chequeo lo detecta and the workflow avisa to Telegram.
 //
-// Uso: node pipeline/watchdog.mjs   (el workflow le pasa R2_STATUS por env)
-// Salidas: wd_report.txt (legible) + wd_fail.txt (nº de fallos, para decidir si avisar).
+// Usage: node pipeline/watchdog.mjs   (the workflow le pasa R2_STATUS by env)
+// Outputs: wd_report.txt (legible) + wd_fail.txt (nº of fallos, for decidir if avisar).
 import fs from "node:fs";
 
 const CHANNELS = [
@@ -11,7 +11,7 @@ const CHANNELS = [
   { label: "Oddly Loop (YT2_)", cid: process.env.YT2_CLIENT_ID, sec: process.env.YT2_CLIENT_SECRET, ref: process.env.YT2_REFRESH_TOKEN },
 ];
 
-// Prueba el acceso a R2 pidiendo la lista de buckets a la API de Cloudflare (error limpio con código).
+// Test the acceso to R2 pidiendo the ready of buckets to the API of Cloudflare (error limpio with code).
 async function checkR2() {
   const A = process.env.CLOUDFLARE_ACCOUNT_ID, T = process.env.CLOUDFLARE_API_TOKEN;
   if (!A || !T) return { ok: false, msg: "faltan CLOUDFLARE_ACCOUNT_ID/API_TOKEN" };
@@ -24,7 +24,7 @@ async function checkR2() {
   } catch (e) { return { ok: false, msg: "excepción: " + (e && e.message ? e.message : e) }; }
 }
 
-// Refresca el token del canal y confirma que sirve + tiene scope (pide el canal propio).
+// Refresca the token of the channel and confirma that sirve + tiene scope (pide the channel propio).
 async function checkYT(c) {
   if (!c.cid || !c.sec || !c.ref) return { ok: false, msg: "faltan credenciales (secrets)" };
   try {
@@ -42,7 +42,7 @@ async function checkYT(c) {
   } catch (e) { return { ok: false, msg: "excepción: " + (e && e.message ? e.message : e) }; }
 }
 
-// Salud de un bot de Telegram: getWebhookInfo dice si el webhook está puesto y sin errores (bot vivo y recibiendo).
+// Salud of a bot of Telegram: getWebhookInfo dice if the webhook is puesto and without errores (bot vivo and recibiendo).
 async function checkBot(token) {
   if (!token) return null; // sin token configurado -> no aplica
   try {
@@ -55,7 +55,7 @@ async function checkBot(token) {
   } catch (e) { return { ok: false, msg: "excepción: " + (e && e.message ? e.message : e) }; }
 }
 
-// Cookie de Bilibili (para el reposteo Fase 2): la API /nav dice si la sesión sigue viva (se vence).
+// Cookie of Bilibili (for the reposteo Phase 2): the API /nav dice if the sesión sigue viva (is vence).
 async function checkBilibili() {
   const raw = (process.env.BILIBILI_COOKIE || "").trim();
   if (!raw) return null; // no configurado -> no aplica
@@ -73,7 +73,7 @@ async function checkBilibili() {
 const lines = [];
 let fails = 0;
 
-// R2 (almacenamiento del sistema).
+// R2 (almacenamiento of the sistema).
 const r2 = await checkR2();
 lines.push(`${r2.ok ? "✅" : "❌"} R2 (almacenamiento): ${r2.msg}`);
 if (!r2.ok) fails++;
@@ -84,13 +84,13 @@ for (const c of CHANNELS) {
   if (!r.ok) fails++;
 }
 
-// Bot de Telegram único del AI OS (Video Forge): que su webhook esté vivo. Radar y Tienvo ya no tienen bot propio.
+// Bot of Telegram único of the AI OS (Video Forge): that its webhook esté vivo. Radar and Tienvo already not tienen bot propio.
 for (const [tok, label] of [[process.env.TELEGRAM_BOT_TOKEN, "Video Forge (bot único)"]]) {
   const r = await checkBot(tok);
   if (r) { lines.push(`${r.ok ? "✅" : "❌"} Bot Telegram ${label}: ${r.msg}`); if (!r.ok) fails++; }
 }
 
-// Cookie de Bilibili (Fase 2 de reposteo): avisar si venció para renovarla a tiempo.
+// Cookie of Bilibili (Phase 2 of reposteo): avisar if venció for renovarla to tiempo.
 {
   const b = await checkBilibili();
   if (b) { lines.push(`${b.ok ? "✅" : "❌"} Bilibili (cookie): ${b.msg}`); if (!b.ok) fails++; }

@@ -1,7 +1,7 @@
-// telegram_broadcast.mjs — publica cada Short PÚBLICO nuevo en un CANAL público de Telegram (gratis,
-// reusa el bot; la gente reenvía/comparte -> más vistas). Anti-duplicado por ledger. No spam.
+// Telegram_broadcast.mjs — publishes cada Short PUBLIC new in a CHANNEL public of Telegram (free,
+// reusa the bot; the gente reenvía/comparte -> more vistas). Anti-duplicado by ledger. Not spam.
 // Uso: node pipeline/telegram_broadcast.mjs <state.json> <ledgerIn.json> <ledgerOut.json> <channelLabel>
-// Env: TELEGRAM_BOT_TOKEN + DISTRIB_CHANNEL_ID (id o @usuario del canal donde el bot es admin).
+// Env: TELEGRAM_BOT_TOKEN + DISTRIB_CHANNEL_ID (id or @usuario of the channel where the bot is admin).
 import fs from "node:fs";
 import { pickNew, caption } from "./lib/distribute.mjs";
 import { normalizarInventario } from "./lib/inventario.mjs";
@@ -13,7 +13,7 @@ const [stateF, ledgerInF, ledgerOutF, channel] = process.argv.slice(2);
 const rj = (p, d) => { try { return JSON.parse(fs.readFileSync(p, "utf8")); } catch { return d; } };
 
 const state = rj(stateF, {});
-// Normalizacion compartida (lib/inventario.mjs): conoce las tres formas de inventario.
+// Normalizacion compartida (lib/inventario.mjs): conoce the tres formas of inventario.
 const list = normalizarInventario(state);
 const done = new Set(rj(ledgerInF, []));
 const nuevos = pickNew(list, done, 4); // máx 4/corrida: cadencia natural, sin ráfaga

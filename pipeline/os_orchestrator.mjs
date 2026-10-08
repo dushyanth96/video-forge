@@ -1,8 +1,8 @@
-// os_orchestrator.mjs — ORCHESTRATOR del AI OS. Normaliza con el contrato los pulses de Video Forge, Viento y
-// Radar (lo que no cumple el contrato se descarta y se reporta), aplica "sin señal" a los viejos y arma el
-// GLOBAL que ven las tres Mini Apps: estado, titular, decisiones, actividad, tareas vivas y prioridad del día.
+// os_orchestrator.mjs — ORCHESTRATOR of the AI OS. Normaliza with the contrato the pulses of Video Forge, Viento and
+// Radar (lo that not cumple the contrato is descarta and is reporta), aplica "without señal" to the viejos and arma the
+// GLOBAL that ven the tres Mini Apps: estado, titular, decisiones, actividad, tareas vivas and prioridad of the day.
 // Uso: node pipeline/os_orchestrator.mjs <out_global.json> <pulse1.json> [pulse2.json ...]
-//      Escribe además os_pulse_<system>.norm.json por cada pulse válido.
+//      Writes además os_pulse_<system>.norm.JSON by cada pulse valid.
 import fs from "node:fs";
 import { makePulse, mergeGlobal, validatePulse } from "./lib/os_contract.mjs";
 

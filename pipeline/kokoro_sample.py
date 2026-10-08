@@ -1,5 +1,5 @@
-# kokoro_sample.py — genera un EJEMPLO corto de una voz Kokoro (para el selector del bot).
-# Uso: python pipeline/kokoro_sample.py <voz> <salida.wav>
+# kokoro_sample.py — generates a EXAMPLE corto of a voice Kokoro (for the selector of the bot).
+# Usage: python pipeline/kokoro_sample.py <voice> <output.wav>
 import sys, numpy as np, soundfile as sf
 from kokoro_onnx import Kokoro
 

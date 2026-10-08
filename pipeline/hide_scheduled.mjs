@@ -1,10 +1,10 @@
-// hide_scheduled.mjs — OCULTA todo lo PROGRAMADO de un canal: cada video con publishAt futuro pasa a
-// PRIVADO sin programación (reversible, NO borra) y se añade a hidden_videos.json en R2 para que los
-// sanadores de backlog no lo re-agenden. Sirve para "vaciar la cola" y que el cerebro vuelva a
-// publicar desde cero con lo que produzca a partir de ahora.
+// hide_scheduled.mjs — OCULTA everything lo SCHEDULED of a channel: cada video with publishAt futuro pasa to
+// PRIVATE without scheduling (reversible, NOT deletes) and is añade to hidden_videos.JSON in R2 for that the
+// sanadores of backlog not lo re-agenden. Sirve for "vaciar the queue" and that the brain vuelva to
+// publish since cero with lo that produzca to partir of now.
 // Uso: node pipeline/hide_scheduled.mjs <hidden_r2_key> [--dry-run] [--ids=ID1,ID2]
-//   --ids: además oculta estos IDs explícitos (los desprograma si aún tienen fecha y los añade a hidden).
-// Env: YT_CLIENT_ID/SECRET/REFRESH_TOKEN del canal (Oddly: el workflow mapea YT2_*), CLOUDFLARE_ACCOUNT_ID/API_TOKEN.
+//   --ids: además oculta estos IDs explícitos (the desprograma if still tienen fecha and the añade to hidden).
+// Env: YT_CLIENT_ID/SECRET/REFRESH_TOKEN of the channel (Oddly: the workflow mapea YT2_*), CLOUDFLARE_ACCOUNT_ID/API_TOKEN.
 // Escribe hide_result.json (resumen) y hide_text.txt (aviso de Telegram).
 import fs from "node:fs";
 
@@ -33,7 +33,7 @@ async function statuses(idList) {
 }
 const isScheduled = (s, now) => s && s.privacy !== "public" && s.publish_at && Date.parse(s.publish_at) > now;
 
-// 1) Inventario: playlist de uploads + search.forMine (los privados subidos directo no siempre están en uploads).
+// 1) Inventario: playlist of uploads + search.forMine (the privados subidos directo not always are in uploads).
 const ids = new Set();
 const ch = await (await tf("https://www.googleapis.com/youtube/v3/channels?part=contentDetails&mine=true", { headers: H })).json();
 const up = ch?.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
@@ -55,7 +55,7 @@ try {
   } while (sp && pages < 4);
 } catch {}
 
-// 2) Programados = no públicos con publishAt futuro.
+// 2) Programados = not públicos with publishAt futuro.
 const now = Date.now(), all = [...ids];
 const st = await statuses(all);
 const sched = all.filter((id) => isScheduled(st.get(id), now)).map((id) => ({ id, ...st.get(id) }))
@@ -63,7 +63,7 @@ const sched = all.filter((id) => isScheduled(st.get(id), now)).map((id) => ({ id
 console.log(`${label}: inventario ${all.length} · programados ${sched.length}${explicit.length ? ` · IDs explícitos ${explicit.length}` : ""}${dryRun ? " (SIMULACIÓN, no toco nada)" : ""}`);
 sched.forEach((s) => console.log(`  📅 ${s.publish_at} ${s.id} — ${s.title}`));
 
-// IDs explícitos: deben existir en el canal (YouTube solo devuelve los que ve con este token).
+// IDs explícitos: must existir in the channel (YouTube only devuelve the that ve with este token).
 const exSt = explicit.length ? await statuses(explicit) : new Map();
 const exFound = explicit.filter((id) => exSt.has(id));
 const exMissing = explicit.filter((id) => !exSt.has(id));
@@ -74,15 +74,15 @@ const toHide = [...new Set([...sched.map((s) => s.id), ...exFound])];
 let hidden = [], failed = [];
 
 if (!dryRun) {
-  // 3) Desprogramar (privado + publishAt null explícito: omitirlo NO borra la programación).
+  // 3) Desprogramar (private + publishAt null explícito: omitirlo NOT deletes the scheduling).
   for (const id of toUnschedule) {
     try {
       const r = await tf("https://www.googleapis.com/youtube/v3/videos?part=status", { method: "PUT", headers: { ...H, "content-type": "application/json" }, body: JSON.stringify({ id, status: { privacyStatus: "private", publishAt: null, selfDeclaredMadeForKids: false } }) });
       if (!r.ok) { failed.push(id); console.error(`  ✖ ${id}: HTTP ${r.status} ${(await r.text()).slice(0, 160)}`); }
     } catch (e) { failed.push(id); console.error(`  ✖ ${id}: ${e.message}`); }
   }
-  // La respuesta del PUT puede devolver todavía el publishAt viejo (consistencia eventual): se verifica
-  // RELEYENDO el estado unos segundos después, no con la respuesta del PUT.
+  // The respuesta of the PUT can devolver still the publishAt viejo (consistencia eventual): is verifies
+  // RELEYENDO the estado some seconds after, not with the respuesta of the PUT.
   if (toUnschedule.length) {
     await sleep(8000);
     const after = await statuses(toUnschedule);
@@ -92,7 +92,7 @@ if (!dryRun) {
     }
   }
   hidden = toHide.filter((id) => !failed.includes(id));
-  // 4) Ocultar en R2 (durable: los sanadores y la app los ignoran).
+  // 4) Ocultar in R2 (durable: the sanadores and the app the ignoran).
   if (hidden.length && CLOUDFLARE_ACCOUNT_ID && CLOUDFLARE_API_TOKEN) {
     const url = `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/r2/buckets/${BUCKET}/objects/${encodeURIComponent(hiddenKey)}`;
     const CF = { Authorization: `Bearer ${CLOUDFLARE_API_TOKEN}` };

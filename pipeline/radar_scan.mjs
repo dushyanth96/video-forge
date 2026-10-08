@@ -1,9 +1,9 @@
-// radar_scan.mjs — BARRIDO del radar (sin Claude): investiga un repo con GEMINI (grounding de
-// Google Search) y crea Issues `radar` NUEVOS (anti-duplicados). No toca código. El workflow lo
-// corre por cron semanal sobre los repos PRIVADOS de Juan (los públicos los cubre la nube de Claude).
+// Radar_scan.mjs — BARRIDO of the Radar (without Claude): investiga a repo with GEMINI (grounding of
+// Google Search) and creates Issues `Radar` NEW (anti-duplicados). Not toca code. The workflow lo
+// corre by cron semanal about the repos PRIVADOS of Juan (the públicos the cubre the nube of Claude).
 //
-// Uso: node pipeline/radar_scan.mjs            (usa RADAR_REPO del entorno)
-// Env: GEMINI_API_KEY(,2), GH_TOKEN (para `gh`), RADAR_REPO=owner/repo (repo objetivo, ya clonado en cwd).
+// Usage: node pipeline/Radar_scan.mjs            (uses RADAR_REPO of the entorno)
+// Env: GEMINI_API_KEY(,2), GH_TOKEN (for `gh`), RADAR_REPO=owner/repo (repo objetivo, already clonado in cwd).
 import fs from "node:fs";
 import { execSync, execFileSync } from "node:child_process";
 
@@ -18,7 +18,7 @@ const sh = (c) => execSync(c, { stdio: ["ignore", "pipe", "pipe"], maxBuffer: 64
 const shq = (c) => { try { return sh(c); } catch { return ""; } };
 const read = (p, max = 8000) => { try { const c = fs.readFileSync(p, "utf8"); return c.length > max ? c.slice(0, max) + "\n…(recortado)" : c; } catch { return ""; } };
 
-// 1) Contexto del repo (README + manifiestos + commits recientes + árbol + issues abiertos).
+// 1) Contexto of the repo (README + manifiestos + commits recientes + árbol + issues abiertos).
 const tracked = shq("git ls-files").split("\n").filter(Boolean);
 const has = (p) => tracked.includes(p);
 const readme = ["README.md", "readme.md", "README.MD", "Readme.md"].map((p) => read(p)).find(Boolean) || "(sin README)";
@@ -48,7 +48,7 @@ function isDup(title) {                                        // Jaccard de pal
 
 console.log(`Radar scan de ${REPO} — ${existing.length} issue(s) abiertos, ${tracked.length} archivos, langs: ${topLangs}`);
 
-// 2) Prompt para Gemini (con grounding de Google Search para traer fuentes reales con fecha).
+// 2) Prompt for Gemini (with grounding of Google Search for traer fuentes reales with fecha).
 const prompt = `Eres un "Radar de proyecto": analizas un repositorio de GitHub e identificas de forma investigada acciones de ALTO VALOR para (a) MEJORAR lo que ya existe, (b) AGREGAR capacidades, features e INTEGRACIONES NUEVAS que le den un salto (no solo arreglar), y (c) hacerlo CRECER. Prioriza traer COSAS NUEVAS del ecosistema (APIs/herramientas/modelos/técnicas recién salidos) que el proyecto podría integrar YA. Usa Google Search para traer novedades REALES y recientes, y cita SIEMPRE fuentes con fecha.
 
 ⛔ RESTRICCIÓN INNEGOCIABLE — TODO DEBE SER GRATIS: cada herramienta, API, modelo, servicio, hosting o integración que propongas TIENE que ser 100% gratuito de forma sostenible: open-source, o con free tier permanente que NO exija tarjeta de crédito. PROHIBIDO sugerir: servicios/APIs de pago, planes "premium/pro/paid", suscripciones, créditos que se agotan y hay que comprar, trials que caducan, o cualquier cosa que pida tarjeta. Si la ÚNICA forma de lograr algo es pagando, NO lo propongas (busca la alternativa gratis, o descártalo). En cada hallazgo que integre algo externo, indica explícitamente por qué es gratis (ej. "MIT/Apache", "free tier sin tarjeta", "self-host").
@@ -96,10 +96,10 @@ ${manifests}
 ## Commits recientes
 ${commits}
 
-## Archivos del repo (muestra)
+## Files of the repo (muestra)
 ${tracked.slice(0, 300).join("\n")}`;
 
-// 3) Descubrir modelos vivos que soporten generateContent (evita 404 por nombres adivinados).
+// 3) Descubrir modelos vivos that soporten generateContent (avoids 404 by nombres adivinados).
 let MODELS = ["gemini-flash-latest", "gemini-2.5-flash", "gemini-flash-lite-latest"];
 async function discoverModels() {
   for (const k of KEYS) {
@@ -154,10 +154,10 @@ async function ask() {
 const findings = await ask();
 if (!Array.isArray(findings) || !findings.length) { console.error("Gemini no devolvió hallazgos usables."); process.exit(3); }
 
-// 4) Asegurar la etiqueta `radar`.
+// 4) Asegurar the tag `Radar`.
 shq(`gh label create radar --color BFD4F2 --description "Radar de proyecto (autom.)" -R ${REPO}`);
 
-// 5) Crear los issues nuevos (anti-duplicados).
+// 5) Create the issues new (anti-duplicados).
 const okType = new Set(["Oportunidad/Novedad", "Mejora", "Error/Bug", "Seguridad", "Dependencia", "Deprecation", "Marca", "Autoría", "Crecimiento", "Predicción/Tendencia"]);
 const okPrio = new Set(["Alta", "Media", "Baja"]);
 const okEff = new Set(["S", "M", "L"]);
@@ -174,22 +174,22 @@ for (const f of findings) {
   const loc = (f.location || "(ver descripción)").toString().replace(/`/g, "");
   const body = `**Prioridad:** ${prio} · **Esfuerzo:** ${eff} · **Tipo:** ${type}
 
-## Descripción
+## Description
 ${(f.description || "").toString().trim()}
 
-## Por qué importa a ESTE repo
+## By qué importa to ESTE repo
 ${(f.why || "").toString().trim()}
 
 ## Referencias (APA)
 ${refs}
 
-## Ubicación en el repo
+## Ubicación in the repo
 \`${loc}\`
 
 ## Acción sugerida
 ${(f.action || "").toString().trim()}
 
-## Prompt para implementar
+## Prompt for implementar
 \`\`\`
 ${(f.implement_prompt || "").toString().trim()}
 \`\`\`
@@ -200,8 +200,8 @@ ${(f.implement_prompt || "").toString().trim()}
   const tmp = `radar_body_${created}.md`;
   fs.writeFileSync(tmp, body);
   try {
-    // Seguridad: el título lo escribe un LLM. Se pasa como ARGUMENTO (sin shell), así "$(...)" o backticks
-    // no pueden ejecutarse. Antes iba interpolado en un comando de shell.
+    // Security: the title lo writes a LLM. Is pasa as ARGUMENTO (without shell), así "$(...)" or backticks
+    // not can ejecutarse. Before iba interpolado in a comando of shell.
     const out = execFileSync("gh", ["issue", "create", "-R", REPO, "--label", "radar", "--title", String(title).slice(0, 240), "--body-file", tmp], { stdio: ["ignore", "pipe", "pipe"], maxBuffer: 16 * 1024 * 1024 }).toString();
     const url = (out.match(/https?:\/\/\S+/) || [""])[0];
     console.log(`  + creado: ${title} ${url}`);

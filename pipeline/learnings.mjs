@@ -1,7 +1,7 @@
-// learnings.mjs — MEJORA CONTINUA. Antes de escribir el guion del próximo video, mira el
-// rendimiento REAL de lo ya publicado (vistas + minutos vistos) y las tendencias, y arma un
-// BRIEF corto y accionable para el guionista: qué está funcionando, qué formato/ángulo/título
-// replicar y 1-2 tendencias a explotar. Así cada video aprende del anterior.
+// learnings.mjs — MEJORA CONTINUA. Before of write the script of the next video, mira the
+// performance REAL of lo already published (vistas + minutes vistos) and the tendencias, and arma a
+// BRIEF corto and accionable for the guionista: qué is funcionando, qué formato/ángulo/title
+// replicar and 1-2 tendencias to explotar. Así cada video learns of the anterior.
 //
 // Uso: node pipeline/learnings.mjs [out.txt=learnings.txt] [out.json=learnings.json]
 // Env: YT_CLIENT_ID / YT_CLIENT_SECRET / YT_REFRESH_TOKEN (OAuth) + GEMINI_API_KEY
@@ -42,7 +42,7 @@ async function gemini(prompt) {
   return null;
 }
 
-// Guarda SIEMPRE algo (aunque falle todo) para no romper la producción.
+// Stores ALWAYS something (aunque falle everything) for not romper the producción.
 function save(brief, top, source) {
   fs.writeFileSync(outTxt, brief);
   fs.writeFileSync(outJson, JSON.stringify({ brief, top, source, generated_at: new Date().toISOString() }, null, 2));
@@ -76,7 +76,7 @@ try {
           const secs = mm ? (+(mm[1] || 0)) * 60 + (+(mm[2] || 0)) : 0;
           return { id: it.id, title: it.snippet?.title || "", type: secs > 0 && secs <= 60 ? "short" : "largo", views: +it.statistics?.viewCount || 0, likes: +it.statistics?.likeCount || 0, comments: +it.statistics?.commentCount || 0, watch: 0 };
         });
-      // minutos vistos por video (Analytics; puede faltar el permiso o venir 0 por el retraso de 1-2 días)
+      // minutes vistos by video (Analytics; can faltar the permiso or venir 0 by the retraso of 1-2 days)
       for (const v of vids) {
         const a = await api(`https://youtubeanalytics.googleapis.com/v2/reports?ids=channel==MINE&startDate=2020-01-01&endDate=2035-01-01&metrics=estimatedMinutesWatched&filters=video==${v.id}`);
         const mins = a?.rows?.[0]?.[0];
@@ -89,7 +89,7 @@ try {
   const top = vids.slice(0, 10);
 
   if (!top.length) {
-    // Sin videos públicos con datos: pídele a Gemini SOLO tendencias actuales + buenas prácticas.
+    // Without videos públicos with datos: pídele to Gemini ONLY tendencias actuales + buenas prácticas.
     const t = await gemini(`Eres estratega de un canal faceless de YouTube de DATOS/DINERO en inglés (mercado EE.UU.). El canal aún no tiene métricas propias. En ESPAÑOL, MUY breve (4-6 líneas, sin relleno): 2-3 ángulos/temas de datos-dinero que están CALIENTES ahora para audiencia de EE.UU. y el patrón de título/gancho que mejor retiene. Serán instrucciones para escribir el próximo guion.`);
     save(t ? `${t}\n\n${GENERIC}` : GENERIC, [], token ? "sin-videos-publicos" : "sin-oauth");
   } else {

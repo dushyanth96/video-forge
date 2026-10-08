@@ -1,9 +1,9 @@
-// shorts_generate.mjs — genera y sube los Shorts APROBADOS del plan.
-// Por cada short aprobado: recorta el segmento del video 16:9, lo convierte a 9:16
-// (video centrado sobre un fondo desenfocado de si mismo = se ve todo, estilo pro),
-// le pone el titulo arriba y el handle abajo, y lo sube a YouTube como Short PRIVADO.
+// Shorts_generate.mjs — generates and uploads the Shorts APROBADOS of the plan.
+// By cada short aprobado: recorta the segmento of the video 16:9, lo convierte to 9:16
+// (video centrado about a background desenfocado of if same = is ve everything, estilo pro),
+// le pone the title arriba and the handle abajo, and lo uploads to YouTube as Short PRIVATE.
 //
-// Uso: node pipeline/shorts_generate.mjs <plan.json> <video.mp4> <out_plan.json>
+// Usage: node pipeline/Shorts_generate.mjs <plan.JSON> <video.mp4> <out_plan.JSON>
 import fs from "node:fs";
 import { execSync } from "node:child_process";
 
@@ -56,7 +56,7 @@ function wrap(t, per = 22) {
 }
 
 function makeShort(s, out) {
-  // 9:16: fondo = el mismo clip escalado a cubrir + desenfoque; encima el clip a 1080 de ancho.
+  // 9:16: background = the same clip escalado to cubrir + desenfoque; encima the clip to 1080 of ancho.
   let vf =
     "[0:v]split=2[bg][fg];" +
     "[bg]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=20:4[bgb];" +
@@ -96,7 +96,7 @@ for (const s of approved) {
   }
 }
 fs.writeFileSync(outPlan, JSON.stringify(plan, null, 2));
-// Manda CADA short aprobado que YA esta subido (los nuevos + los de antes), con su link.
+// Sends CADA short aprobado that ALREADY esta uploaded (the new + the of before), with its link.
 const uploaded = (plan.shorts || [])
   .filter((s) => s.approved && s.video_id)
   .map((s) => ({ n: s.n, title: s.title, video_id: s.video_id, url: `https://youtu.be/${s.video_id}` }));

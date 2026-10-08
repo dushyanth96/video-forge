@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-# photo_edit.py — Retoque de foto PROFESIONAL que PRESERVA la identidad.
-# No re-genera la cara (no cambia facciones): limpia piel/imperfecciones y sube
-# textura, tipo estudio. Opcionalmente cambia el fondo sin tocar a la persona.
+# photo_edit.py — Retoque of photo PROFESIONAL that PRESERVA the identidad.
+# Not re-generates the cara (not cambia facciones): cleans piel/imperfecciones and uploads
+# textura, type estudio. Opcionalmente cambia the background without tocar to the persona.
 #
 # Modos:
 #   retoque  -> GFPGAN (restauracion de rostro, fidelidad alta = misma identidad)
-#               + Real-ESRGAN (textura/nitidez del resto) + gradacion de color suave.
-#   fondo    -> rembg recorta el sujeto; se pone un fondo nuevo segun el prompt
+#               + Real-ESRGAN (textura/nitidez of the resto) + gradacion of color suave.
+#   background    -> rembg recorta the sujeto; is pone a background new segun the prompt
 #               (color solido / desenfoque / imagen IA de Pollinations) y luego se
-#               aplica el mismo retoque de rostro para pulir.
+#               aplica the same retoque of rostro for pulir.
 #
 # Uso: python pipeline/photo_edit.py <entrada> <salida> <modo> "<prompt>"
 import os
@@ -23,12 +23,12 @@ OUT = sys.argv[2]
 MODE = (sys.argv[3] if len(sys.argv) > 3 else "retoque").lower()
 PROMPT = sys.argv[4] if len(sys.argv) > 4 else ""
 
-# Fidelidad de GFPGAN: mas alto = mas fiel al rostro original (preserva identidad).
+# Fidelidad of GFPGAN: more alto = more fiel to the rostro original (preserva identidad).
 FIDELITY = 0.6
 
-# Suavidad del retoque (CALIBRABLE desde el bot via PHOTO_STRENGTH). El resultado de
-# GFPGAN se MEZCLA con la foto ORIGINAL: mas bajo = mas natural (conserva la piel real,
-# evita el "look IA/plastico"). Por defecto SUAVE (Juan pidio menos agresivo).
+# Suavidad of the retoque (CALIBRABLE since the bot via PHOTO_STRENGTH). The result of
+# GFPGAN is MEZCLA with the photo ORIGINAL: more bajo = more natural (conserva the piel real,
+# avoids the "look IA/plastico"). By defecto SUAVE (Juan pidio less agresivo).
 STRENGTH = os.environ.get("PHOTO_STRENGTH", "medio").lower()
 BLEND = {"suave": 0.25, "medio": 0.40, "fuerte": 0.60}.get(STRENGTH, 0.40)  # cuanto GFPGAN
 SKIN = {"suave": 0.55, "medio": 0.75, "fuerte": 0.92}.get(STRENGTH, 0.75)   # cuanto retoque de piel
@@ -38,7 +38,7 @@ def load_bgr(path):
     img = cv2.imread(path, cv2.IMREAD_COLOR)
     if img is None:
         raise SystemExit("photo_edit: no pude leer la imagen de entrada")
-    # Limita el lado mayor para no reventar memoria en CPU (el upscale x2 la sube luego).
+    # Limita the lado mayor for not reventar memoria in CPU (the upscale x2 the uploads then).
     h, w = img.shape[:2]
     m = max(h, w)
     if m > 1600:
@@ -89,7 +89,7 @@ def fetch_pollinations(prompt, w, h):
     return cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR)
 
 
-# Colores conocidos (BGR) para fondo solido si el prompt los menciona.
+# Colores conocidos (BGR) for background solido if the prompt the menciona.
 COLORS = {
     "blanco": (245, 245, 245), "negro": (15, 15, 15), "gris": (200, 200, 200),
     "azul": (200, 150, 60), "rojo": (60, 60, 210), "verde": (90, 170, 90),
@@ -143,11 +143,11 @@ def auto_correct(bgr):
     # Auto-brillo: si esta oscura aclara, si esta quemada baja un poco (gamma).
     g = 0.80 if meanL < 110 else (1.12 if meanL > 165 else 0.95)
     l2 = np.clip(255.0 * ((l2 / 255.0) ** g), 0, 255).astype(np.uint8)
-    # Auto balance de blancos: centrar las medias de a,b hacia 128 (quita dominante).
+    # Auto balance of blancos: centrar the medias of to,b hacia 128 (quita dominante).
     a = np.clip(a.astype(np.float32) - (float(a.mean()) - 128) * 0.6, 0, 255).astype(np.uint8)
     b = np.clip(b.astype(np.float32) - (float(b.mean()) - 128) * 0.6, 0, 255).astype(np.uint8)
     out = cv2.cvtColor(cv2.merge((l2, a, b)), cv2.COLOR_LAB2BGR)
-    # Saturacion: si esta palida (poco color), subir mas; si no, un toque.
+    # Saturacion: if esta palida (little color), upload more; if not, a toque.
     hsv = cv2.cvtColor(out, cv2.COLOR_BGR2HSV).astype(np.float32)
     mul = 1.28 if float(hsv[..., 1].mean()) < 85 else 1.08
     hsv[..., 1] = np.clip(hsv[..., 1] * mul, 0, 255)
@@ -175,7 +175,7 @@ def skin_retouch(bgr, amount=SKIN):
     recon = np.clip(smooth_low.astype(np.int16) + high, 0, 255).astype(np.uint8)
     m = skin_mask(bgr) * amount
     out = (recon.astype(np.float32) * m + bgr.astype(np.float32) * (1 - m)).astype(np.uint8)
-    # Micro-nitidez global (define ojos/cejas tras suavizar la piel).
+    # Micro-nitidez global (define ojos/cejas after suavizar the piel).
     blur = cv2.GaussianBlur(out, (0, 0), 1.1)
     out = cv2.addWeighted(out, 1.25, blur, -0.25, 0)
     return out
@@ -188,7 +188,7 @@ def main():
     bgr = auto_correct(bgr)   # analiza y corrige luz/color (oscura, palida, contraluz)
     try:
         out = gfpgan_restore(bgr, weight=FIDELITY)
-        # Mezcla con la ORIGINAL (subida al mismo tamano) para un retoque NATURAL, no plastico.
+        # Mezcla with the ORIGINAL (upload to the same tamano) for a retoque NATURAL, not plastico.
         orig_up = cv2.resize(bgr, (out.shape[1], out.shape[0]), interpolation=cv2.INTER_LANCZOS4)
         out = cv2.addWeighted(out, BLEND, orig_up, 1.0 - BLEND, 0)
         print(f"photo_edit: retoque '{STRENGTH}' (mezcla {int(BLEND*100)}% GFPGAN / {int((1-BLEND)*100)}% original)")

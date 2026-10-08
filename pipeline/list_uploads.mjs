@@ -1,5 +1,5 @@
-// list_uploads.mjs — lista TODOS los videos subidos al canal con privacidad, fecha,
-// duracion y vistas. Sirve para desenredar duplicados (que quedo publico vs privado).
+// list_uploads.mjs — ready ALL the videos subidos to the channel with privacidad, fecha,
+// duration and vistas. Sirve for desenredar duplicados (that quedo public vs private).
 // Uso: node pipeline/list_uploads.mjs
 import fs from "node:fs";
 
@@ -42,7 +42,7 @@ rows.sort((a, b) => (a.date < b.date ? 1 : -1));
 console.log("TOTAL", rows.length);
 for (const r of rows) console.log(`${r.short ? "SHORT" : "VIDEO"} | ${r.privacy.padEnd(7)} | ${r.dur.padStart(6)} | ${r.views.padStart(4)}v | ${r.date} | ${r.id} | ${r.title}`);
 
-// Mensaje compacto para Telegram
+// Message compacto for Telegram
 const line = (r) => `${r.privacy === "public" ? "🟢" : r.privacy === "private" ? "🔒" : "🟡"} ${r.dur} · ${r.views}v · \`${r.id}\` ${r.title}`;
 const shorts = rows.filter((r) => r.short), longs = rows.filter((r) => !r.short);
 let msg = `📋 *Inventario del canal* (${rows.length} videos)\n\n*Videos largos:*\n` + (longs.map(line).join("\n") || "—");

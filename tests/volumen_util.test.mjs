@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { decidirVolumen } from "../pipeline/lib/volumen_util.mjs";
 
-// El caso que motivo todo esto: Oddly medido el 2026-10-03.
+// The caso that motivo everything esto: Oddly medido the 2026-10-03.
 const ODDLY_REAL = {
   vistasTotales: 23828, // 518 videos x ~46 vistas de mediana
   videos: 518,
@@ -14,13 +14,13 @@ describe("decidirVolumen", () => {
     const d = decidirVolumen(ODDLY_REAL);
     expect(d.volumenSirve).toBe(false);
     expect(d.reestructurar).toBe(true);
-    // Lo importante: NO sube la cadencia. Producir mas solo gasta computo.
+    // Lo important: NOT uploads the cadencia. Producir more only gasta computo.
     expect(d.cadencia).toBe(8);
     expect(d.factor).toBeGreaterThan(5);
   });
 
   it("no sube la cadencia justo cuando mas tentador seria (brecha enorme)", () => {
-    // La regla vieja hacia justo lo contrario: a mayor brecha, mas volumen.
+    // The regla vieja hacia justo lo contrario: to mayor brecha, more volumen.
     const enorme = decidirVolumen({ ...ODDLY_REAL, metaVistas: 100_000_000 });
     const normal = decidirVolumen(ODDLY_REAL);
     expect(enorme.cadencia).toBe(normal.cadencia);
@@ -28,7 +28,7 @@ describe("decidirVolumen", () => {
   });
 
   it("cuando el canal SI rinde, empuja volumen", () => {
-    // 500 videos a 2.000 vistas cada uno: la meta esta al alcance produciendo mas.
+    // 500 videos to 2.000 vistas cada uno: the meta esta to the alcance produciendo more.
     const d = decidirVolumen({
       vistasTotales: 1_000_000, videos: 500, metaVistas: 2_000_000, diasRestantes: 90,
     });
@@ -38,7 +38,7 @@ describe("decidirVolumen", () => {
   });
 
   it("empuja tambien cuando falta una mejora alcanzable (<=5x)", () => {
-    // Cada video rinde 1.000 y harian falta ~2.800: 2,8x, duro pero no iluso.
+    // Cada video rinde 1.000 and harian falta ~2.800: 2,8x, duro but not iluso.
     const d = decidirVolumen({
       vistasTotales: 500_000, videos: 500, metaVistas: 3_500_000, diasRestantes: 90,
     });

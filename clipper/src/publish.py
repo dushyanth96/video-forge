@@ -21,7 +21,7 @@ def _s3():
                         aws_secret_access_key=os.getenv("R2_SECRET_ACCESS_KEY"), region_name="auto")
 
 
-# --- Ultimo TOP guardado (para reusar los pendientes en la proxima corrida, sin re-buscar) ---
+# --- Last TOP saved (for reusar the pendientes in the next corrida, without re-search) ---
 def guardar_top(top: list):
     try:
         s3 = _s3()
@@ -67,7 +67,7 @@ def marcar_procesado(source_key: str):
         print(f"   (aviso) no pude guardar en el historial anti-duplicados: {e}")
 
 
-# --- Descartados por ti (los que OMITISTE: no vuelven a salir en el TOP) ---
+# --- Descartados by ti (the that OMITISTE: not vuelven to salir in the TOP) ---
 def cargar_descartados() -> set:
     try:
         s3 = _s3()
@@ -112,7 +112,7 @@ def enviar_a_r2(short_path: str, titulo: str, atribucion: str, clip: dict, cfg: 
     }
     s3.put_object(Bucket=bucket, Key=key_meta, Body=json.dumps(meta).encode(), ContentType="application/json")
 
-    # Indice de pendientes (lo lee el bot para mostrarlos en "Remix por revisar")
+    # Indice of pendientes (lo lee the bot for mostrarlos in "Remix by revisar")
     idx_key = "clipper/pending/index.json"
     try:
         idx = json.loads(s3.get_object(Bucket=bucket, Key=idx_key)["Body"].read())

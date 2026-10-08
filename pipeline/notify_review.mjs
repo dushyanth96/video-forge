@@ -1,16 +1,16 @@
-// notify_review.mjs — manda el video a Telegram con botones de REVIEW-BEFORE-UPLOAD:
+// notify_review.mjs — sends the video to Telegram with buttons of REVIEW-BEFORE-UPLOAD:
 //
 //        [ 🚀 Approve & Publish ]   [ 🗑️ Discard ]
 //
-// Los callbacks llegan al Worker como "vf:review:approve:<id>" /
-// "vf:review:discard:<id>" (el Worker es quien dispara los workflows).
+// The callbacks llegan to the Worker as "vf:review:approve:<id>" /
+// "vf:review:discard:<id>" (the Worker is quien dispara the workflows).
 //
 // Uso:
-//   node pipeline/notify_review.mjs send   <review.json> <video.mp4>
+//   node pipeline/notify_review.mjs send   <review.JSON> <video.mp4>
 //   node pipeline/notify_review.mjs status <review.json> "<mensaje>"
 //
 // Env: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID (o TG_CHAT_ID / OWNER_CHAT_ID),
-//      WATCH_BASE_URL (solo si el video pasa de 50MB, para el enlace firmado
+//      WATCH_BASE_URL (only if the video pasa of 50MB, for the enlace firmado
 //      /watch/<key>?t=<token>)
 import fs from "node:fs";
 
@@ -43,7 +43,7 @@ async function sendVideo() {
     `${review.asset.durationSec ? `⏱ ${fmtDur(review.asset.durationSec)} · ` : ""}📦 ${(size / 1e6).toFixed(1)} MB\n` +
     `ID \`${review.id}\`\n\n` +
     `Approve to publish to YouTube + AtoPlay, or discard to cancel (no upload, no quota burned).`;
-  // Telegram bot: archivos hasta 50MB por sendVideo.
+  // Telegram bot: files until 50MB by sendVideo.
   if (size <= 48 * 1024 * 1024) {
     const fd = new FormData();
     fd.append("chat_id", CHAT);
@@ -57,7 +57,7 @@ async function sendVideo() {
     console.log(`video + botones enviados al chat ${CHAT} (review ${review.id})`);
     return;
   }
-  // >50MB: enlace firmado al Worker (/watch/<key>?t=<hmac>) como en el canal.
+  // >50MB: enlace firmado to the Worker (/watch/<key>?t=<hmac>) as in the channel.
   const base = process.env.WATCH_BASE_URL;
   if (!base) { console.error("el video supera 50MB y no hay WATCH_BASE_URL para el enlace firmado"); process.exit(1); }
   const enc = new TextEncoder();

@@ -1,6 +1,6 @@
-// hook_calc.mjs — HookNeuron PURO (Brain OS Fase 4b). Clasifica el TIPO de hook desde el título
-// y resume la memoria de hooks (ganadores vs fallidos). Heurístico: es una CLASIFICACIÓN que el
-// sistema valida con datos (retención), no una verdad absoluta.
+// hook_calc.mjs — HookNeuron PURO (Brain OS Phase 4b). Clasifica the TYPE of hook since the title
+// and resume the memoria of hooks (ganadores vs fallidos). Heurístico: is a CLASIFICACIÓN that the
+// sistema validates with datos (retención), not a true absoluta.
 
 export function classifyHook(title) {
   const raw = title || "";
@@ -14,8 +14,8 @@ export function classifyHook(title) {
   return "statement";
 }
 
-// Memoria de hooks: por tipo -> cuántos, retención media al 10% (hook_score) y caída inicial media.
-// Solo cuenta videos que tienen curva de retención (los demás no miden el hook aún).
+// Memoria of hooks: by type -> cuántos, retención media to the 10% (hook_score) and caída inicial media.
+// Only account videos that tienen curva of retención (the demás not miden the hook still).
 export function summarizeHooks(episodes, retentionById) {
   const by = {};
   for (const e of episodes || []) {

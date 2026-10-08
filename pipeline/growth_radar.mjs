@@ -1,8 +1,8 @@
-// growth_radar.mjs — GROWTH RADAR: inteligencia de crecimiento de YouTube para los 2 canales.
-// Si hay BRAVE_API_KEY: BUSCA en la web (Brave Search) resultados frescos y se los pasa a Gemini
-// (investigacion verificada). Si no, usa el conocimiento de Gemini. Investiga tendencias,
-// competencia, OUTLIERS, algoritmo/politicas, IA/reutilizado, y requisitos YPP; clasifica por
-// evidencia y propone EXPERIMENTOS. Todo en la infra de Juan. Salida: growth_radar.txt + .json.
+// growth_Radar.mjs — GROWTH RADAR: inteligencia of crecimiento of YouTube for the 2 channels.
+// If hay BRAVE_API_KEY: SEARCH in the web (Brave Search) results frescos and is the pasa to Gemini
+// (investigacion verificada). If not, uses the conocimiento of Gemini. Investiga tendencias,
+// competencia, OUTLIERS, algoritmo/politicas, IA/reutilizado, and requisitos YPP; clasifica by
+// evidencia and propone EXPERIMENTS. Everything in the infra of Juan. Output: growth_Radar.txt + .JSON.
 import fs from "node:fs";
 import { TEXT_MODELS } from "./_models.mjs";
 
@@ -10,7 +10,7 @@ const KEYS = [process.env.GEMINI_API_KEY, process.env.GEMINI_API_KEY2, process.e
 const TAVILY = process.env.TAVILY_API_KEY;
 const sleep = (ms) => new Promise((s) => setTimeout(s, ms));
 
-// --- Busqueda web (Tavily, gratis sin tarjeta) ---
+// --- Search web (Tavily, free without tarjeta) ---
 async function tavily(q) {
   try {
     const r = await fetch("https://api.tavily.com/search", {

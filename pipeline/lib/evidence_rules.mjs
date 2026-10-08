@@ -1,6 +1,6 @@
-// evidence_rules.mjs — genera EVIDENCIA para el registro de hipótesis (Brain OS Fase 4b, §18).
-// Honesto: cada regla compara una señal del video contra el baseline del canal (no opinión).
-// PURO y testeable. Cierra el loop retención -> evidencia -> hipótesis.
+// evidence_rules.mjs — generates EVIDENCIA for the registro of hipótesis (Brain OS Phase 4b, §18).
+// Honesto: cada regla compara a señal of the video contra the baseline of the channel (not opinión).
+// PURO and testeable. Cierra the loop retención -> evidencia -> hipótesis.
 import { classifyHook } from "./hook_calc.mjs";
 
 function median(xs) {
@@ -16,14 +16,14 @@ export function gatherEvidence(episodes, retentionById) {
   const eps = episodes || [];
   const ret = retentionById || {};
   const ev = [];
-  // Baseline: mediana de la caída inicial (solo videos con curva).
+  // Baseline: mediana of the caída inicial (only videos with curva).
   const medDrop = median(eps.map((e) => (ret[e.video_id] || {}).early_drop_pct));
   if (medDrop == null) return ev;
   for (const e of eps) {
     const r = ret[e.video_id];
     if (!r || !Number.isFinite(r.early_drop_pct)) continue;
-    // Hipótesis: los hooks con PREGUNTA mejoran la retención inicial.
-    // Evidencia +1 si su caída inicial es <= la mediana del canal; -1 si es peor.
+    // Hipótesis: the hooks with PREGUNTA mejoran the retención inicial.
+    // Evidencia +1 if its caída inicial is <= the mediana of the channel; -1 if is worse.
     if (classifyHook(e.title) === "question") {
       ev.push({
         hypothesis_id: "global-question-hook",

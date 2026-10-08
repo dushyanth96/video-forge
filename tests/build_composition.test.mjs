@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { buildComposition } from "../pipeline/motiongfx/build_composition.mjs";
 
-// ---- Fija: 7 beats que cubren todos los layouts
+// ---- Fija: 7 beats that cubren all the layouts
 // (hook, concept, deep_dive, stat, takeaway, concept corto, cta) ----
 const TIMING = {
   title: "The Psychology Of Discipline",
@@ -18,9 +18,9 @@ const TIMING = {
   total: 54.0,
 };
 
-// Ejecuta el <script> de una composicion con stubs de navegador.
-// Captura ReferenceErrors (identificadores filtrados del builder) que
-// node --check no ve, y devuelve los tweens construidos.
+// Ejecuta the <script> of a composicion with stubs of navegador.
+// Captura ReferenceErrors (identificadores filtrados of the builder) that
+// node --check not ve, and devuelve the tweens construidos.
 function runScript(html) {
   const m = html.match(/<script>([\s\S]*?)<\/script>/);
   if (!m) throw new Error("no se encontro <script>");
@@ -43,7 +43,7 @@ function runScript(html) {
   return { timelines, tweens };
 }
 
-// ============================ runtime del <script> ============================
+// ============================ runtime of the <script> ============================
 describe("script de la composicion (smoke de runtime)", () => {
   it("se ejecuta sin errores y registra window.__timelines.main", () => {
     const { timelines } = runScript(buildComposition(TIMING));
@@ -142,11 +142,11 @@ describe("design system v1.0", () => {
   it("Alex Brush visible >= 1.2s: beat corto extiende su escena (spec §3)", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const out = buildComposition(TIMING);
-    // Beat 6 (index 5) dura 1.5s; la regla extiende la escena a 2.25s.
+    // Beat 6 (index 5) dura 1.5s; the regla extiende the scene to 2.25s.
     expect(out).toMatch(/id="beat5" data-start="46\.00" data-duration="2\.25"/);
     expect(warn).toHaveBeenCalledWith(expect.stringContaining("demasiado corto"));
-    // mockRestore() borra el historial de llamadas en vitest: restaurar
-    // solo despues de los asserts.
+    // mockRestore() deletes the historial of llamadas in vitest: restaurar
+    // only after of the asserts.
     warn.mockRestore();
   });
 

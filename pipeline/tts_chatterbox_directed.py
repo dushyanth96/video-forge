@@ -50,7 +50,7 @@ def main() -> int:
         print("ERROR: mapa sin beats")
         return 1
 
-    # Modo "pedazo": genera solo una rebanada contigua de beats, para correr en
+    # Mode "pedazo": generates only a rebanada contigua of beats, for correr in
     # paralelo. Uso: ... <out.wav> <chunk_index> <num_chunks>
     chunk_offset = 0
     if len(sys.argv) >= 5:
@@ -61,7 +61,7 @@ def main() -> int:
         beats = beats[ci * size:(ci + 1) * size]
         print(f"CHUNK {ci + 1}/{nc}: {len(beats)} beats de este pedazo (offset {chunk_offset})")
         if not beats:
-            # pedazo vacio (menos beats que chunks): escribe un wav de silencio corto.
+            # pedazo vacio (less beats that chunks): writes a wav of silencio corto.
             sf.write(out_path, np.zeros(int(0.05 * 24000), dtype=np.float32), 24000)
             json.dump({"sr": 24000, "beats": []}, open(out_path + ".timing.json", "w"))
             print("pedazo vacio -> silencio")
@@ -115,7 +115,7 @@ def main() -> int:
 
         pre = silence(pause_before)
         parts.append(pre); beat_samples += len(pre)
-        # una oracion por clip -> el modelo se mantiene estable
+        # a oracion by clip -> the modelo is mantiene estable
         for sent in split_sentences(text):
             wav = gen(sent, exaggeration, cfg)
             arr = wav.squeeze(0).cpu().numpy().astype(np.float32)

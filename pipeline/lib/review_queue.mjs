@@ -1,9 +1,9 @@
 // review_queue.mjs — maquina de estados de Review-Before-Upload (pura, sin I/O).
 //
 // Estados: pending -> approved | discarded ; approved -> published.
-// El estado vive en R2 como JSON (motiongfx/reviews/<id>.json); este modulo
-// solo valida transiciones y devuelve el nuevo estado. Asi el Worker, los
-// workflows y los tests comparten LA MISMA logica sin credenciales.
+// The estado vive in R2 as JSON (motiongfx/reviews/<id>.JSON); este modulo
+// only validates transiciones and devuelve the new estado. Asi the Worker, the
+// workflows and the tests comparten THE SAME logica without credenciales.
 //
 // Uso:
 //   import { createReview, approve, discard, markPublished, transitions } from "./review_queue.mjs";
@@ -15,7 +15,7 @@ export const STATUS = Object.freeze({
   PUBLISHED: "published",
 });
 
-// Transiciones permitidas (la tabla de verdad del flujo).
+// Transiciones permitidas (the tabla of true of the flujo).
 export const TRANSITIONS = Object.freeze({
   pending: ["approved", "discarded"],
   approved: ["published"],
@@ -25,7 +25,7 @@ export const TRANSITIONS = Object.freeze({
 
 const ID_PREFIX = "rv-";
 
-// ID corto y ordenable: rv-<timestamp base36>-<4 hex>. Cabe holgado en los
+// ID corto and ordenable: rv-<timestamp base36>-<4 hex>. Cabe holgado in the
 // 64 bytes de callback_data de Telegram ("vf:review:approve:" = 18 chars).
 export function newReviewId(now = new Date()) {
   const t = now.getTime().toString(36);
@@ -43,8 +43,8 @@ function validReview(review) {
   );
 }
 
-// Crea el item de revision a partir del guion + el video ya renderizado.
-// `asset` = { videoKey, videoSize, durationSec } — referencia al MP4 en R2.
+// Creates the item of revision to partir of the script + the video already renderizado.
+// `asset` = { videoKey, videoSize, durationSec } — referencia to the MP4 in R2.
 export function createReview({ id, title, description = "", tags = [], asset, createdAt = new Date().toISOString() }) {
   if (!id || !title || !asset || !asset.videoKey) {
     throw new Error("createReview requiere id, title y asset.videoKey");
@@ -87,21 +87,21 @@ function apply(review, nextStatus, extra = {}) {
   return next;
 }
 
-// Approve: solo desde pending. El workflow de publicacion corre DESPUES.
+// Approve: only since pending. The workflow of publishing corre AFTER.
 export function approve(review) {
   return apply(review, STATUS.APPROVED, { decidedAt: new Date().toISOString() });
 }
 
-// Discard: cancela la subida SIN tocar YouTube (cero cuota gastada) y
-// marca los assets temporales para limpieza.
+// Discard: cancela the upload WITHOUT tocar YouTube (cero cuota gastada) and
+// marca the assets temporales for limpieza.
 export function discard(review, reason = "") {
   const next = apply(review, STATUS.DISCARDED, { decidedAt: new Date().toISOString() });
   if (reason) next.reason = String(reason);
   return next;
 }
 
-// Marca una plataforma publicada. Se acumula en platforms[]; cuando al menos
-// YouTube OK, el estado pasa a published.
+// Marca a plataforma publicada. Is acumula in platforms[]; when to the less
+// YouTube OK, the estado pasa to published.
 export function markPlatform(review, platform, result) {
   if (!validReview(review)) throw new Error("review invalido");
   if (review.status !== STATUS.APPROVED && review.status !== STATUS.PUBLISHED) {
@@ -118,7 +118,7 @@ export function markPlatform(review, platform, result) {
   if (platform === "youtube" && result.ok && result.videoId) {
     next.youtube = { videoId: result.videoId, url: `https://youtu.be/${result.videoId}`, privacy: result.privacy || "public" };
   }
-  // Publicado = aprobado + al menos una plataforma OK.
+  // Published = aprobado + to the less a plataforma OK.
   const anyOk = platforms.some((p) => p.ok);
   next.status = anyOk ? STATUS.PUBLISHED : STATUS.APPROVED;
   if (anyOk && !next.publishedAt) next.publishedAt = entry.at;
@@ -127,8 +127,8 @@ export function markPlatform(review, platform, result) {
   return next;
 }
 
-// ¿Puede este review dispararse de nuevo? (idempotencia: un approve duplicado
-// NO debe re-subir el video ni gastar cuota extra).
+// ¿Can este review dispararse of new? (idempotencia: a approve duplicado
+// NOT must re-upload the video nor gastar cuota extra).
 export function canTransition(review, nextStatus) {
   return validReview(review) && TRANSITIONS[review.status].includes(nextStatus);
 }

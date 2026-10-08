@@ -1,10 +1,10 @@
-// ypp_metrics.mjs — Mide los requisitos REALES del YouTube Partner Program por ventana (auditoría BR-01/BR-10).
-// Vistas de Shorts de 90 días y horas vistas sin Shorts de 365 días (YouTube Analytics, dimensión
-// creatorContentType), subidas públicas de 90 días, suscriptores, y — si la API lo permite — fuentes de
-// tráfico e impresiones/CTR de 28 días. Lo que la API no entregue queda en null con su motivo: NUNCA se
-// sustituye por el total histórico del canal.
+// ypp_metrics.mjs — Mide the requisitos REALES of the YouTube Partner Program by ventana (auditoría BR-01/BR-10).
+// Vistas of Shorts of 90 days and hours vistas without Shorts of 365 days (YouTube Analytics, dimensión
+// creatorContentType), subidas públicas of 90 days, suscriptores, and — if the API lo allows — fuentes of
+// tráfico and impresiones/CTR of 28 days. Lo that the API not entregue queda in null with its motivo: NEVER is
+// sustituye by the total histórico of the channel.
 // Uso: node pipeline/ypp_metrics.mjs <data-lens|oddly> <out.json> <history.json>
-// Env: YT_CLIENT_ID / YT_CLIENT_SECRET / YT_REFRESH_TOKEN del canal.
+// Env: YT_CLIENT_ID / YT_CLIENT_SECRET / YT_REFRESH_TOKEN of the channel.
 import fs from "node:fs";
 
 const [label = "canal", outFile = "ypp.json", histFile = "ypp_history.json"] = process.argv.slice(2);
@@ -37,17 +37,17 @@ async function analytics(params, tag) {
 }
 const isShort = (t) => /short/i.test(String(t || ""));
 
-// 1) Vistas de Shorts 90 días.
+// 1) Vistas of Shorts 90 days.
 let shorts_views_90d = null;
 const rs = await analytics(`startDate=${start90}&endDate=${end}&dimensions=creatorContentType&metrics=views`, "shorts_views_90d");
 if (rs) shorts_views_90d = rs.filter((r) => isShort(r[0])).reduce((a, r) => a + (+r[1] || 0), 0);
 
-// 2) Horas vistas sin Shorts 365 días.
+// 2) Hours vistas without Shorts 365 days.
 let watch_hours_365d = null;
 const rw = await analytics(`startDate=${start365}&endDate=${end}&dimensions=creatorContentType&metrics=estimatedMinutesWatched`, "watch_hours_365d");
 if (rw) watch_hours_365d = Math.round(rw.filter((r) => !isShort(r[0])).reduce((a, r) => a + (+r[1] || 0), 0) / 60);
 
-// 2b) Ritmo ACTUAL: últimos 28 días por tipo de contenido (en canal joven el promedio de la ventana lo subestima).
+// 2b) Ritmo ACTUAL: últimos 28 days by type of contenido (in channel joven the promedio of the ventana lo subestima).
 let shorts_views_per_day_28d = null, watch_hours_per_day_28d = null;
 const r28 = await analytics(`startDate=${start28}&endDate=${end}&dimensions=creatorContentType&metrics=views,estimatedMinutesWatched`, "pace_28d");
 if (r28) {
@@ -55,7 +55,7 @@ if (r28) {
   watch_hours_per_day_28d = Math.round((r28.filter((r) => !isShort(r[0])).reduce((a, r) => a + (+r[2] || 0), 0) / 60 / 28) * 100) / 100;
 }
 
-// 3) Suscriptores + subidas públicas de 90 días (Data API).
+// 3) Suscriptores + subidas públicas of 90 days (Data API).
 let subs = null, uploads_90d = null;
 try {
   const ch = await (await tf("https://www.googleapis.com/youtube/v3/channels?part=statistics,contentDetails&mine=true", { headers: H })).json();
@@ -86,7 +86,7 @@ try {
   availability.subs = subs !== null;
 } catch (e) { errors.push(`data_api: ${e.message}`); availability.subs = false; }
 
-// 4) Diagnóstico (opcional): fuentes de tráfico e impresiones/CTR de 28 días.
+// 4) Diagnóstico (optional): fuentes of tráfico and impresiones/CTR of 28 days.
 let traffic_28d = null;
 const rt = await analytics(`startDate=${start28}&endDate=${end}&dimensions=insightTrafficSourceType&metrics=views&sort=-views`, "traffic_28d");
 if (rt) traffic_28d = rt.map((r) => ({ source: r[0], views: +r[1] || 0 }));
@@ -106,7 +106,7 @@ const out = {
 };
 fs.writeFileSync(outFile, JSON.stringify(out, null, 2));
 
-// Historial diario (un snapshot por día, se reemplaza el de hoy).
+// Historial diario (a snapshot by day, is reemplaza the of today).
 let hist = [];
 try { hist = JSON.parse(fs.readFileSync(histFile, "utf8")); } catch {}
 if (!Array.isArray(hist)) hist = [];

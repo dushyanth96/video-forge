@@ -1,8 +1,8 @@
-// clip_archive_cc_short.mjs — CLIPEADOR desde Internet Archive (archive.org) en sus colecciones de
-// COMUNIDAD con licencia LIBRE: CC0 / CC-BY / dominio público. Archive PERMITE la descarga directa
-// (nada de evasión), y aloja mucho material gracioso/viral (animales, bloopers, fails) CON su audio
-// original. Busca por popularidad (descargas), VERIFICA la licencia por ítem (rechaza SA/NC/ND),
-// la IA elige el mejor momento -> SHORT 9:16 conservando el AUDIO ORIGINAL + atribución (CC-BY).
+// clip_archive_cc_short.mjs — CLIPEADOR since Internet Archive (archive.org) in its colecciones of
+// COMUNIDAD with licencia LIBRE: CC0 / CC-BY / dominio public. Archive ALLOWS the descarga directa
+// (nothing of evasión), and aloja much material gracioso/viral (animales, bloopers, fails) WITH its audio
+// original. Search by popularidad (descargas), VERIFIES the licencia by ítem (rechaza SA/NC/ND),
+// the IA elige the best momento -> SHORT 9:16 conservando the AUDIO ORIGINAL + atribución (CC-BY).
 //
 // Uso: node pipeline/clip_archive_cc_short.mjs "<tema>" <categoria> <out.mp4>
 // Env: GEMINI_API_KEY(,2). music.mp3 opcional.
@@ -27,20 +27,20 @@ function licFromUrl(u) {
   return null;
 }
 
-// 1) Buscar en Archive.org SOLO ítems con licencia Creative Commons. Primero por TÍTULO (más
-// relevante: evita que un match de texto suelto traiga cine viejo), luego texto amplio de respaldo.
+// 1) Search in Archive.org ONLY ítems with licencia Creative Commons. First by TITLE (more
+// relevante: avoids that a match of texto suelto traiga cine viejo), then texto amplio of respaldo.
 console.log(`Buscando CC en Archive.org: "${topic}"…`);
 async function search(qstr) {
   const u = `https://archive.org/advancedsearch.php?q=${encodeURIComponent(qstr)}&fl[]=identifier&fl[]=title&fl[]=licenseurl&fl[]=creator&sort[]=downloads+desc&rows=60&output=json`;
   try { const jj = await (await tf(u)).json(); return (jj.response && jj.response.docs) || []; } catch { return []; }
 }
-// Excluir colecciones de cine viejo/archivo clásico -> nos quedamos con subidas de COMUNIDAD (recientes).
+// Excluir colecciones of cine viejo/file clásico -> nos quedamos with subidas of COMUNIDAD (recientes).
 const cc = `mediatype:movies AND licenseurl:(*creativecommons* OR *publicdomain*) AND NOT collection:(feature_films OR classic_tv OR sci-fi_horror OR film_noir OR silent_films OR classic_cartoons OR prelinger OR animationandcartoons OR classic_you_tube)`;
 let docs = await search(`title:(${topic}) AND ${cc}`);        // 1º: el tema en el TÍTULO (relevante)
 if (docs.length < 5) docs = docs.concat(await search(`(${topic}) AND ${cc}`)); // respaldo: texto amplio
 if (!docs.length) { console.error("Archive.org CC: sin resultados para ese tema"); process.exit(1); }
 
-// 2) Elegir el primer ítem con licencia USABLE + un mp4 descargable de tamaño razonable.
+// 2) Elegir the primer ítem with licencia USABLE + a mp4 descargable of tamaño razonable.
 let src = null, mp4 = null;
 for (const d of docs) {
   const licKey = licFromUrl(d.licenseurl);
@@ -61,7 +61,7 @@ const credited = src.licKey === "cc-by";
 const attribution = `${src.title} · ${src.creator} · https://archive.org/details/${src.id} · ${src.licKey.toUpperCase()}`;
 console.log(`Elegido: "${src.title}" · ${src.creator} · ${src.licKey}`);
 
-// 3) Descargar directo (Archive permite la descarga; sin yt-dlp, sin evasión).
+// 3) Descargar directo (Archive allows the descarga; without yt-dlp, without evasión).
 const film = `${work}/film.mp4`;
 const r = await tf(mp4, {}, 600000);
 if (!r.ok) { console.error("descarga Archive falló " + r.status); process.exit(1); }
@@ -69,7 +69,7 @@ fs.writeFileSync(film, Buffer.from(await r.arrayBuffer()));
 const dur = parseFloat(sh(`ffprobe -v error -show_entries format=duration -of csv=p=0 "${film}"`).trim()) || 0;
 if (dur < 5) { console.error("clip muy corto/ilegible"); process.exit(1); }
 
-// 4) Miniaturas + IA elige el mejor momento (adaptativo a la duración).
+// 4) Thumbnails + IA elige the best momento (adaptativo to the duration).
 const a0 = dur * 0.06, a1 = Math.max(a0 + 1, dur * 0.92), N = Math.min(16, Math.max(3, Math.floor(dur / 4))), step = (a1 - a0) / N, thumbs = [];
 for (let i = 0; i < N; i++) { const t = Math.round(a0 + i * step), p = `${work}/th${i}.jpg`; try { execSync(`ffmpeg -y -ss ${t} -i "${film}" -frames:v 1 -vf "scale=320:-1" "${p}"`, { stdio: "ignore" }); if (fs.existsSync(p)) thumbs.push({ t, p }); } catch {} }
 async function pick() {
@@ -83,7 +83,7 @@ let mo = await pick(); if (!mo || !isFinite(+mo.start)) mo = { start: Math.round
 const clipLen = Math.min(CLIP, Math.max(5, dur - 0.5));
 const start = Math.max(0, Math.min(+mo.start, dur - clipLen));
 
-// 5) Corte PRECISO + 9:16 con sujeto centrado (smart crop), conservando el AUDIO ORIGINAL.
+// 5) Cut PRECISO + 9:16 with sujeto centrado (smart crop), conservando the AUDIO ORIGINAL.
 const { w: srcW, h: srcH } = sourceWH(film);
 const sx = isFinite(+mo.subject_x) ? +mo.subject_x : 0.5;
 const vf = smartCropVf(W, H, srcW, srcH, sx, "eq=contrast=1.06:saturation=1.06");
@@ -92,7 +92,7 @@ execSync(`ffmpeg -y -ss ${pre} -i "${film}" -ss ${fine} -t ${clipLen} -vf "${vf}
 const hadAudio = finishClip(raw, outPath);
 console.log("audio original: " + (hadAudio ? "sí" : "no (solo música)"));
 
-// 6) Paquete + manifiesto (CC-BY exige atribución; la puerta de compliance lo valida).
+// 6) Paquete + manifiesto (CC-BY exige atribución; the gate of compliance lo validates).
 fs.mkdirSync("publish", { recursive: true });
 const pkg = { title: (mo.title || src.title).slice(0, 92) + " #Shorts", description: `#Shorts\n\n${credited ? "Credit: " + attribution + " (edited/clipped)." : "Source: " + src.title + " — Internet Archive (" + src.licKey + ")."}`, tags: ["shorts", niche, "creative commons"], language: "en" };
 fs.writeFileSync("publish/package.json", JSON.stringify(pkg, null, 2));

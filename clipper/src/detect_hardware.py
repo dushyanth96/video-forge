@@ -9,7 +9,7 @@ import subprocess
 
 
 def _tiene_gpu_nvidia() -> bool:
-    # 1) nvidia-smi en el PATH = hay driver NVIDIA
+    # 1) nvidia-smi in the PATH = hay driver NVIDIA
     if shutil.which("nvidia-smi"):
         try:
             r = subprocess.run(["nvidia-smi"], capture_output=True, timeout=8)

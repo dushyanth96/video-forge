@@ -1,10 +1,10 @@
-// bilibili_playwright.mjs — Sube un video a Bilibili Studio (member.bilibili.com) automatizando el
-// navegador con Playwright, EN LA NUBE (GitHub Actions, headless). Usa la cookie web del creador
-// (SESSDATA/bili_jct/DedeUserID/DedeUserID__ckMd5) — la misma con la que subes a mano. Replica el flujo humano.
+// Bilibili_Playwright.mjs — Uploads a video to Bilibili Studio (member.Bilibili.com) automatizando the
+// navegador with Playwright, IN THE NUBE (GitHub Actions, headless). Uses the cookie web of the creador
+// (SESSDATA/bili_jct/DedeUserID/DedeUserID__ckMd5) — the same with the that subes to mano. Replica the flujo humano.
 //
-// Uso: node pipeline/bilibili_playwright.mjs <video.mp4>
+// Usage: node pipeline/Bilibili_Playwright.mjs <video.mp4>
 // Env: BILIBILI_COOKIE, BILI_TITLE, BILI_DESC, BILI_TAG (coma), [BILI_UPLOAD_URL]
-// Deja evidencia en shots/ (capturas) + page.html (DOM) para validar/depurar.
+// Deja evidencia in shots/ (capturas) + page.html (DOM) for validar/depurar.
 import { chromium } from "playwright";
 import fs from "node:fs";
 
@@ -39,13 +39,13 @@ try {
   await page.goto(UPLOAD_URL, { waitUntil: "domcontentloaded", timeout: 60000 });
   await page.waitForTimeout(5000);
   await shot("open");
-  // Guardar el DOM para poder afinar selectores desde el artefacto.
+  // Save the DOM for poder afinar selectores since the artefacto.
   try { fs.writeFileSync("page.html", await page.content()); } catch {}
 
-  // ¿Nos reconoció la cookie? (si nos manda a login, la cookie no sirvió)
+  // ¿Nos reconoció the cookie? (if nos sends to login, the cookie not sirvió)
   if (/passport\.bilibili\.com|\/login/i.test(page.url())) { console.error("❌ Redirigió a login — la cookie no autenticó. URL:", page.url()); await shot("login_redirect"); await browser.close(); process.exit(2); }
 
-  // 1) Seleccionar el archivo (el <input type=file> puede estar oculto).
+  // 1) Seleccionar the file (the <input type=file> can estar oculto).
   log("→ Buscando el input de archivo…");
   const fileInput = await page.waitForSelector('input[type="file"]', { state: "attached", timeout: 45000 });
   await fileInput.setInputFiles(VIDEO);
@@ -53,8 +53,8 @@ try {
   await page.waitForTimeout(4000);
   await shot("uploading");
 
-  // 2) Esperar a que la SUBIDA termine DE VERDAD. Señal real = texto "上传完成" (antes me confundía con
-  //    "投稿", que siempre está en el botón, y enviaba con el botón deshabilitado).
+  // 2) Esperar to that the UPLOAD termine OF TRUE. Señal real = texto "上传完成" (before me confundía with
+  //    "投稿", that always is in the button, and enviaba with the button deshabilitado).
   const deadline = Date.now() + 8 * 60 * 1000; // hasta 8 min
   let uploaded = false;
   while (Date.now() < deadline) {
@@ -66,7 +66,7 @@ try {
   }
   if (!uploaded) { log("⚠️ no detecté '上传完成' — sigo, puede que ya esté lista"); await shot("upload_timeout"); }
 
-  // 3) Título: normalmente se auto-rellena con el nombre del archivo; lo reemplazamos.
+  // 3) Title: normalmente is auto-rellena with the nombre of the file; lo reemplazamos.
   log("→ Poniendo título…");
   const titleSel = ['input[placeholder*="标题"]', 'input[placeholder*="itle"]', 'input[maxlength="80"]', 'input[maxlength="40"]'];
   for (const s of titleSel) { const el = page.locator(s).first(); if (await el.count().catch(() => 0)) { await el.click({ timeout: 5000 }).catch(() => {}); await el.fill("").catch(() => {}); await el.type(TITLE, { delay: 20 }).catch(() => {}); break; } }
@@ -79,16 +79,16 @@ try {
     await shot("tags");
   }
 
-  // 5) Descripción (opcional).
+  // 5) Description (optional).
   if (DESC) { const d = page.locator('textarea[placeholder*="简介"], textarea[placeholder*="escription"]').first(); if (await d.count().catch(() => 0)) { await d.fill(DESC).catch(() => {}); } }
 
   // 5a) PORTADA (封面) — OBLIGATORIA. Bilibili muestra portadas sugeridas pero NINGUNA queda elegida:
-  //     si no se elige, el envío falla con "请先上传封面". Elegimos una miniatura recomendada.
+  //     if not is elige, the envío fails with "请先上传封面". Elegimos a thumbnail recomendada.
   log("→ Seleccionando portada (封面)…");
   try {
     await page.getByText("系统推荐封面", { exact: false }).first().scrollIntoViewIfNeeded().catch(() => {});
     await page.waitForTimeout(800);
-    // Buscar las miniaturas por TAMAÑO real de portada (img o div con background-image) y sus coords de viewport.
+    // Search the thumbnails by TAMAÑO real of portada (img or div with background-image) and its coords of viewport.
     const cands = await page.evaluate(() => {
       const out = [];
       document.querySelectorAll('img, [style*="background-image"], [class*="cover"]').forEach((el) => {
@@ -113,7 +113,7 @@ try {
     await shot("cover");
   } catch (e) { log("portada:", e && e.message ? e.message : e); }
 
-  // 5b) 创作声明 (Declaración de autoría) — OBLIGATORIO. Abrir el dropdown, ver opciones y elegir una.
+  // 5b) 创作声明 (Declaración of autoría) — OBLIGATORIO. Abrir the dropdown, ver options and elegir a.
   log("→ Declaración de autoría (创作声明)…");
   const declTrigger = page.locator('input[placeholder*="创作声明"], input[placeholder*="创作声"]').first();
   if (await declTrigger.count().catch(() => 0)) {
@@ -123,7 +123,7 @@ try {
     await shot("decl_open");
     const opts = await page.locator('.el-select-dropdown__item, li[class*="option"], [class*="select-dropdown"] li, [class*="option-item"]').allInnerTexts().catch(() => []);
     log("创作声明 opciones:", JSON.stringify(opts));
-    // Preferir "无"/"none"/"原创"/"自制"; si no, la primera opción real.
+    // Preferir "无"/"none"/"原创"/"自制"; if not, the first option real.
     const pref = ["无以上", "无", "none", "原创", "自制", "self"];
     let picked = false;
     for (const p of pref) { const el = page.locator(`.el-select-dropdown__item:has-text("${p}"), li:has-text("${p}")`).first(); if (await el.count().catch(() => 0)) { await el.click().catch(() => {}); picked = true; log("创作声明 elegido:", p); break; } }
@@ -133,10 +133,10 @@ try {
   } else { log("⚠️ No encontré el dropdown de 创作声明 (quizá ya no es obligatorio)"); }
 
   await shot("before_submit");
-  // 6) Enviar. Esperar a que el botón 立即投稿 esté HABILITADO (si la subida no terminó, está deshabilitado).
+  // 6) Send. Esperar to that the button 立即投稿 esté HABILITADO (if the upload not terminó, is deshabilitado).
   log("→ Enviando…");
   let submitted = false;
-  // El botón es un span/div (no <button>). getByText exacto encuentra el elemento clickable más pequeño.
+  // The button is a span/div (not <button>). getByText exacto encuentra the elemento clickable more pequeño.
   const submitBtn = page.getByText("立即投稿", { exact: true }).last();
   if (await submitBtn.count().catch(() => 0)) {
     for (let i = 0; i < 24; i++) { // esperar a que se habilite (clase disabled del contenedor)
@@ -153,13 +153,13 @@ try {
   } else { log("⚠️ no encontré el botón 立即投稿"); }
   await page.waitForTimeout(2500);
   await shot("after_click");
-  // Diálogo de confirmación (si aparece).
+  // Diálogo of confirmación (if aparece).
   for (const c of ['button:has-text("确定")', 'button:has-text("确认")', 'button:has-text("继续投稿")', 'button:has-text("继续")', 'button:has-text("知道了")']) {
     const el = page.locator(c).last();
     if ((await el.count().catch(() => 0)) && (await el.isVisible().catch(() => false))) { await el.click().catch(() => {}); log("confirm:", c); await page.waitForTimeout(2000); break; }
   }
-  // 7) Éxito ESTRICTO: solo el modal/texto real de投稿成功 o irse del formulario a gestión de稿件.
-  //    (Nada de regex flojo tipo "success"/"review" que daba falso positivo.)
+  // 7) Éxito ESTRICTO: only the modal/texto real of投稿成功 or irse of the formulario to gestión of稿件.
+  //    (Nothing of regex flojo type "success"/"review" that daba false positivo.)
   let ok = false;
   const t2 = Date.now() + 70000;
   while (Date.now() < t2) {

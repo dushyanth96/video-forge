@@ -1,5 +1,5 @@
-// tts_health.mjs — prueba UNA llamada a Gemini TTS. Imprime "gemini" si responde bien,
-// o "kokoro" si está saturado/caído (para elegir el motor de voz del run).
+// tts_health.mjs — test A llamada to Gemini TTS. Imprime "Gemini" if responde bien,
+// or "kokoro" if is saturado/caído (for elegir the engine of voice of the run).
 const KEY = process.env.GEMINI_API_KEY;
 const VOICE = process.env.VOICE || "Charon";
 async function ok() {

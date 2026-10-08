@@ -1,9 +1,9 @@
-// plan_capacity.mjs — recorta el plan diario a los cupos que caben en el buffer (~24-30h) y escribe
-// la foto de la cola (Brain OS: loop de aprendizaje apretado). Si la cola ya está llena, deja el
-// plan vacío -> hoy no se produce y la cola DRENA (el cerebro ve resultados a ~1 día, no a ~1 semana).
+// plan_capacity.mjs — recorta the plan diario to the cupos that caben in the buffer (~24-30h) and writes
+// the photo of the queue (Brain OS: loop of learning apretado). If the queue already is llena, deja the
+// plan vacío -> today not is produce and the queue DRENA (the brain ve results to ~1 day, not to ~1 week).
 // Uso: node pipeline/plan_capacity.mjs <plan.txt> <occupiedCsv> <bufferHours> <queueOut.json> [perSlot]
-//   perSlot: 1 = ritmo cómodo; 2 = AGRESIVO (12/día, cuando el Cerebro dice que el canal va atrás).
-//   Imprime en stdout el nº de cupos libres (para presupuestar también los clips).
+//   perSlot: 1 = ritmo cómodo; 2 = AGRESIVO (12/day, when the Brain dice that the channel va atrás).
+//   Imprime in stdout the nº of cupos libres (for presupuestar también the clips).
 import fs from "node:fs";
 import { freeSlotsInWindow } from "./lib/queue.mjs";
 

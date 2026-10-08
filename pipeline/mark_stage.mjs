@@ -1,6 +1,6 @@
-// mark_stage.mjs — marca etapas hechas por video en un registro (channel/videos.json).
-// Solo rastrea lo que NO se deduce de YouTube: miniatura y shorts. (guion/voz/render/seo
-// se dan por hechos si el video ya esta subido; publicado se lee en vivo del canal.)
+// mark_stage.mjs — marca etapas hechas by video in a registro (channel/videos.JSON).
+// Only rastrea lo that NOT is deduce of YouTube: thumbnail and Shorts. (script/voice/render/seo
+// is dan by hechos if the video already esta uploaded; published is lee in vivo of the channel.)
 // Uso: node pipeline/mark_stage.mjs <videos.json> <video_id> "<title>" <etapas,csv>
 import fs from "node:fs";
 

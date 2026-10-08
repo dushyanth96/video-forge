@@ -1,13 +1,13 @@
-// inventario.mjs — normaliza el inventario de videos, que llega en TRES formas distintas:
-//   - cache del bot (channel/inventory_cache.json): { longs, shorts }
+// inventario.mjs — normaliza the inventario of videos, that llega in TRES formas distintas:
+//   - cache of the bot (channel/inventory_cache.JSON): { longs, Shorts }
 //   - estado de Data Lens (channel/state.json):     { published, shorts }  <- stats ANIDADOS
 //   - estado de Oddly   (channel/auto2/state.json): { list }
 //
-// La tercera forma hacia falta porque el cache del bot NO es una fuente fiable: lo escribe
-// el Worker de Telegram solo cuando alguien ABRE la app, y SIETE workflows lo borran a
-// proposito para forzar el refresco. `episodes.mjs` encontraba el archivo ausente, sacaba
-// "0 episodios", y el workflow restauraba la copia vieja de R2: todo el analisis de Data
-// Lens llevaba 11 dias congelado, y la alerta "Pipeline parado" medi­a la edad del DATO.
+// The tercera way hacia falta because the cache of the bot NOT is a fuente fiable: lo writes
+// the Worker of Telegram only when alguien ABRE the app, and SIETE workflows lo borran to
+// proposito for forzar the refresco. `episodes.mjs` encontraba the file ausente, sacaba
+// "0 episodios", and the workflow restauraba the copia vieja of R2: everything the analisis of Data
+// Lens llevaba 11 days congelado, and the alerta "Pipeline parado" medi­to the edad of the DATO.
 
 /** Aplana los stats anidados de channel/state.json sin pisar valores ya planos. */
 export function aplanar(v) {
@@ -32,6 +32,6 @@ export function normalizarInventario(data) {
   return videos
     .map(aplanar)
     .filter((v) => v && v.video_id)
-    // Un video puede estar en `published` y en `shorts` a la vez.
+    // A video can estar in `published` and in `Shorts` to the vez.
     .filter((v) => (vistos.has(v.video_id) ? false : (vistos.add(v.video_id), true)));
 }

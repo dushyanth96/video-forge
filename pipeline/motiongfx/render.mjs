@@ -1,18 +1,18 @@
-// render.mjs — orquestador del pipeline de motion graphics (ingles, code-rendered).
+// render.mjs — orquestador of the pipeline of motion graphics (ingles, code-rendered).
 //
-//   script.json -> TTS por beat (Gemini) -> timing.json
+//   script.JSON -> TTS by beat (Gemini) -> timing.JSON
 //              -> build_composition.mjs -> hyperframes render -> MP4 visual
-//              -> FFmpeg: voz + BGM (ducking sidechain) + SFX -> MP4 final
+//              -> Ffmpeg: voice + BGM (ducking sidechain) + SFX -> MP4 final
 //
 // Audio: assets/audio/bgm/ y assets/audio/sfx/. Si falta algun
 // asset, se sintetizan stubs CC0 deterministicos
 // (assets/audio/make_fallback_audio.mjs, sin ffmpeg); si eso
-// tambien falla, el pipeline sigue con voz sola — nunca falla
-// por el audio.
+// tambien fails, the pipeline sigue with voice sola — never fails
+// by the audio.
 //
 // Uso: node pipeline/motiongfx/render.mjs <workDir> <script.json> <out.mp4>
-// Env: GEMINI_API_KEY (TTS), MOTIONGFX_SILENT=1 (beats sin voz, para tests),
-//      HF_VERSION (default 0.7.68, la misma del package.json)
+// Env: GEMINI_API_KEY (TTS), MOTIONGFX_SILENT=1 (beats without voice, for tests),
+//      HF_VERSION (default 0.7.68, the same of the package.JSON)
 import fs from "node:fs";
 import path from "node:path";
 import { execSync } from "node:child_process";
@@ -48,7 +48,7 @@ function probeDuration(file) {
   } catch { return 0; }
 }
 
-// ---- 1) TTS por beat (voz inglesa) ----
+// ---- 1) TTS by beat (voice inglesa) ----
 const beatFiles = [];
 const beatDurs = [];
 for (let i = 0; i < beats.length; i++) {
@@ -56,8 +56,8 @@ for (let i = 0; i < beats.length; i++) {
   const mp3 = path.join(workDir, `beat_${i}.mp3`);
   fs.writeFileSync(txt, beats[i].text);
   if (SILENT) {
-    // Estimacion determinista para tests: usa la duracion declarada en el
-    // guion (Phase C: 4 beats clavados a 18/60/60/18s); sin ella, ~2.6
+    // Estimacion determinista for tests: uses the duration declarada in the
+    // script (Phase C: 4 beats clavados to 18/60/60/18s); without ella, ~2.6
     // palabras/seg + aire.
     const declared = parseFloat(beats[i].duration);
     beatDurs.push(Number.isFinite(declared) && declared > 0 ? declared : beats[i].text.split(/\s+/).length / 2.6 + 0.4);
@@ -72,19 +72,19 @@ for (let i = 0; i < beats.length; i++) {
   beatFiles.push(mp3);
 }
 
-// ---- 2) Unir la voz en un solo MP3 + timing.json ----
+// ---- 2) Join the voice in a only MP3 + timing.JSON ----
 const listFile = path.join(workDir, "concat.txt");
 if (!SILENT) {
   fs.writeFileSync(listFile, beatFiles.map((f) => `file '${f.replace(/'/g, "'\\''")}'`).join("\n"));
   execSync(`ffmpeg -y -f concat -safe 0 -i "${listFile}" -af "loudnorm=I=-14:TP=-1.5" -c:a libmp3lame -b:a 192k "${path.join(workDir, "voiceover.mp3")}"`, { stdio: "inherit" });
 } else {
-  // Voz "silenciosa": mp3 de silencio con la duracion estimada total.
+  // Voice "silenciosa": mp3 of silencio with the duration estimada total.
   const est = beatDurs.reduce((s, d) => s + d, 0);
   execSync(`ffmpeg -y -f lavfi -i anullsrc=r=24000:cl=mono -t ${est.toFixed(2)} -c:a libmp3lame -b:a 192k "${path.join(workDir, "voiceover.mp3")}"`, { stdio: "inherit" });
 }
 const voiceDur = probeDuration(path.join(workDir, "voiceover.mp3")) || beatDurs.reduce((s, d) => s + d, 0);
 
-// Ajusto los beats a la duracion REAL del audio (proporcional).
+// Ajusto the beats to the duration REAL of the audio (proporcional).
 const sumBeats = beatDurs.reduce((s, d) => s + d, 0) || 1;
 const scale = voiceDur / sumBeats;
 let t = INTRO;
@@ -104,7 +104,7 @@ fs.writeFileSync(path.join(workDir, "timing.json"), JSON.stringify(timing, null,
 // ---- 3) Composicion (code-rendered) ----
 execSync(`node "${path.join(import.meta.dirname, "build_composition.mjs")}" "${path.join(workDir, "timing.json")}" "${path.join(workDir, "index.html")}" voiceover.mp3`, { stdio: "inherit" });
 
-// ---- 4) HyperFrames render (solo visual; el audio se mezcla despues) ----
+// ---- 4) HyperFrames render (only visual; the audio is mezcla after) ----
 const visualMp4 = path.join(workDir, "visual.mp4");
 const atts = 2;
 let ok = false;
@@ -121,10 +121,10 @@ for (let att = 1; att <= atts && !ok; att++) {
 }
 if (!ok) { console.error("HyperFrames no produjo el video"); process.exit(1); }
 
-// ---- 5) Audio polish: voz + BGM (ducking) + SFX por cambio de beat ----
+// ---- 5) Audio polish: voice + BGM (ducking) + SFX by cambio of beat ----
 const AUDIO_DIR = path.join(import.meta.dirname, "..", "..", "assets", "audio");
 const GEN_AUDIO = path.join(AUDIO_DIR, "make_fallback_audio.mjs");
-// MP3 propio del usuario gana sobre el WAV sintetizado.
+// MP3 propio of the usuario gana about the WAV sintetizado.
 function findAudio(sub, name) {
   for (const ext of [".mp3", ".wav"]) {
     const p = path.join(AUDIO_DIR, sub, name + ext);
@@ -135,8 +135,8 @@ function findAudio(sub, name) {
 const bgmFound = findAudio("bgm", "bgm_bed");
 const sfxFound = SFX_KINDS.map((k) => findAudio("sfx", k));
 if (!bgmFound || sfxFound.some((p) => !p)) {
-  // Fallback CC0: sintetiza los stubs que faltan (deterministas,
-  // <1s, sin ffmpeg). Si falla, se usa lo que haya — o nada.
+  // Fallback CC0: sintetiza the stubs that faltan (deterministas,
+  // <1s, without ffmpeg). If fails, is uses lo that haya — or nothing.
   try {
     execSync(`node "${GEN_AUDIO}"`, { stdio: "ignore" });
   } catch (e) {
@@ -173,7 +173,7 @@ if (mixCmd) {
     fs.copyFileSync(visualMp4, outMp4);
   }
 } else {
-  // Sin BGM ni SFX: el video renderizado ya trae la voz.
+  // Without BGM nor SFX: the video renderizado already trae the voice.
   console.log("sin assets de audio — video con voz sola");
   fs.copyFileSync(visualMp4, outMp4);
 }

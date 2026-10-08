@@ -1,11 +1,11 @@
-// brain_optimize.mjs — EL CEREBRO 2.0: bucle de aprendizaje GRATIS (medir -> reflexionar -> ajustar).
-// Lee la "tabla de aprendizaje" (channel/brain/learning.json: los "genes" de cada video), trae las
-// vistas REALES de YouTube (API gratis), calcula qué gen rinde (vistas/día por categoría, gancho, hora),
-// y con un LLM GRATIS (Gemini->Cloudflare) redacta una ESTRATEGIA accionable. Escribe strategy.json
-// (lo leen los productores) + brain2.txt (resumen a Telegram). Sin entrenar redes: aprende de datos reales.
+// brain_optimize.mjs — THE BRAIN 2.0: bucle of learning FREE (medir -> reflexionar -> ajustar).
+// Lee the "tabla of learning" (channel/brain/learning.JSON: the "genes" of cada video), trae the
+// vistas REALES of YouTube (API free), calcula qué gen rinde (vistas/day by categoría, hook, hour),
+// and with a LLM FREE (Gemini->Cloudflare) drafts a ESTRATEGIA accionable. Writes strategy.JSON
+// (lo leen the productores) + brain2.txt (resumen to Telegram). Without entrenar redes: learns of datos reales.
 //
 // Uso: node pipeline/brain_optimize.mjs
-// Env: YT_* (Data Lens) y/o YT2_* (Oddly), GEMINI/CLOUDFLARE (para llm.mjs).
+// Env: YT_* (Data Lens) and/or YT2_* (Oddly), GEMINI/CLOUDFLARE (for llm.mjs).
 // Lee en cwd: learning.json (de R2), history_map.json (de R2, opcional). Escribe: strategy.json, brain2.txt.
 import fs from "node:fs";
 import { genText } from "./llm.mjs";
@@ -16,13 +16,13 @@ const MATURE_DAYS = 3;            // un video necesita días para medir de verda
 const hourOf = (iso) => { try { return new Date(iso).getUTCHours(); } catch { return null; } };
 const ageDays = (iso) => Math.max(0.5, (now - Date.parse(iso)) / 86400000);
 
-// Canales y sus credenciales (cada uno con su token OAuth).
+// Channels and its credenciales (cada uno with its token OAuth).
 const CHANNELS = [
   { key: "oddly", label: "Oddly Loop", cid: process.env.YT2_CLIENT_ID, sec: process.env.YT2_CLIENT_SECRET, ref: process.env.YT2_REFRESH_TOKEN },
   { key: "datalens", label: "The Data Lens", cid: process.env.YT_CLIENT_ID, sec: process.env.YT_CLIENT_SECRET, ref: process.env.YT_REFRESH_TOKEN },
 ].filter((c) => c.cid && c.sec && c.ref);
 
-// Investigación WEB con Gemini + grounding de Google Search (tendencias REALES y recientes). Gratis.
+// Investigación WEB with Gemini + grounding of Google Search (tendencias REALES and recientes). Free.
 const GKEYS = [process.env.GEMINI_API_KEY, process.env.GEMINI_API_KEY2].filter(Boolean);
 async function webResearch(query) {
   for (const k of GKEYS) for (const m of ["gemini-flash-latest", "gemini-2.5-flash"]) {
@@ -54,7 +54,7 @@ async function stats(access, ids) {
   return out;
 }
 
-// ---- Tabla de aprendizaje: genes por video. Si falta learning.json, siembra desde history_map.json (Data Lens).
+// ---- Tabla of learning: genes by video. If falta learning.JSON, siembra since history_map.JSON (Data Lens).
 let learning = rj("learning.json", []);
 if (!Array.isArray(learning)) learning = [];
 const seen = new Set(learning.map((r) => r.video_id));
@@ -63,7 +63,7 @@ for (const m of rj("history_map.json", [])) {
 }
 console.log(`Tabla de aprendizaje: ${learning.length} videos`);
 
-// ---- Traer vistas reales por canal y anexar rendimiento a cada gen.
+// ---- Traer vistas reales by channel and anexar performance to cada gen.
 const rows = [];
 for (const c of CHANNELS) {
   const ids = [...new Set(learning.filter((r) => r.channel === c.key && r.video_id).map((r) => r.video_id))];
@@ -79,7 +79,7 @@ for (const c of CHANNELS) {
 const mature = rows.filter((r) => r.mature);
 console.log(`Con vistas: ${rows.length} · maduros (>=${MATURE_DAYS}d): ${mature.length}`);
 
-// ---- Agregar por gen (por canal): categoría/subject, hora de publicación, largo del gancho.
+// ---- Agregar by gen (by channel): categoría/subject, hour of publishing, largo of the hook.
 function agg(list, keyFn) {
   const m = {};
   for (const r of list) { const k = keyFn(r); if (k == null || k === "") continue; (m[k] = m[k] || { n: 0, vpd: 0, views: 0 }); m[k].n++; m[k].vpd += r.vpd; m[k].views += r.views; }
@@ -99,7 +99,7 @@ for (const c of CHANNELS) {
   };
 }
 
-// ---- BARRA DE APRENDIZAJE: ¿está aprendiendo? = datos maduros (cobertura) + claridad de la señal (0-100%).
+// ---- BARRA OF LEARNING: ¿is aprendiendo? = datos maduros (cobertura) + claridad of the señal (0-100%).
 const LEARN_TARGET = 12; // videos maduros por canal para "confiar" en lo aprendido
 function learningOf(list) {
   const n = list.length;
@@ -115,7 +115,7 @@ function learningOf(list) {
 const learnBar = { per_channel: {}, overall: learningOf(mature) };
 for (const c of CHANNELS) { const list = mature.filter((r) => r.channel === c.key); if (list.length) learnBar.per_channel[c.key] = { label: c.label, ...learningOf(list) }; }
 
-// ---- Investigación WEB de tendencias (Gemini + grounding) — el cerebro consulta la web, no solo sus datos.
+// ---- Investigación WEB of tendencias (Gemini + grounding) — the brain consulta the web, not only its datos.
 const NICHE = { oddly: "calm space, satisfying, relaxation and sleep YouTube Shorts (cosmos/ASMR niche)", datalens: "history YouTube Shorts (facts and stories that changed the world)" };
 const webTrends = {};
 for (const c of CHANNELS) {
@@ -124,7 +124,7 @@ for (const c of CHANNELS) {
   if (t) { webTrends[c.key] = t; console.log(`tendencias web [${c.key}]: ${t.length} chars`); }
 }
 
-// ---- Reflexión con LLM GRATIS -> estrategia que COMBINA datos propios + tendencias web.
+// ---- Reflexión with LLM FREE -> estrategia that COMBINA datos propios + tendencias web.
 let strategy = { at: new Date().toISOString(), note: "sin datos maduros aún", per_channel: {} };
 if (mature.length >= 3 || Object.keys(webTrends).length) {
   const PROMPT = `You are the growth optimizer for faceless YouTube channels. Combine (A) the channel's OWN performance data and (B) fresh WEB TRENDS to decide what to DO MORE and what to EXPLORE next, per channel. Be concrete. If a channel has little data, lean on the web trends for exploration ideas.
@@ -145,9 +145,9 @@ strategy.web_trends = webTrends;  // tendencias web consultadas (las lee la app)
 strategy.learning = learnBar;  // barra de aprendizaje (la lee la app)
 fs.writeFileSync("strategy.json", JSON.stringify(strategy, null, 2));
 
-// ---- Resumen humano para Telegram.
+// ---- Resumen humano for Telegram.
 const barOf = (p) => { const f = Math.round((p / 100) * 10); return "█".repeat(f) + "░".repeat(10 - f); };
-// ¿Subió la barra vs la vez anterior? (strategy_prev.json lo baja el workflow antes de correr.)
+// ¿Subió the barra vs the vez anterior? (strategy_prev.JSON lo downloads the workflow before of correr.)
 const prev = rj("strategy_prev.json", null);
 const prevScore = prev && prev.learning && prev.learning.overall ? prev.learning.overall.score : null;
 const rose = prevScore != null && learnBar.overall.score > prevScore + 2;

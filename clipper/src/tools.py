@@ -24,5 +24,5 @@ def ffmpeg() -> str:
 
 
 def ffprobe() -> str:
-    # imageio-ffmpeg no trae ffprobe; si no esta en el PATH, se devuelve el nombre (el QA lo maneja).
+    # imageio-ffmpeg not trae ffprobe; if not esta in the PATH, is devuelve the nombre (the QA lo maneja).
     return shutil.which("ffprobe") or "ffprobe"

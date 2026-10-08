@@ -1,27 +1,27 @@
-# Cloudflare Worker = cerebro del bot de Telegram (gratis, siempre encendido).
-# Recibe los mensajes de Telegram (webhook) y dispara GitHub Actions.
+# Cloudflare Worker = the Telegram bot brain (free, always on).
+# Receives Telegram messages (webhook) and dispatches GitHub Actions.
 
 name = "video-forge-bot"
 main = "src/index.js"
 compatibility_date = "2026-01-01"
 
-# Variables NO secretas (el repo objetivo).
+# Non-secret variables (the target repo).
 [vars]
 GH_REPO = "juanberrio0399/video-forge"
 
-# Fase 7: editor de fotos. El Worker guarda el ORIGEN en R2 y dispara photo_edit.yml
-# (el retoque real corre en Actions con GFPGAN/Real-ESRGAN para preservar la identidad).
-# R2 guarda el origen SOLO mientras se itera (se borra al Guardar) + el estado de sesion.
-# Reloj del AI OS: cada 30 min dispara el Orchestrator y, en horas pares, el cerebro en vivo (GitHub se salta crons).
+# Phase 7: photo editor. The Worker stores the SOURCE in R2 and dispatches photo_edit.yml
+# (the actual retouch runs on Actions with GFPGAN/Real-ESRGAN to preserve identity).
+# R2 keeps the source ONLY while iterating (deleted on Save) + session state.
+# AI OS clock: every 30 min dispatches the Orchestrator and, on even hours, the live brain (GitHub skips crons).
 [triggers]
 crons = ["*/30 * * * *"]
 
-# AI OS: canales internos hacia los paneles de Radar y Viento (misma cuenta; sin URL pública).
-# TODOS los [[services]] estan comentados: el deploy fallaba (error 10143 de Cloudflare)
-# porque los Workers de destino no existen en esta cuenta.
+# AI OS: internal channels to the Radar and Viento panels (same account; no public URL).
+# ALL [[services]] are commented out: the deploy failed (Cloudflare error 10143)
+# because the target Workers do not exist in this account.
 # /p/radar, /p/viento y /v/*/api/* responden 503 "Panel no conectado" mientras no existan;
-# bot/src/index.js protege cada uso de env.RADAR/env.VIENTO (if (!svc) y && env.VIENTO).
-# Para reactivar uno: descomenta su bloque y confirma que el Worker este en la misma cuenta.
+# bot/src/index.js guards every use of env.RADAR/env.VIENTO (if (!svc) and && env.VIENTO).
+# To re-enable one: uncomment its block and confirm the Worker is in the same account.
 # [[services]]
 # binding = "RADAR"
 # service = "radar-bot"
@@ -38,6 +38,6 @@ bucket_name = "video-forge"
 
 # Secretos (NO van aqui; se ponen con `wrangler secret put <NOMBRE>`):
 #   TELEGRAM_BOT_TOKEN        -> token de @BotFather
-#   TELEGRAM_WEBHOOK_SECRET   -> cadena aleatoria (la misma en setWebhook)
-#   OWNER_CHAT_ID             -> tu chat id de Telegram (solo tu puedes mandar)
+#   TELEGRAM_WEBHOOK_SECRET   -> random string (the same one in setWebhook)
+#   OWNER_CHAT_ID             -> your Telegram chat id (only you can send)
 #   GH_TOKEN                  -> GitHub PAT fine-grained con Actions: Read/Write

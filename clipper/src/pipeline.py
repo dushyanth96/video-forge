@@ -123,13 +123,13 @@ def seleccionar_interactivo(cfg: dict) -> list:
     excluidos = proc | desc
     ntop = cfg.get("mostrar_top", 8)
 
-    # 1) Reusar lo anterior (quitando ya procesados y omitidos)
+    # 1) Reusar lo anterior (quitando already procesados and omitidos)
     top = [t for t in publish.cargar_top() if _source_key(t.get("url", "")) not in excluidos]
     reusados = len(top)
     if reusados:
         print(f"\n📋 Retomo tu lista anterior: {reusados} video(s) pendiente(s).")
 
-    # 2) Rellenar hasta 'mostrar_top' con nuevos (si faltan)
+    # 2) Rellenar until 'mostrar_top' with new (if faltan)
     if len(top) < ntop:
         ya = excluidos | {_source_key(t.get("url", "")) for t in top}
         nuevos = _buscar_nuevos(cfg, ya)[: ntop - len(top)]
@@ -165,7 +165,7 @@ def seleccionar_interactivo(cfg: dict) -> list:
                      if x.isdigit() and 1 <= int(x) <= len(top)] or [1]
     aprobados = [top[i - 1] for i in aprob_idx]
 
-    # 4) Mostrar los NO aprobados y ofrecer OMITIR (para que no vuelvan)
+    # 4) Mostrar the NOT aprobados and ofrecer OMITIR (for that not vuelvan)
     no_aprob = [i for i in range(1, len(top) + 1) if i not in aprob_idx]
     if no_aprob:
         print("\n🚫 No aprobaste estos (siguen en tu lista para la proxima):")

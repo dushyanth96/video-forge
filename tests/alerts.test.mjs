@@ -4,7 +4,7 @@ import { growthDrop, formatFatigue, concentration, pipelineStalled, behindGoal, 
 const DAY = 86400000;
 const NOW = Date.parse("2026-09-20T00:00:00Z");
 const dstr = (ms) => new Date(ms).toISOString().slice(0, 10);
-// historial acumulado: subs en d-14, d-7, hoy
+// historial acumulado: subs in d-14, d-7, today
 function hist(v14, v7, v0) {
   return [
     { date: dstr(NOW - 14 * DAY), subs: v14 },

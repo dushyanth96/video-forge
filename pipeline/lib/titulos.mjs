@@ -1,23 +1,23 @@
-// titulos.mjs — evita los dos defectos que mataron a The Data Lens.
+// titles.mjs — avoids the dos defectos that mataron to The Data Lens.
 //
-// Medido en el canal el 2026-10-03 (45 Shorts listados, 3 suscriptores, 121 videos):
+// Medido in the channel the 2026-10-03 (45 Shorts listados, 3 suscriptores, 121 videos):
 //
-// 1) SE REPETIAN LOS TITULOS. Seis titulos distintos ocupaban 22 de los 45 videos:
+// 1) IS REPETIAN THE TITLES. Seis titles distintos ocupaban 22 of the 45 videos:
 //    "The Deadliest Siege in Human History" x7, "The Deadliest Volcano Eruption in
-//    History" x6, "The Deadliest Gamble in Human History" x3... El pipeline SI evitaba
-//    repetir TEMAS (history_used.json), pero nunca miro los TITULOS: dos temas distintos
-//    (Leningrado, Constantinopla) colapsan en el mismo titulo generico. YouTube lee eso
-//    como contenido repetitivo, y muchos de esos videos quedaron en CERO vistas.
+//    History" x6, "The Deadliest Gamble in Human History" x3... The pipeline IF evitaba
+//    repetir TOPICS (history_used.JSON), but never miro the TITLES: dos topics distintos
+//    (Leningrado, Constantinopla) colapsan in the same title generico. YouTube lee eso
+//    as contenido repetitivo, and many of esos videos quedaron in CERO vistas.
 //
-// 2) EL TITULO GENERICO RINDE 6 VECES MENOS. Partiendo los 45 en dos grupos:
+// 2) THE TITLE GENERICO RINDE 6 VECES LESS. Partiendo the 45 in dos grupos:
 //      generico ("The Deadliest/Worst X in History"): n=33, mediana 2, media 7, 10 ceros
-//      especifico (una historia concreta):            n=12, mediana 12, media 82
-//    Los cinco mejores son todos concretos: "The Single Signature That Destroyed German
+//      especifico (a historia concreta):            n=12, mediana 12, media 82
+//    The cinco best are all concretos: "The Single Signature That Destroyed German
 //    Democracy" (406), "The Single Key That Doomed The Titanic" (321), "The Lab Accident
 //    That Saved Millions of Lives" (105).
 //
-// La misma forma que el unico Short que desperto en Oddly ("Why Baby Otters Hold Hands").
-// Dos canales distintos apuntando a lo mismo: concreto y especifico le gana a superlativo
+// The same way that the unico Short that desperto in Oddly ("Why Baby Otters Hold Hands").
+// Dos channels distintos apuntando to lo same: concreto and especifico le gana to superlativo
 // generico.
 
 /** Quita adornos para comparar titulos: hashtags, puntuacion, mayusculas, espacios. */
@@ -37,33 +37,33 @@ export function esDuplicado(titulo, usados) {
   return (usados || []).some((u) => normalizar(u) === t);
 }
 
-// Superlativos que producen titulos intercambiables. No es que la palabra sea mala: es que
-// "The <superlativo> <cosa> in (Human) History" describe mil videos distintos por igual, y
-// por eso el modelo cae ahi una y otra vez.
+// Superlativos that producen titles intercambiables. Not is that the palabra sea mala: is that
+// "The <superlativo> <cosa> in (Human) History" describe mil videos distintos by igual, and
+// by eso the modelo cae there a and other vez.
 const SUPERLATIVOS = ["deadliest", "worst", "biggest", "greatest", "largest", "most dangerous", "craziest", "wildest", "scariest"];
 
 /**
- * Detecta la forma "The <superlativo> ... in (Human|Recorded) History", que es la plantilla
- * en la que el modelo se queda atrapado.
+ * Detecta the way "The <superlativo> ... in (Human|Recorded) History", that is the plantilla
+ * in the that the modelo is queda atrapado.
  */
 export function esGenerico(titulo) {
   const t = normalizar(titulo);
   if (!t) return false;
   const tieneSuper = SUPERLATIVOS.some((s) => t.includes(s));
   if (!tieneSuper) return false;
-  // "in history" / "in human history" / "in recorded history" al final: la plantilla completa.
+  // "in history" / "in human history" / "in recorded history" to the final: the plantilla completa.
   return /\bin (human |recorded |world )?history\b/.test(t);
 }
 
 /**
- * Revisa un titulo recien generado contra las dos reglas.
- * @returns {{ok:boolean, motivo:string|null, queja:string|null}} `queja` es el texto que se
- *          le devuelve al modelo para que lo reintente sabiendo QUE hizo mal.
+ * Revisa a title recien generated contra the dos reglas.
+ * @returns {{ok:boolean, motivo:string|null, queja:string|null}} `queja` is the texto that is
+ *          le devuelve to the modelo for that lo reintente sabiendo THAT hizo mal.
  */
 export function revisar(titulo, usados, opts = {}) {
-  // `prohibirGenerico` se apaga en Oddly a proposito. Ahi la plantilla listicle NO rinde
-  // peor (mediana 53 contra 36 del resto, medido el 2026-10-03) y ademas es el BRAZO DE
-  // CONTROL del experimento de formato: prohibirla dejaria el A/B sin con que comparar.
+  // `prohibirGenerico` is apaga in Oddly to proposito. There the plantilla listicle NOT rinde
+  // worse (mediana 53 contra 36 of the resto, medido the 2026-10-03) and ademas is the BRAZO OF
+  // CONTROL of the experiment of formato: prohibirla dejaria the to/B without with that comparar.
   const prohibirGenerico = opts.prohibirGenerico !== false;
   const t = String(titulo ?? "").trim();
   if (!t) return { ok: false, motivo: "vacio", queja: "El titulo vino vacio. Escribe uno." };

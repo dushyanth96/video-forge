@@ -1,9 +1,9 @@
-// lineup.mjs — PLAN DE MAÑANA (Brain OS "en vivo"). PURO y testeable.
-// El cerebro no fabrica todo 10 minutos antes: rehace el plan del día siguiente cada pocas horas con lo
-// último que sabe (reparto ejecutado, banco de ideas, experimento activo, lo ya programado) y lo produce
-// con horas de anticipación. Cada pieza del plan es una DECISIÓN auditable:
-//   DECISIÓN → RAZÓN → EVIDENCIA → ACCIÓN → MÉTRICA → PLAZO → CRITERIO DE ÉXITO → SIGUIENTE DECISIÓN
-// Además separa lo que el cerebro SABE, CREE, DESCONOCE y está COMPROBANDO (auditoría: incertidumbre).
+// lineup.mjs — PLAN OF TOMORROW (Brain OS "in vivo"). PURO and testeable.
+// The brain not fabrica everything 10 minutes before: rehace the plan of the day siguiente cada pocas hours with lo
+// last that sabe (reparto ejecutado, banco of ideas, experiment activo, lo already scheduled) and lo produce
+// with hours of anticipación. Cada pieza of the plan is a DECISIÓN auditable:
+//   DECISIÓN → RAZÓN → EVIDENCIA → ACCIÓN → MÉTRICA → PLAZO → CRITERIO OF ÉXITO → SIGUIENTE DECISIÓN
+// Además separa lo that the brain SABE, CREE, DESCONOCE and is COMPROBANDO (auditoría: incertidumbre).
 import { etOffsetHours, bestHoursET } from "./queue.mjs";
 
 const DAY = 86400000, HOUR = 3600000;
@@ -16,7 +16,7 @@ export function etDate(nowMs, addDays = 0) {
   return t.toISOString().slice(0, 10);
 }
 
-// Franjas (ms UTC) de un día ET con las horas dadas (o las investigadas por día de la semana).
+// Slots (ms UTC) of a day ET with the hours dadas (or the investigadas by day of the week).
 export function daySlots(dateStr, hoursET) {
   const [y, m, d] = dateStr.split("-").map(Number);
   const noon = new Date(Date.UTC(y, m - 1, d, 12));
@@ -25,7 +25,7 @@ export function daySlots(dateStr, hoursET) {
   return hours.map((h) => Date.UTC(y, m - 1, d, h - off, 0, 0)).sort((a, b) => a - b);
 }
 
-// Reparto intercalado (round-robin ponderado suave): el mismo nicho no sale en bloque.
+// Reparto intercalado (round-robin ponderado suave): the same niche not sale in bloque.
 export function interleave(allocation) {
   const w = Object.entries(allocation || {}).filter(([, n]) => +n > 0).map(([k, n]) => ({ k, n: +n, cur: 0 }));
   const total = w.reduce((a, x) => a + x.n, 0);
@@ -47,13 +47,13 @@ const confidenceOf = (n) => (n >= 15 ? "media" : n >= 5 ? "baja" : "muy baja");
 //   scheduled:[{video_id,title,publish_at,niche}], producing:[{slot_utc,niche,run_url,claimed_at}], missing:[keys],
 //   d7Median, channel
 // }
-// Elige la variante de formato de una franja.
+// Elige the variante of formato of a slot.
 //
-// `variants[nicho]` puede ser un string (la variante fija de siempre) o una LISTA. Con una
-// lista, las franjas de ESE nicho van alternando entre los brazos -> los dos formatos se
-// producen sobre el MISMO tema. Eso es lo que hace que el A/B sirva: si un brazo fuera
-// "animales" y el otro "satisfying", lo medido seria tema Y formato a la vez, y el resultado
-// no diria nada. Alternar dentro del nicho deja el tema fijo y el formato como unica variable.
+// `variants[niche]` can ser a string (the variante fija of always) or a READY. With a
+// ready, the slots of ESE niche van alternando between the brazos -> the dos formatos is
+// producen about the SAME topic. Eso is lo that hace that the to/B sirva: if a brazo fuera
+// "animales" and the other "satisfying", lo medido seria topic and formato to the vez, and the result
+// not diria nothing. Alternar dentro of the niche deja the topic fijo and the formato as unica variable.
 export function elegirVariante(variants, nicheKey, turno = 0) {
   const v = (variants || {})[nicheKey];
   if (Array.isArray(v)) {
@@ -74,13 +74,13 @@ export function buildLineup(input = {}) {
   const capacity = Math.min(seqAll.length, slots.length * perSlot);
   const seq = seqAll.slice(0, capacity);
 
-  // Slots expandidos (perSlot por franja), en orden temporal.
+  // Slots expandidos (perSlot by slot), in orden temporal.
   const slotList = [];
   slots.forEach((s) => { for (let i = 0; i < perSlot; i++) slotList.push(s); });
 
-  // Ideas del banco para este canal, mejor priorizadas primero, sin repetir, y SOLO donde encajan:
-  // idea con nicho -> ese nicho; hook/título/formato (genéricas) -> cualquiera; idea de tema sin nicho ->
-  // solo el nicho líder. Una pieza en experimento de gancho no recibe ideas de gancho (una variable).
+  // Ideas of the banco for este channel, best priorizadas first, without repetir, and ONLY where encajan:
+  // idea with niche -> ese niche; hook/title/formato (genéricas) -> cualquiera; idea of topic without niche ->
+  // only the niche líder. A pieza in experiment of hook not recibe ideas of hook (a variable).
   const ideas = (input.bank || []).filter((b) => b && b.state === "BACKLOG" && (!b.channel || b.channel === (input.channel || "auto2")))
     .sort((a, b) => (+b.priority || 0) - (+a.priority || 0));
   const usedIdeas = new Set();
@@ -92,7 +92,7 @@ export function buildLineup(input = {}) {
     return !!leaderKey && leaderKey[0] === nicheKey;
   };
 
-  // Experimento: UNA variable, solo en un nicho; el resto es control (no cambia nada más).
+  // Experiment: A variable, only in a niche; the resto is control (not cambia nothing more).
   const exp = input.experiment && input.experiment.id && Array.isArray(input.experiment.arms) && input.experiment.arms.length === 2 ? input.experiment : null;
   let armToggle = 0;
   const turnoVariante = {};  // franjas ya repartidas por nicho, para alternar los brazos
@@ -105,7 +105,7 @@ export function buildLineup(input = {}) {
     const slot = slotList[i];
     const meta = niches[nicheKey] || {};
     const label = meta.label || nicheKey;
-    // Reconciliación: video programado cerca de la franja (mismo nicho primero).
+    // Reconciliación: video scheduled cerca of the slot (same niche first).
     const near = scheduled.filter((v) => !used.has(v.video_id) && Math.abs(v.t - slot) <= 40 * 60000);
     const match = near.find((v) => v.niche === nicheKey) || near[0] || null;
     if (match) used.add(match.video_id);
@@ -185,7 +185,7 @@ export function buildKnowledge(input = {}, niches = {}) {
   return { sabe, cree, desconoce, comprobando };
 }
 
-// Qué producir AHORA: piezas planeadas con margen (ni última hora ni demasiado lejos), primero las más cercanas.
+// Qué producir NOW: piezas planeadas with margen (nor last hour nor demasiado lejos), first the more cercanas.
 export function pickToProduce(lineups, nowMs = Date.now(), opts = {}) {
   const max = opts.max != null ? opts.max : 3;
   const minLead = (opts.minLeadHours != null ? opts.minLeadHours : 3) * HOUR;
@@ -198,7 +198,7 @@ export function pickToProduce(lineups, nowMs = Date.now(), opts = {}) {
   return all.sort((a, b) => Date.parse(a.slot_utc) - Date.parse(b.slot_utc)).slice(0, max);
 }
 
-// Diferencias entre el plan anterior y el nuevo -> pensamientos para la bitácora.
+// Diferencias between the plan anterior and the new -> pensamientos for the bitácora.
 export function diffLineups(prev, next) {
   const out = [];
   if (!next) return out;

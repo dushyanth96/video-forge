@@ -1,6 +1,6 @@
-// list_private.mjs — imprime (CSV) los video_ids PRIVADOS SIN programar del canal (backlog por publicar).
-// Excluye los que ya tienen publishAt futuro (programados) y los ocultos (channel/<hidden>.json si se pasa).
-// Uso: node pipeline/list_private.mjs [hidden_r2_key]   (usa YT_* del canal; para Oddly el workflow mapea YT2_*)
+// list_private.mjs — imprime (CSV) the video_ids PRIVADOS WITHOUT schedule of the channel (backlog by publish).
+// Excluye the that already tienen publishAt futuro (programados) and the ocultos (channel/<hidden>.JSON if is pasa).
+// Usage: node pipeline/list_private.mjs [hidden_r2_key]   (uses YT_* of the channel; for Oddly the workflow mapea YT2_*)
 import { readHiddenFile, parseHidden, backlogToSchedule } from "./lib/hidden.mjs";
 const { YT_CLIENT_ID, YT_CLIENT_SECRET, YT_REFRESH_TOKEN, CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN } = process.env;
 const BUCKET = process.env.BUCKET || "video-forge";
@@ -13,8 +13,8 @@ async function token() {
 }
 const tok = await token(); const H = { Authorization: `Bearer ${tok}` };
 
-// Lista de ocultos: FALLA CERRADO. Si se pidió y no se puede leer, no se lista nada (antes contaba como vacía
-// y el sanador podía programar y publicar videos ocultos).
+// Ready of ocultos: FAILS CERRADO. If is pidió and not is can leer, not is ready nothing (before contaba as vacía
+// and the sanador podía schedule and publish videos ocultos).
 let hidden = null;
 if (process.env.HIDDEN_FILE) hidden = readHiddenFile(process.env.HIDDEN_FILE);
 else if (!hiddenKey) hidden = new Set();

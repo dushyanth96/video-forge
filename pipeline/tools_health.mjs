@@ -1,5 +1,5 @@
-// tools_health.mjs — valida a DIARIO las herramientas/APIs GRATIS que usa la fabrica (guion, voz,
-// b-roll, miniaturas, subir, metricas) y guarda el estado para verlo en la app y avisar si algo cae.
+// tools_health.mjs — validates to DIARIO the herramientas/APIs FREE that uses the fabrica (script, voice,
+// b-roll, thumbnails, upload, metricas) and stores the estado for verlo in the app and avisar if something cae.
 // Uso: node pipeline/tools_health.mjs <out.json>
 // Env: GEMINI_API_KEY, PEXELS_API_KEY, YT_CLIENT_ID/SECRET/REFRESH
 import fs from "node:fs";
@@ -9,11 +9,11 @@ const out = process.argv[2] || "tools_health.json";
 const { GEMINI_API_KEY, GEMINI_API_KEY2, PEXELS_API_KEY, YT_CLIENT_ID, YT_CLIENT_SECRET, YT_REFRESH_TOKEN, GH_TOKEN, GITHUB_REPOSITORY } = process.env;
 const tools = [];
 const add = (name, ok, detail, critical = false) => tools.push({ name, ok, detail, critical });
-// fetch con timeout: una API LENTA (no caida) no cuelga el job entero.
+// fetch with timeout: a API SLOW (not caida) not cuelga the job entero.
 const tf = (u, o = {}, ms = 8000) => fetch(u, { ...o, signal: AbortSignal.timeout(ms) });
 
 async function checkGeminiText() {
-  // Prueba CADA llave (multi-llave = mas cuota). Cada llave prueba varios modelos (evita 404 de un nombre).
+  // Test CADA llave (multi-llave = more cuota). Cada llave test several modelos (avoids 404 of a nombre).
   const keys = [GEMINI_API_KEY, GEMINI_API_KEY2].filter(Boolean);
   if (!keys.length) return add("Gemini (guion/SEO/IA)", false, "sin API key", true);
   const models = TEXT_MODELS;
@@ -60,7 +60,7 @@ async function checkYouTube() {
 }
 
 async function checkGitHub() {
-  // El PAT del que cuelga TODA la orquestacion (un workflow dispara al siguiente con gh workflow run).
+  // The PAT of the that cuelga ALL the orquestacion (a workflow dispara to the siguiente with gh workflow run).
   if (!GH_TOKEN) return add("GitHub Actions (orquestacion)", false, "sin GH_TOKEN", true);
   const repo = GITHUB_REPOSITORY || "juanberrio0399/video-forge";
   try {

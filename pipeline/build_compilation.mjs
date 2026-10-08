@@ -1,10 +1,10 @@
-// build_compilation.mjs — ENSAMBLADOR del canal automático #2. Arma una COMPILACIÓN
-// transformada: baja clips SOLO de fuentes con licencia (Pexels/Pixabay por ahora),
-// los une con transiciones + narración IA + música + subtítulos + número de ranking,
-// y ESCRIBE compilation_manifest.json (fuente/licencia de cada clip) para que
-// compliance_check.mjs valide ANTES de publicar. Modelado en recipe_assemble.mjs.
+// build_compilation.mjs — ENSAMBLADOR of the channel automático #2. Arma a COMPILATION
+// transformada: downloads clips ONLY of fuentes with licencia (Pexels/Pixabay by now),
+// the joins with transiciones + narration IA + music + subtitles + number of ranking,
+// and WRITES compilation_manifest.JSON (fuente/licencia of cada clip) for that
+// compliance_check.mjs valide BEFORE of publish. Modelado in recipe_assemble.mjs.
 //
-// Uso: node pipeline/build_compilation.mjs <niche> <voicemap.json> <timing.json> <voz.wav> <out.mp4> [format]
+// Usage: node pipeline/build_compilation.mjs <niche> <voicemap.JSON> <timing.JSON> <voice.wav> <out.mp4> [format]
 //   format: "16:9" (default) o "9:16". Env: PEXELS_API_KEY, PIXABAY_API_KEY. music.mp3 opcional.
 import fs from "node:fs";
 import path from "node:path";
@@ -26,10 +26,10 @@ const sources = readJSON("channel/auto2/sources.seed.json", {});
 const nicheCfg = ((sources.niches || {})[niche]) || {};
 const queryPool = nicheCfg.queries || ["nature", "city", "abstract"];
 
-// PERFIL POR NICHO — cada categoria tiene sus caracteristicas. Lo importante en
-// ASMR/satisfying es el SONIDO (audio original del clip mandando, musica casi nula);
-// en narrativas/ciencia la NARRACION manda (voz alta, musica de apoyo). Esto define
-// como se mezcla el audio y el ritmo. Se puede sobre-escribir por nicho en sources.seed.json ("profile").
+// PERFIL BY NICHE — cada categoria tiene its caracteristicas. Lo important in
+// ASMR/satisfying is the SOUND (audio original of the clip mandando, music casi nula);
+// in narrativas/ciencia the NARRATION sends (voice alta, music of apoyo). Esto define
+// as is mezcla the audio and the ritmo. Is can about-write by niche in sources.seed.JSON ("profile").
 const PROFILES = {
   //                 sonido-clip     ambVol  musicVol  voiceVol  grade                                                        clip-min
   satisfying:      { keepAudio: true,  amb: 1.0,  music: 0.05, voice: 0.55, grade: "eq=brightness=0.02:saturation=1.18:contrast=1.06,unsharp=3:3:0.35", minClip: 2.2 },
@@ -38,8 +38,8 @@ const PROFILES = {
   ciencia_humor:   { keepAudio: false, amb: 0.9,  music: 0.12, voice: 1.0,  grade: GRADE,                                                              minClip: 1.6 },
 };
 const profile = { ...(PROFILES[niche] || { keepAudio: false, amb: 0, music: 0.12, voice: 1.0, grade: GRADE, minClip: 1.6 }), ...(nicheCfg.profile || {}) };
-// ACABADO CINEMATOGRÁFICO (como un colorista de cine): viñeta suave + grano fílmico + micro-contraste,
-// por nicho. Sutil en satisfying/naturaleza (limpio y nítido); fuerte y frío en narrativas (drama).
+// ACABADO CINEMATOGRÁFICO (as a colorista of cine): viñeta suave + grano fílmico + micro-contraste,
+// by niche. Sutil in satisfying/naturaleza (limpio and nítido); fuerte and frío in narrativas (drama).
 const CINE = {
   satisfying: "vignette=a=PI/7",
   naturaleza_relax: "vignette=a=PI/7",
@@ -54,12 +54,12 @@ const timing = readJSON(timingPath, {});
 const isShort = vm.kind === "short"; // Short 9:16: duración por categoría (ASMR más largo, ciencia corto)
 const SHORT = nicheCfg.short || { clip_sec: 6 };
 const SHORT_CAP = 178; // tope duro de YouTube Shorts (<3 min); no lo pasamos
-// Duración de cada clip: la narración (timing) si existe; si no (ASMR puro), el clip_sec del nicho.
+// Duration of cada clip: the narration (timing) if existe; if not (ASMR puro), the clip_sec of the niche.
 const durOf = (i) => { const b = (timing.beats || []).find((x) => x.index === i) || (timing.beats || [])[i]; const base = (b && b.dur ? +b.dur : (isShort ? (SHORT.clip_sec || 6) : 3.5)); return Math.max(profile.minClip, base); };
 function hasAudio(p) { try { return execSync(`ffprobe -v error -select_streams a -show_entries stream=index -of csv=p=0 "${p}"`).toString().trim().length > 0; } catch { return false; } }
 
-// ¿Hay voz? (ASMR PURO no lleva narración -> voice.wav no existe). Define si la pieza es
-// narrada o de puro sonido, y qué transformación declaramos para la puerta de compliance.
+// ¿Hay voice? (ASMR PURO not lleva narration -> voice.wav not existe). Define if the pieza is
+// narrada or of puro sound, and qué transformación declaramos for the gate of compliance.
 const hasVoice = (() => { try { return !!voicePath && fs.existsSync(voicePath) && fs.statSync(voicePath).size > 2000 && profile.voice > 0; } catch { return false; } })();
 const work = "comp"; fs.mkdirSync(work, { recursive: true });
 const manifest = { niche, format, clips: [], transform: { narration: hasVoice, editing: true, original_script: true, sound_design: !!profile.keepAudio } };
@@ -70,30 +70,30 @@ async function dl(url, dest) {
   const buf = Buffer.from(await r.arrayBuffer());
   if (buf.length < 10000) throw new Error(`descarga ${buf.length}b (muy chica, no es video)`);
   fs.writeFileSync(dest, buf);
-  // validar que sea un video real (evita correr ffmpeg sobre HTML/basura de una fuente rota)
+  // validar that sea a video real (avoids correr ffmpeg about HTML/basura of a fuente rota)
   try { execSync(`ffprobe -v error -select_streams v:0 -show_entries stream=codec_name -of csv=p=0 "${dest}"`, { stdio: ["ignore", "pipe", "ignore"] }); }
   catch { throw new Error("la fuente no devolvió un video válido"); }
 }
-// ffmpeg capturando el stderr real (para ver el MOTIVO si falla, no un genérico "Command failed").
+// ffmpeg capturando the stderr real (for ver the MOTIVO if fails, not a genérico "Command failed").
 function ff(cmd) {
   try { execSync(cmd, { stdio: ["ignore", "ignore", "pipe"] }); }
   catch (e) { const err = (e.stderr ? e.stderr.toString() : "").trim().split("\n").filter(Boolean).slice(-3).join(" | "); throw new Error("ffmpeg: " + (err || (e.message || "").split("\n")[0])); }
 }
 
-// Fuentes LEGALES (licencia comercial). Cada una devuelve {url, source, license}.
+// Fuentes LEGALES (licencia comercial). Cada a devuelve {url, source, license}.
 async function pexels(q) {
   if (!PEXELS) return null;
   try {
     const orient = W >= H ? "landscape" : "portrait";
-    // size=large -> Full HD/4K (antes "medium" traia clips chicos que se agrandaban = borroso).
+    // size=large -> Full HD/4K (before "medium" traia clips chicos that is agrandaban = borroso).
     const r = await fetch(`https://api.pexels.com/videos/search?query=${encodeURIComponent(q)}&orientation=${orient}&size=large&per_page=15`, { headers: { Authorization: PEXELS } });
     if (!r.ok) return null;
     const j = await r.json();
     for (const v of (j.videos || []).sort(() => Math.random() - 0.5)) {
       const files = (v.video_files || []).filter((f) => f.file_type === "video/mp4" && f.width && f.height);
       if (!files.length) continue;
-      // Elige el clip que CUBRE el frame (w>=W && h>=H) SIN upscale; el mas chico que cubra (menos downscale).
-      // Si ninguno cubre, el mas grande disponible (el menor upscale posible).
+      // Elige the clip that CUBRE the frame (w>=W && h>=H) WITHOUT upscale; the more chico that cubra (less downscale).
+      // If ninguno cubre, the more grande disponible (the menor upscale possible).
       const cover = files.filter((f) => f.width >= W && f.height >= H).sort((a, b) => a.width * a.height - b.width * b.height);
       const f = cover[0] || files.sort((a, b) => b.width * b.height - a.width * a.height)[0];
       if (f) return { url: f.link, source: "pexels", license: "pexels" };
@@ -119,11 +119,11 @@ async function pixabay(q) {
 }
 async function getClip(q) { return (await pexels(q)) || (await pixabay(q)); }
 
-// --- EFECTOS ASMR curados (Freesound, solo CC0 = uso comercial libre, sin atribución) ---
-// Garantiza los "sonidos de ASMR que se ven en redes" sin depender de que el clip de stock
-// traiga audio. Mapea el término del clip al sonido correcto. Inactivo si no hay FREESOUND_API_KEY.
+// --- EFECTOS ASMR curados (Freesound, only CC0 = uso comercial libre, without atribución) ---
+// Garantiza the "sounds of ASMR that is ven in redes" without depender of that the clip of stock
+// traiga audio. Mapea the término of the clip to the sound correct. Inactivo if not hay FREESOUND_API_KEY.
 const FREESOUND = process.env.FREESOUND_API_KEY || "";
-// Mapa trigger->sonido: el del nicho (sources.seed.json) manda; estos son respaldo general.
+// Mapa trigger->sound: the of the niche (sources.seed.JSON) sends; estos are respaldo general.
 const SFX_MAP = {
   "forest waterfall": "waterfall", "ocean waves sunset": "ocean waves", "mountain aerial": "wind mountain",
   "rain forest": "rain", "river flowing": "river stream", "snowfall calm": "soft wind", "clouds timelapse": "soft wind",
@@ -133,13 +133,13 @@ async function fetchSfx(q, dest) {
   if (!FREESOUND) return null;
   try {
     const term = SFX_MAP[q] || (q + " asmr");
-    // CC0 (sin atribución) + duración usable + ordenado por MÁS DESCARGADOS (calidad validada
-    // por la comunidad) para traer los mejores sonidos, no cualquiera.
+    // CC0 (without atribución) + duration usable + ordenado by MORE DESCARGADOS (quality validada
+    // by the comunidad) for traer the best sounds, not cualquiera.
     const params = new URLSearchParams({ query: term, filter: 'license:"Creative Commons 0" duration:[2 TO 60]', sort: "downloads_desc", fields: "id,name,previews,username,avg_rating,num_downloads", page_size: "15", token: FREESOUND });
     const r = await fetch(`https://freesound.org/apiv2/search/text/?${params}`, { signal: AbortSignal.timeout(12000) });
     if (!r.ok) return null;
     const j = await r.json();
-    // Preferimos bien valorados; si no hay rating, el más descargado igual sirve.
+    // Preferimos bien valorados; if not hay rating, the more descargado igual sirve.
     const cands = (j.results || []).filter((x) => x.previews && x.previews["preview-hq-mp3"]);
     const hit = cands.find((x) => (x.avg_rating || 0) >= 3.5) || cands[0];
     if (!hit) return null;
@@ -150,15 +150,15 @@ async function fetchSfx(q, dest) {
   } catch { return null; }
 }
 
-// 🎧 MEZCLA ASMR PROFESIONAL — NO reusa clips ajenos ni amontona sonidos. Elige UNA PALETA
-// curada (sonidos que combinan para relajar) y la mezcla como un profesional: una CAMA de
-// fondo continua y dominante + 1-2 ACENTOS suaves encima, con niveles controlados. Todo
-// Freesound CC0. Devuelve la pista o null (para caer al audio del clip).
+// 🎧 MEZCLA ASMR PROFESIONAL — NOT reusa clips ajenos nor amontona sounds. Elige A PALETA
+// curada (sounds that combinan for relajar) and the mezcla as a profesional: a CAMA of
+// background continua and dominante + 1-2 ACENTOS suaves encima, with niveles controlados. Everything
+// Freesound CC0. Devuelve the track or null (for caer to the audio of the clip).
 async function buildAsmrRelaxMix(totalDur) {
   const palettes = nicheCfg.palettes || [];
   if (!palettes.length) return null;
-  // 1) BIBLIOTECA CURADA (asmr_lib/, bajada de R2). Preferimos la paleta MÁS RICA (cama + más
-  // acentos) para que el ASMR suene lleno, no una paleta pobre (1 solo sonido).
+  // 1) LIBRARY CURADA (asmr_lib/, bajada of R2). Preferimos the paleta MORE RICA (cama + more
+  // acentos) for that the ASMR suene lleno, not a paleta pobre (1 only sound).
   const lib = readJSON("asmr_lib/manifest.json", null);
   const libN = lib && lib[niche];
   let pal, libEntry;
@@ -177,7 +177,7 @@ async function buildAsmrRelaxMix(totalDur) {
     (libEntry.credits || []).forEach((c) => manifest.clips.push({ clip_id: `lib_${c.id}`, source: "freesound", license: "cc0", url: c.url, query: pal.name }));
     console.log(`  🎧 Biblioteca curada -> paleta "${pal.name}".`);
   } else if (FREESOUND) {
-    // 2) En vivo desde Freesound (si no hay biblioteca).
+    // 2) In vivo since Freesound (if not hay library).
     const bf = `${work}/pal_bed.mp3`; const bedMeta = await fetchSfx(pal.bed, bf);
     if (!bedMeta) return null;
     bedFile = bf; manifest.clips.push({ clip_id: "sfx_bed", source: "freesound", license: "cc0", url: `https://freesound.org/s/${bedMeta.id}/`, query: pal.bed });
@@ -189,8 +189,8 @@ async function buildAsmrRelaxMix(totalDur) {
   } else return null;
   if (!bedFile) return null;
   const out = `${work}/relax_mix.m4a`;
-  // En ASMR los TRIGGERS mandan: acentos (corte/tap/agua) PROTAGONISTAS y nítidos; la cama solo
-  // pega de fondo, suave. Hasta 3 acentos. dynaudnorm realza; el loudnorm final sube todo al nivel.
+  // In ASMR the TRIGGERS mandan: acentos (cut/tap/agua) PROTAGONISTAS and nítidos; the cama only
+  // pega of background, suave. Until 3 acentos. dynaudnorm realza; the loudnorm final uploads everything to the nivel.
   const accVol = [0.9, 0.65, 0.5];
   const useAcc = accents.slice(0, 3);
   const ins = [`-stream_loop -1 -i "${bedFile}"`];
@@ -202,9 +202,9 @@ async function buildAsmrRelaxMix(totalDur) {
   return out;
 }
 
-// 🎬 SONIDO DE NICHOS NARRADOS (narrativas/ciencia) — identidad propia igual que el ASMR:
-// una CAMA atmosférica MUY baja bajo la narración (tensión/ambiente) + STINGERS de énfasis
-// (impacto/whoosh/ding) en algunos beats. Todo CC0 desde la biblioteca. Devuelve pista o null.
+// 🎬 SOUND OF NICHES NARRADOS (narrativas/ciencia) — identidad propia igual that the ASMR:
+// a CAMA atmosférica VERY downloads bajo the narration (tensión/ambiente) + STINGERS of énfasis
+// (impacto/whoosh/ding) in algunos beats. Everything CC0 since the library. Devuelve track or null.
 async function buildNarrationSound(totalDur, durs) {
   const lib = readJSON("asmr_lib/manifest.json", null);
   const snd = lib && lib[niche] && lib[niche]._sound;
@@ -213,11 +213,11 @@ async function buildNarrationSound(totalDur, durs) {
   const stg = (snd.stingers || []).filter((f) => fs.existsSync(f));
   if (!bed && !stg.length) return null;
   const out = `${work}/narr_sound.m4a`;
-  // Base silenciosa del largo del video (para que amix dure todo el video).
+  // Base silenciosa of the largo of the video (for that amix dure everything the video).
   const ins = [`-f lavfi -t ${totalDur} -i anullsrc=r=44100:cl=stereo`];
   let fc = ""; const mix = ["[0:a]"]; let idx = 1;
   if (bed) { ins.push(`-stream_loop -1 -i "${bed}"`); fc += `[${idx}:a]dynaudnorm=f=250:g=4,volume=0.16[bed];`; mix.push("[bed]"); idx++; }
-  // Stingers en el primer beat y ~cada 3 beats (reveal), hasta 16.
+  // Stingers in the primer beat and ~cada 3 beats (reveal), until 16.
   if (stg.length && durs.length) {
     let acc = 0; const times = [];
     for (let i = 0; i < durs.length; i++) { if (i === 0 || i % 3 === 0) times.push(acc); acc += durs[i] - TD; }
@@ -231,11 +231,11 @@ async function buildNarrationSound(totalDur, durs) {
 }
 
 // Subtitulo quemado (caja legible abajo).
-// Parte el texto en lineas de `per` caracteres, hasta `maxLineas` (3). Con 2 se cortaban
-// frases a media palabra en TODOS los verticales: 22 caracteres x 2 lineas = 44, y los
-// hechos pasan de ahi. Visto en el canal el 2026-10-03: "Puppies have soft paws that
-// secrete sweat to" (44 exactos) y "The crisp sound of cured soap bars being" (40), las
-// dos cortadas. Si aun asi no cabe se avisa por consola, en vez de tirar el final en silencio.
+// Part the texto in lines of `per` caracteres, until `maxLineas` (3). With 2 is cortaban
+// frases to media palabra in ALL the verticales: 22 caracteres x 2 lines = 44, and the
+// hechos pasan of there. Visto in the channel the 2026-10-03: "Puppies have soft paws that
+// secrete sweat to" (44 exactos) and "The crisp sound of cured soap bars being" (40), the
+// dos cortadas. If still asi not cabe is avisa by consola, in vez of tirar the final in silencio.
 function wrap(t, per, maxLineas = 3) {
   const w = (t || "").split(/\s+/).filter(Boolean);
   const L = [];
@@ -267,8 +267,8 @@ async function makeClip(i) {
   await dl(got.url, raw);
   const vf = `${COVER},${NGRADE}${subFilter(i, beats[i].text || beats[i].subtitle)}`;
   if (profile.keepAudio) {
-    // Nichos de SONIDO (ASMR/relax): conservamos el audio original del clip. Si el clip no
-    // trae audio, le ponemos silencio para que todos los clips tengan pista (join uniforme).
+    // Niches of SOUND (ASMR/relax): conservamos the audio original of the clip. If the clip not
+    // trae audio, le ponemos silencio for that all the clips tengan track (join uniforme).
     if (hasAudio(raw)) {
       ff(`ffmpeg -y -stream_loop -1 -i "${raw}" -t ${dur} -vf "${vf}" -r ${FPS} -c:v libx264 -preset veryfast -pix_fmt yuv420p -c:a aac -ar 44100 -ac 2 "${out}"`);
     } else {
@@ -307,16 +307,16 @@ if (parts.length === 1) {
   execSync(`ffmpeg -y ${inputs} -filter_complex "${filter}" -map "${acc}" -r ${FPS} -c:v libx264 -preset veryfast -pix_fmt yuv420p "${silent}"`, { stdio: "inherit" });
 }
 
-// Ambiente = audio ORIGINAL de los clips (solo nichos de sonido: ASMR/relax). Lo unimos
-// con acrossfade (misma duración TD que el xfade de video) para que quede en sync.
-// Best-effort: si algo falla, seguimos con narración+música y no rompemos la producción.
+// Ambiente = audio ORIGINAL of the clips (only niches of sound: ASMR/relax). Lo unimos
+// with acrossfade (same duration TD that the xfade of video) for that quede in sync.
+// Best-effort: if something fails, seguimos with narration+music and not rompemos the producción.
 let ambient = null;
 if (profile.keepAudio) {
   const totalDur = Math.max(4, durs.reduce((a, b) => a + b, 0) - Math.max(0, durs.length - 1) * TD);
-  // 1) LO PRINCIPAL: mezcla ASMR profesional por paleta (biblioteca curada o Freesound en vivo).
+  // 1) LO PRINCIPAL: mezcla ASMR profesional by paleta (library curada or Freesound in vivo).
   try { ambient = await buildAsmrRelaxMix(totalDur); }
   catch (e) { console.log("  (aviso) mezcla ASMR falló: " + e.message); ambient = null; }
-  // 2) Respaldo (sin key o si falla): el audio ORIGINAL de los clips, nivelado.
+  // 2) Respaldo (without key or if fails): the audio ORIGINAL of the clips, nivelado.
   if (!ambient) {
     try {
       ambient = `${work}/amb.m4a`;
@@ -345,8 +345,8 @@ if (profile.keepAudio) {
   catch (e) { console.log("  (aviso) sonido de narrativa falló: " + e.message); ambient = null; }
 }
 
-// Mezcla: voz (si hay) + música (si hay) + ambiente (si el nicho lo pide). normalize=0
-// respeta los volúmenes por nicho (en ASMR el ambiente/sonido manda; en ASMR PURO no hay voz).
+// Mezcla: voice (if hay) + music (if hay) + ambiente (if the niche lo pide). normalize=0
+// respeta the volúmenes by niche (in ASMR the ambiente/sound sends; in ASMR PURO not hay voice).
 const ins = [`-i "${silent}"`]; const mix = []; let fc = ""; let idx = 1;
 if (hasVoice) { ins.push(`-i "${voicePath}"`); fc += `[${idx}:a]volume=${profile.voice}[vo];`; mix.push("[vo]"); idx++; }
 if (fs.existsSync("music.mp3")) { ins.push(`-stream_loop -1 -i music.mp3`); fc += `[${idx}:a]volume=${profile.music}[mu];`; mix.push("[mu]"); idx++; }

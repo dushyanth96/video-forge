@@ -1,9 +1,9 @@
-// niche_rank.mjs — Ranking de nichos ROBUSTO (auditoría BR-07/BR-09). PURO.
-// Antes: MEDIA de vistas/día acumuladas de TODOS los videos (un viral viejo arrastraba el nicho) y nichos
-// adivinados por palabras del título. Ahora: MEDIANA de vistas/día de una COHORTE comparable (videos
-// públicos de 5 a 30 días), mínimo de muestra por nicho, y los nichos inferidos quedan fuera del ranking.
-// Además: la regla de ESCALADO de volumen solo se habilita si la cohorte reciente no rinde peor que la
-// anterior medida a la MISMA edad (vistas al día 7), nunca por vistas acumuladas de edades distintas.
+// niche_rank.mjs — Ranking of niches ROBUSTO (auditoría BR-07/BR-09). PURO.
+// Before: MEDIA of vistas/day acumuladas of ALL the videos (a viral viejo arrastraba the niche) and niches
+// adivinados by palabras of the title. Now: MEDIANA of vistas/day of a COHORTE comparable (videos
+// públicos of 5 to 30 days), mínimo of muestra by niche, and the niches inferidos quedan fuera of the ranking.
+// Además: the regla of ESCALADO of volumen only is habilita if the cohorte reciente not rinde worse that the
+// anterior medida to the SAME edad (vistas to the day 7), never by vistas acumuladas of edades distintas.
 
 const DAY = 86400000;
 
@@ -19,7 +19,7 @@ const ageDays = (v, nowMs) => {
   return Number.isFinite(t) ? (nowMs - t) / DAY : null;
 };
 
-// Videos elegibles para medir un nicho: públicos, con nicho REAL (no inferido) y edad dentro de la ventana.
+// Videos elegibles for medir a niche: públicos, with niche REAL (not inferido) and edad dentro of the ventana.
 export function cohort(list, opts = {}) {
   const nowMs = opts.nowMs != null ? opts.nowMs : Date.now();
   const minAge = opts.minAge != null ? opts.minAge : 5;
@@ -37,7 +37,7 @@ export function cohort(list, opts = {}) {
   return { videos: out, excluded_inferred: inferred };
 }
 
-// Ranking por mediana de la cohorte. sufficient = hay muestra para decidir (si no, solo exploración).
+// Ranking by mediana of the cohorte. sufficient = hay muestra for decidir (if not, only exploración).
 export function rankNiches(list, opts = {}) {
   const minN = opts.minN != null ? opts.minN : 5;
   const { videos, excluded_inferred } = cohort(list, opts);
@@ -60,8 +60,8 @@ export function rankNiches(list, opts = {}) {
   };
 }
 
-// Regla de escalado: compara vistas al día 7 de la cohorte reciente (publicada hace 7-14 días) vs la
-// anterior (14-21 días). Sin muestra suficiente -> NO escala ("sin_dato"), nunca asume.
+// Regla of escalado: compara vistas to the day 7 of the cohorte reciente (publicada hace 7-14 days) vs the
+// anterior (14-21 days). Without muestra suficiente -> NOT escala ("without_dato"), never asume.
 // viewsAtAge: { video_id: { d7: views, published_at } }
 export function scaleGate(viewsAtAge, opts = {}) {
   const nowMs = opts.nowMs != null ? opts.nowMs : Date.now();

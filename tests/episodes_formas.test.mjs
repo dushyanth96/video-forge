@@ -1,10 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { normalizarInventario, aplanar } from "../pipeline/lib/inventario.mjs";
 
-// Antes este test lanzaba `episodes.mjs` como proceso para probar la normalizacion. Fallaba
-// 1 de cada ~9 corridas bajo la suite completa (7 procesos a la vez en Windows), y un test
-// que falla al azar es peor que uno que falla siempre: rompe el CI sin decir nada util.
-// La logica se extrajo a lib/inventario.mjs y aqui se prueba directa. Sin procesos, sin flake.
+// Before este test lanzaba `episodes.mjs` as proceso for probar the normalizacion. Fallaba
+// 1 of cada ~9 corridas bajo the suite completa (7 procesos to the vez in Windows), and a test
+// that fails to the azar is worse that uno that fails always: rompe the CI without decir nothing util.
+// The logica is extrajo to lib/inventario.mjs and here is test directa. Without procesos, without flake.
 
 describe("normalizarInventario: las tres formas de inventario", () => {
   it("cache del bot: { longs, shorts }", () => {
@@ -18,7 +18,7 @@ describe("normalizarInventario: las tres formas de inventario", () => {
   });
 
   it("Data Lens: { published } con los stats ANIDADOS — la forma que no entendia", () => {
-    // Forma real de channel/state.json. Era la que devolvia 0 episodios.
+    // Way real of channel/state.JSON. Era the that devolvia 0 episodios.
     const v = normalizarInventario({
       published: [
         { video_id: "c", title: "C", stats: { views: 406, likes: 9, comments: 1 } },
@@ -26,7 +26,7 @@ describe("normalizarInventario: las tres formas de inventario", () => {
       ],
     });
     expect(v).toHaveLength(2);
-    // Lo importante: las vistas salen de stats.views en vez de quedarse en 0.
+    // Lo important: the vistas salen of stats.views in vez of quedarse in 0.
     expect(v.map((x) => x.views)).toEqual([406, 321]);
     expect(v[0].likes).toBe(9);
     expect(v[0].comments).toBe(1);

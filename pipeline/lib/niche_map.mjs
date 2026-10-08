@@ -1,14 +1,14 @@
-// niche_map.mjs — lee el mapa video_id -> categoria del canal auto (Oddly), que ahora
-// tambien guarda la VARIANTE de formato con la que se produjo cada video.
+// niche_map.mjs — lee the mapa video_id -> categoria of the channel auto (Oddly), that now
+// tambien stores the VARIANTE of formato with the that is produjo cada video.
 //
-// Por que existe: el mapa era `{ "abc123": "animales_tiernos" }`, un string suelto. Con eso
-// se puede rankear por categoria, pero NO se puede medir una pregunta de formato: "un hecho
-// concreto rinde mas que una lista de 14?". El A/B por cohortes (lib/ab_test.mjs) agrupa por
-// el valor de un campo del video, asi que la variante tiene que viajar con cada video.
+// By that existe: the mapa era `{ "abc123": "animales_tiernos" }`, a string suelto. With eso
+// is can rankear by categoria, but NOT is can medir a pregunta of formato: "a hecho
+// concreto rinde more that a ready of 14?". The to/B by cohortes (lib/ab_test.mjs) agrupa by
+// the valor of a campo of the video, asi that the variante tiene that viajar with cada video.
 //
-// Compatibilidad: los ~518 videos ya publicados estan guardados como string. Esos siguen
-// leyendose igual y quedan con variant=null (no entran en el A/B, que es lo correcto: no
-// sabemos con que formato se hicieron). Los nuevos se guardan como { n, v }.
+// Compatibilidad: the ~518 videos already publicados are guardados as string. Esos siguen
+// leyendose igual and quedan with variant=null (not entran in the to/B, that is lo correct: not
+// sabemos with that formato is hicieron). The new is guardan as { n, v }.
 
 /** Normaliza una entrada del mapa, venga en formato viejo (string) o nuevo ({n, v}). */
 export function leerEntrada(entrada) {
@@ -28,9 +28,9 @@ export function nuevaEntrada(niche, variant) {
 }
 
 /**
- * Pega `niche` y `variant` a cada video del inventario, leyendo el mapa.
- * No pisa lo que el video ya traiga: el mapa es la fuente, pero si el inventario
- * ya resolvio el dato, se respeta.
+ * Pega `niche` and `variant` to cada video of the inventario, leyendo the mapa.
+ * Not pisa lo that the video already traiga: the mapa is the fuente, but if the inventario
+ * already resolvio the dato, is respeta.
  */
 export function anotarVideos(videos, mapa) {
   const m = mapa && typeof mapa === "object" ? mapa : {};

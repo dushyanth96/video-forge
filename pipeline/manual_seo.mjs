@@ -1,13 +1,13 @@
 // manual_seo.mjs — SEO de un clip manual con IA (Gemini multimodal).
-// Gemini ESCUCHA el audio del clip + la pista/caption y escribe title.txt / description.txt.
+// Gemini ESCUCHA the audio of the clip + the track/caption and writes title.txt / description.txt.
 // Uso: node pipeline/manual_seo.mjs <audio.mp3|""> "<caption/pista opcional>"
-// Si no hay audio (o falla), cae al caption. Sin dependencias pesadas (no whisper).
+// If not hay audio (or fails), cae to the caption. Without dependencias pesadas (not whisper).
 import fs from "node:fs";
 import { TEXT_MODELS } from "./_models.mjs";
 
 const [audioPath, caption = ""] = process.argv.slice(2);
 const KEYS = [process.env.GEMINI_API_KEY, process.env.GEMINI_API_KEY2, process.env.GEMINI_API_KEY3].filter(Boolean);
-// Solo mandamos el audio si existe y es chico (limite de request inline ~20MB).
+// Only mandamos the audio if existe and is chico (limite of request inline ~20MB).
 const hasAudio = !!(audioPath && fs.existsSync(audioPath) && fs.statSync(audioPath).size > 2000 && fs.statSync(audioPath).size < 15 * 1024 * 1024);
 
 function escribir(title, desc) {

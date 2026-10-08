@@ -1,6 +1,6 @@
-// build_composition.mjs — genera la composicion HyperFrames del video (nivel pro):
+// build_composition.mjs — generates the composicion HyperFrames of the video (nivel pro):
 // fondo cinematografico, numeros hero gigantes, barras animadas, comparaciones,
-// subtitulos con diseno, y un ticker sutil. Todo sincronizado con timing.json.
+// subtitles with diseno, and a ticker sutil. Everything sincronizado with timing.JSON.
 //
 // Uso: node pipeline/build_composition.mjs <timing.json> <out.html> [audio] [maxSeconds]
 import fs from "node:fs";
@@ -15,8 +15,8 @@ const RATE = 1902;
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 const f2 = (n) => Number(n).toFixed(2);
 
-// ---- Datos animados AUTOMATICOS: por cada beat, si menciona una cifra/estadistica fuerte,
-// la mostramos GIGANTE y animada encima del b-roll. Funciona para CUALQUIER tema (no hardcodeado).
+// ---- Datos animados AUTOMATICOS: by cada beat, if menciona a cifra/estadistica fuerte,
+// the mostramos GIGANTE and animada encima of the b-roll. Funciona for CUALQUIER topic (not hardcodeado).
 const WORDNUM = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70, eighty: 80, ninety: 90, hundred: 100 };
 const COUNT = "views|users|subscribers|people|customers|stores|employees|downloads|followers";
 const magAbbr = { trillion: "T", billion: "B", million: "M", thousand: "K" };
@@ -36,7 +36,7 @@ function extractFigure(text) {
   // 3) $X magnitud -> "$19B"
   m = t.match(/\$\s?(\d+(?:\.\d+)?)\s?(trillion|billion|million|thousand)\b/i);
   if (m) return { big: "$" + m[1] + magAbbr[m[2].toLowerCase()], sub: "" };
-  // 4) digito + magnitud sin unidad -> dinero (canal de dinero) "$XB"
+  // 4) digito + magnitud without unidad -> money (channel of money) "$XB"
   m = t.match(/(\d+(?:\.\d+)?)\s?(trillion|billion|million|thousand)\b/i);
   if (m) return { big: "$" + m[1] + magAbbr[m[2].toLowerCase()], sub: "" };
   // 5) porcentaje
@@ -62,7 +62,7 @@ beats.forEach((b, i) => {
   tw.push(`tl.to("#cap${i}",{opacity:0,y:-10,duration:0.24,ease:"power1.in"},${f2(end - 0.2)});`);
 });
 
-// ---- Datos animados (automaticos por beat) ----
+// ---- Datos animados (automaticos by beat) ----
 let sid = 0, lastHeroEnd = -99;
 beats.forEach((b) => {
   const tipo = (b.tipo || "").toLowerCase();
@@ -95,11 +95,11 @@ broll.forEach((c, i) => {
   if (isVideo) {
     brollEls.push(`<video class="broll clip" id="bv${i}" data-start="${f2(c.start)}" data-duration="${f2(dur)}" data-track-index="0" src="${c.file}" muted playsinline></video>`);
     brollTw.push(`tl.fromTo("#bv${i}",{opacity:0},{opacity:1,duration:0.6,ease:"power1.out"},${f2(c.start)});`);
-    // Zoom lento alternado (in/out) por clip -> movimiento de director, no plano estatico.
+    // Zoom slow alternado (in/out) by clip -> movimiento of director, not shot estatico.
     const z0 = i % 2 ? 1.0 : 1.14, z1 = i % 2 ? 1.14 : 1.0;
     brollTw.push(`tl.fromTo("#bv${i}",{scale:${z0}},{scale:${z1},duration:${f2(dur + 0.6)},ease:"none"},${f2(c.start)});`);
   } else {
-    // imagen IA con ken burns (zoom + paneo), visibilidad por opacidad en su ventana
+    // image IA with ken burns (zoom + paneo), visibilidad by opacidad in its ventana
     const dx = i % 2 ? -50 : 50;
     brollEls.push(`<img class="broll" id="bv${i}" src="${c.file}" />`);
     brollTw.push(`tl.set("#bv${i}",{opacity:0},0);`);
@@ -186,7 +186,7 @@ const html = `<!doctype html>
     const tl = gsap.timeline({ paused: true });
     const T = ${f2(total)};
 
-    // fondo: blobs a la deriva (seek-safe, sobre toda la duracion)
+    // background: blobs to the deriva (seek-safe, about all the duration)
     tl.to("#b1",{x:180,y:120,duration:T,ease:"sine.inOut"},0);
     tl.to("#b2",{x:-160,y:-90,duration:T,ease:"sine.inOut"},0);
     tl.to("#b3",{x:120,y:-140,duration:T,ease:"sine.inOut"},0);

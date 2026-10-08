@@ -1,8 +1,8 @@
-// radar_groom.mjs — CAPA 2 del Cerebro del radar: en vez de ACUMULAR issues, MANTIENE el backlog
-// limpio y MEJORÁNDOSE. Toma los issues `radar` ABIERTOS de un repo, detecta los que están
-// RELACIONADOS (mismo objetivo/área) y los CONSOLIDA en UNO solo, más completo: actualiza el que se
-// queda (el más antiguo) con la versión combinada y cierra los redundantes con un enlace. Usa LLM gratis.
-// No toca issues que no sean `radar`. Conservador: solo fusiona lo claramente relacionado.
+// Radar_groom.mjs — CAPA 2 of the Brain of the Radar: in vez of ACUMULAR issues, MANTIENE the backlog
+// limpio and MEJORÁNDOSE. Toma the issues `Radar` ABIERTOS of a repo, detecta the that are
+// RELACIONADOS (same objetivo/área) and the CONSOLIDA in UNO only, more completo: actualiza the that is
+// queda (the more antiguo) with the version combinada and cierra the redundantes with a enlace. Uses LLM free.
+// Not toca issues that not sean `Radar`. Conservador: only fusiona lo claramente relacionado.
 //
 // Uso: node pipeline/radar_groom.mjs            (TARGET=owner/repo, GH_TOKEN, keys de llm.mjs)
 import { genText } from "./llm.mjs";
@@ -12,7 +12,7 @@ const TOKEN = process.env.GH_TOKEN;
 if (!REPO || !TOKEN) { console.error("Falta TARGET o GH_TOKEN"); process.exit(2); }
 const api = (path, opts = {}) => fetch(`https://api.github.com${path}`, { ...opts, headers: { Authorization: `Bearer ${TOKEN}`, Accept: "application/vnd.github+json", "content-type": "application/json", "user-agent": "radar-groom", ...(opts.headers || {}) } });
 
-// 1) Traer los issues `radar` ABIERTOS (sin PRs).
+// 1) Traer the issues `Radar` ABIERTOS (without PRs).
 const issues = [];
 for (let page = 1; page <= 5; page++) {
   const r = await api(`/repos/${REPO}/issues?labels=radar&state=open&per_page=100&page=${page}`);
@@ -24,7 +24,7 @@ for (let page = 1; page <= 5; page++) {
 console.log(`${REPO}: ${issues.length} issues radar abiertos`);
 if (issues.length < 2) { console.log("nada que consolidar"); process.exit(0); }
 
-// 2) LLM: agrupar los RELACIONADOS y consolidar. Conservador.
+// 2) LLM: agrupar the RELACIONADOS and consolidar. Conservador.
 const PROMPT = `Eres el curador del backlog de un radar de mejoras de un repo. Te doy los issues ABIERTOS (etiqueta "radar"). Encuentra grupos de issues que estén CLARAMENTE RELACIONADOS (mismo objetivo, misma área, o uno es sub-parte/duplicado del otro) y que convenga UNIR en un solo issue mejor. Sé CONSERVADOR: si no están claramente relacionados, NO los agrupes. No inventes issues que no estén en la lista.
 
 Para cada grupo, produce un issue CONSOLIDADO que combine y mejore el contenido de todos (más completo y accionable, sin perder nada útil). Conserva el estilo del radar (Descripción, Referencias/fuentes si las hay, ubicación en el repo, y un "Prompt para implementar" claro).
@@ -42,7 +42,7 @@ if (raw) { try { plan = JSON.parse(raw); } catch (e) { console.error("JSON invá
 const groups = (plan.groups || []).filter((g) => g && g.keep && Array.isArray(g.close) && g.close.length && g.title && g.body);
 if (!groups.length) { console.log("El curador no encontró grupos para consolidar."); process.exit(0); }
 
-// 3) Aplicar: actualizar el "keep" con la versión consolidada y cerrar los redundantes con enlace.
+// 3) Aplicar: actualizar the "keep" with the version consolidada and cerrar the redundantes with enlace.
 const valid = new Set(issues.map((i) => i.number));
 let done = 0;
 for (const g of groups) {

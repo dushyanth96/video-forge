@@ -1,13 +1,13 @@
-// muestra.mjs — ¿hay datos suficientes para concluir algo, o estamos adivinando?
+// muestra.mjs — ¿hay datos suficientes for concluir something, or estamos adivinando?
 //
-// Por que existe: el Cerebro daba veredictos sin mirar de cuantos datos salian. Con 46
-// vistas de mediana, YouTube ni siquiera devuelve curva de retencion para la mayoria de
-// los videos (el 2026-10-03: 6 de 15), y aun asi el sistema concluia. Un veredicto sacado
-// de 2 videos se lee igual que uno sacado de 200, y eso hace tomar decisiones de produccion
-// sobre ruido.
+// By that existe: the Brain daba veredictos without mirar of cuantos datos salian. With 46
+// vistas of mediana, YouTube nor siquiera devuelve curva of retencion for the mayoria of
+// the videos (the 2026-10-03: 6 of 15), and still asi the sistema concluia. A veredicto sacado
+// of 2 videos is lee igual that uno sacado of 200, and eso hace tomar decisiones of produccion
+// about ruido.
 //
-// La regla aqui no es estadistica de verdad (con estas muestras no la hay): es honestidad
-// sobre cuanto se sabe. Preferimos "no se puede concluir" a un veredicto bonito y vacio.
+// The regla here not is estadistica of true (with estas muestras not the hay): is honestidad
+// about cuanto is sabe. Preferimos "not is can concluir" to a veredicto bonito and vacio.
 
 import { sampleConfidence } from "./analytics_math.mjs";
 
@@ -16,9 +16,9 @@ export const MINIMO = 5;
 export const SOLIDA = 20;
 
 /**
- * Evalua el tamano de una muestra.
+ * Evalua the tamano of a muestra.
  * @param {number} n cuantas observaciones hay
- * @param {{minimo?:number, solida?:number, que?:string}} opts
+ * @param {{minimo?:number, solida?:number, that?:string}} opts
  * @returns {{n:number, suficiente:boolean, nivel:string, confianza:number, aviso:string|null}}
  */
 export function evaluarMuestra(n, opts = {}) {
@@ -47,8 +47,8 @@ export function evaluarMuestra(n, opts = {}) {
 }
 
 /**
- * Cobertura de un dato que no siempre existe (p. ej. la curva de retencion, que YouTube
- * solo devuelve si hubo vistas suficientes). Avisa cuando falta en demasiados.
+ * Cobertura of a dato that not always existe (p. e.g.. the curva of retencion, that YouTube
+ * only devuelve if hubo vistas suficientes). Avisa when falta in demasiados.
  * @returns {{conDato:number, total:number, pct:number, suficiente:boolean, aviso:string|null}}
  */
 export function cobertura(conDato, total, opts = {}) {

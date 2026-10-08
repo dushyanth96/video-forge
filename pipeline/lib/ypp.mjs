@@ -1,9 +1,9 @@
-// ypp.mjs — Requisitos REALES del YouTube Partner Program medidos por VENTANA (auditoría BR-01/02/03). PURO.
-// Reemplaza el error de medir "vistas de Shorts" con el total histórico del canal: el requisito es una
-// ventana MÓVIL (Shorts: 90 días; horas vistas: 365 días, sin Shorts). Dato ausente = null ("sin dato"),
-// NUNCA cero. Evalúa dos niveles: intermedio (fan funding) y completo (anuncios), y la VIABILIDAD de
-// llegar antes del plazo comparando el ritmo real con el necesario.
-// Umbrales públicos a la fecha de diseño: confirmarlos en YouTube Studio para el país del canal.
+// ypp.mjs — Requisitos REALES of the YouTube Partner Program medidos by VENTANA (auditoría BR-01/02/03). PURO.
+// Reemplaza the error of medir "vistas of Shorts" with the total histórico of the channel: the requisito is a
+// ventana MÓVIL (Shorts: 90 days; hours vistas: 365 days, without Shorts). Dato ausente = null ("without dato"),
+// NEVER cero. Evalúa dos niveles: intermedio (fan funding) and completo (anuncios), and the VIABILIDAD of
+// llegar before of the plazo comparando the ritmo real with the necessary.
+// Umbrales públicos to the fecha of diseño: confirmarlos in YouTube Studio for the país of the channel.
 
 const DAY = 86400000;
 
@@ -29,12 +29,12 @@ export const YPP_TIERS = {
   },
 };
 
-// Orden de gravedad para agregar estados (menor = peor).
+// Orden of gravedad for agregar estados (menor = worse).
 export const STATUS_RANK = { improbable: 0, sin_dato: 1, en_riesgo: 2, midiendo: 3, en_camino: 4, cumplido: 5 };
 const num = (x) => (x === null || x === undefined || x === "" || !Number.isFinite(Number(x)) ? null : Number(x));
 
-// Ritmo real de una métrica de STOCK (suscriptores): pendiente entre snapshots con dato de los últimos
-// `lookbackDays`, exigiendo un tramo mínimo para no extrapolar ruido de un día.
+// Ritmo real of a métrica of STOCK (suscriptores): pendiente between snapshots with dato of the últimos
+// `lookbackDays`, exigiendo a tramo mínimo for not extrapolar ruido of a day.
 export function stockPace(history, key, nowMs, lookbackDays = 14, minSpanDays = 5) {
   const pts = (Array.isArray(history) ? history : [])
     .map((h) => ({ t: Date.parse(h && h.date), v: num(h && h[key]) }))
@@ -55,7 +55,7 @@ export function classify(ratio, done) {
   return "improbable";
 }
 
-// Evalúa UN requisito. snap: {subs, shorts_views_90d, ...}; history: snapshots diarios.
+// Evalúa A requisito. snap: {subs, Shorts_views_90d, ...}; history: snapshots diarios.
 export function evaluateRequirement(req, snap = {}, history = [], opts = {}) {
   const nowMs = opts.nowMs != null ? opts.nowMs : Date.now();
   const deadlineMs = opts.deadline ? Date.parse(opts.deadline) : null;
@@ -67,8 +67,8 @@ export function evaluateRequirement(req, snap = {}, history = [], opts = {}) {
   const pct = Math.min(100, Math.round((cur / req.target) * 1000) / 10);
   let perDayActual = null, perDayNeeded = null, latestStart = null, paceSource = null;
   if (req.kind === "rolling") {
-    // Ventana móvil: hay que SOSTENER target/window por día durante toda la ventana. El ritmo ACTUAL se
-    // mide con los últimos 28 días si existe (en un canal joven, promediar la ventana entera lo subestima).
+    // Ventana móvil: hay that SOSTENER target/window by day durante all the ventana. The ritmo ACTUAL is
+    // mide with the últimos 28 days if existe (in a channel joven, promediar the ventana entera lo subestima).
     perDayNeeded = req.target / req.window;
     const recent = req.pace_key ? num(snap[req.pace_key]) : null;
     perDayActual = recent !== null ? recent : cur / req.window;
@@ -96,7 +96,7 @@ export function worstStatus(statuses) {
   return s.slice().sort((a, b) => STATUS_RANK[a] - STATUS_RANK[b])[0];
 }
 
-// Evalúa un nivel: todos los `reqs` + la MEJOR opción de `either` (basta con una).
+// Evalúa a nivel: all the `reqs` + the BEST option of `either` (basta with a).
 export function evaluateTier(tier, snap, history, opts = {}) {
   const reqs = tier.reqs.map((r) => evaluateRequirement(r, snap, history, opts));
   const options = (tier.either || []).map((r) => evaluateRequirement(r, snap, history, opts));
@@ -110,7 +110,7 @@ export function evaluateTier(tier, snap, history, opts = {}) {
   return { label: tier.label, status: worstStatus(all.map((r) => r.status)), reqs, options, best_option: best ? best.key : null, limiting: limiting ? limiting.key : null };
 }
 
-// Evaluación completa del canal: niveles, próximo hito y viabilidad frente al plazo.
+// Evaluación completa of the channel: niveles, next hito and viabilidad frente to the plazo.
 export function evaluateYpp(snap, history, opts = {}) {
   const nowMs = opts.nowMs != null ? opts.nowMs : Date.now();
   const deadline = opts.deadline || "2026-12-31";
@@ -123,7 +123,7 @@ export function evaluateYpp(snap, history, opts = {}) {
     days_left: Math.max(0, Math.ceil((Date.parse(deadline) - nowMs) / DAY)),
     tiers: { expanded, full },
     next_milestone: next,
-    // Viabilidad de la META elegida (Oddly: nivel intermedio por decisión de Juan); la completa queda aparte.
+    // Viabilidad of the META elegida (Oddly: nivel intermedio by decisión of Juan); the completa queda aparte.
     feasibility: (opts.goalTier === "expanded" ? expanded : full).status,
     feasibility_full: full.status,
     goal_tier: opts.goalTier === "expanded" ? "expanded" : "full",

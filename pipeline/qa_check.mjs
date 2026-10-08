@@ -1,6 +1,6 @@
-// qa_check.mjs — QA automático del video FINAL. Rechaza cortos, rotos, sin audio o de baja
-// calidad, para que el sistema los rehaga solo y NUNCA se acepte un video malo.
-// Uso: node pipeline/qa_check.mjs <video.mp4> <min_score> <out qa.json>
+// qa_check.mjs — QA automático of the video FINAL. Rechaza cortos, rotos, without audio or of downloads
+// quality, for that the sistema the rehaga only and NEVER is acepte a video malo.
+// Usage: node pipeline/qa_check.mjs <video.mp4> <min_score> <out qa.JSON>
 // Env: QA_MIN_DURATION (def 300s = 5min), QA_MIN_SCORE (def 7.0)
 import { execSync } from "node:child_process";
 import fs from "node:fs";
@@ -23,13 +23,13 @@ if (!vtype.includes("video")) { reasons.push("sin pista de video"); hard = true;
 if (!atype.includes("audio")) { reasons.push("sin audio"); hard = true; }
 if (dur > 0 && dur < MIN_DUR) { reasons.push(`muy corto (${Math.round(dur)}s < ${MIN_DUR}s)`); hard = true; }
 
-// La nota es INFORMATIVA, NO bloquea. (El auto-review de Gemini a veces falla y da 0; un review
-// fallido NO significa video malo. Y forzar una nota alta inalcanzable causaba loops de renders.)
-// Solo se marca como "baja" para avisarte, pero el video SE PRESENTA igual si esta completo.
+// The score is INFORMATIVA, NOT bloquea. (The auto-review of Gemini to veces fails and da 0; a review
+// fallido NOT significa video malo. and forzar a score alta inalcanzable causaba loops of renders.)
+// Only is marca as "downloads" for avisarte, but the video IS PRESENTA igual if esta completo.
 const scoreLow = minScore > 0 && minScore < MIN_SCORE;
 if (scoreLow) reasons.push(`nota ${minScore}/10 (por debajo de ${MIN_SCORE}, revísalo)`);
 
-// PASA si no hay fallo OBJETIVO (corto/roto/sin audio). La calidad subjetiva no bloquea.
+// PASA if not hay failure OBJETIVO (corto/roto/without audio). The quality subjetiva not bloquea.
 const passed = !hard;
 
 fs.writeFileSync(out, JSON.stringify({

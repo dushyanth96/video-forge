@@ -1,10 +1,10 @@
-// recipe_plan.mjs — planifica un REEL de cocina 9:16 a partir del texto de la receta.
-// Gemini actua como chef + editor: convierte la receta en un guion por PASOS
-// (narracion en español natural + subtitulo en pantalla + que mostrar). El resultado
-// alimenta al TTS (voz de la esposa) y al ensamblador del video.
+// recipe_plan.mjs — planifica a REEL of cocina 9:16 to partir of the texto of the recipe.
+// Gemini actua as chef + editor: convierte the recipe in a script by STEPS
+// (narration in español natural + subtitulo in pantalla + that mostrar). The result
+// alimenta to the TTS (voice of the esposa) and to the ensamblador of the video.
 //
 // Uso: node pipeline/recipe_plan.mjs <texto.txt> <numMedios> <plan.json> <voicemap.json>
-// Env: GEMINI_API_KEY (opcional; sin ella usa una heuristica), VOICE_REF (ruta al mp3 de la voz).
+// Env: GEMINI_API_KEY (optional; without ella uses a heuristica), VOICE_REF (ruta to the mp3 of the voice).
 import fs from "node:fs";
 import { TEXT_MODELS } from "./_models.mjs";
 
@@ -14,8 +14,8 @@ const VOICE_REF = process.env.VOICE_REF || "";
 const mediaCount = Math.max(0, parseInt(mediaCountArg || "0", 10) || 0);
 const recipe = fs.existsSync(textPath) ? fs.readFileSync(textPath, "utf8").trim() : "";
 
-// Cuantos pasos: cerca del numero de fotos/videos que mando (asi cada medio tiene su
-// momento), con un minimo para que la receta se entienda y un techo para no alargar.
+// Cuantos steps: cerca of the number of photos/videos that mando (asi cada medio tiene its
+// momento), with a minimo for that the recipe is entienda and a techo for not alargar.
 const nSteps = Math.min(10, Math.max(4, mediaCount || 5));
 
 async function geminiPlan() {
@@ -49,7 +49,7 @@ async function geminiPlan() {
   return null;
 }
 
-// Heuristica sin IA: parte la receta en lineas/frases y arma pasos simples.
+// Heuristica without IA: part the recipe in lines/frases and arma steps simples.
 function heuristicPlan() {
   const lines = recipe
     .split(/\n+|(?<=[.!?])\s+/)
@@ -66,7 +66,7 @@ function heuristicPlan() {
 }
 
 const plan = (await geminiPlan()) || heuristicPlan();
-// Limpieza defensiva de cada beat.
+// Limpieza defensiva of cada beat.
 plan.title = plan.title || "Receta casera";
 plan.beats = plan.beats.map((b) => ({
   narration: (b.narration || "").toString().trim() || "Seguimos con la preparacion.",
@@ -77,7 +77,7 @@ plan.beats = plan.beats.map((b) => ({
 
 fs.writeFileSync(planOut, JSON.stringify(plan, null, 2));
 
-// voicemap para el TTS dirigido (mismo formato que el pipeline de voz del canal).
+// voicemap for the TTS dirigido (same formato that the pipeline of voice of the channel).
 const voicemap = {
   lang: "es",
   voice_ref: VOICE_REF || undefined,

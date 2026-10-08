@@ -1,9 +1,9 @@
-// space_short_script.mjs — GUION de un SHORT 9:16 calmado de espacio ("space facts to fall asleep to").
-// Un dato del espacio que da asombro pero CONTADO SUAVE (para relajar, no para hypear), dividido en
-// beats con QUERY pensada para encontrar VIDEO real de la NASA (movimiento, no fotos fijas).
+// space_short_script.mjs — SCRIPT of a SHORT 9:16 calmado of espacio ("space facts to fall asleep to").
+// A dato of the espacio that da asombro but CONTADO SUAVE (for relajar, not for hypear), dividido in
+// beats with QUERY pensada for encontrar VIDEO real of the NASA (movimiento, not photos fijas).
 //
 // Uso: node pipeline/space_short_script.mjs <script.json> <narration.txt>
-// Env: GEMINI_API_KEY(,2). Lee space_short_used.json (temas ya usados, de R2).
+// Env: GEMINI_API_KEY(,2). Lee space_short_used.JSON (topics already usados, of R2).
 import fs from "node:fs";
 import { genText } from "./llm.mjs";  // Gemini -> Cloudflare Workers AI (fallback gratis, sin cuota)
 
@@ -31,7 +31,7 @@ Then split the narration into 5 visual BEATS. For EACH beat, a CONCRETE English 
 Return ONLY JSON:
 {"topic":"the subject","title":"<=80 char calm SEO title, e.g. 'Space Facts to Fall Asleep To 🌌'","hook":"the soft first line (the 2-second hook)","thumb_text":"2-4 word punchy thumbnail hook, uppercase-friendly (e.g. 'RINGS OF ICE', 'A DYING STAR', 'DIAMOND RAIN')","narration":"the full narration","beats":[{"text":"beat sentence","query":"NASA video search query"}],"hashtags":["#space","#relaxing","#Shorts","..."]}`;
 
-// FASE 2 — el cerebro ACTÚA (bandido): 70% explota lo que GANA (strategy.json), 30% explora algo nuevo.
+// PHASE 2 — the brain ACTÚA (bandido): 70% explota lo that GANA (strategy.JSON), 30% explora something new.
 let strat = null; try { strat = JSON.parse(fs.readFileSync("strategy.json", "utf8")); } catch {}
 const oddly = (strat && strat.per_channel && strat.per_channel.oddly) || {};
 const explore = Math.random() < 0.3;

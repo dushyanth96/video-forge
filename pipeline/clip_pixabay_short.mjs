@@ -1,10 +1,10 @@
-// clip_pixabay_short.mjs — CLIPEADOR desde Pixabay (API oficial, descarga DIRECTA de mp4, sin
-// yt-dlp ni bloqueo de bots). Licencia Pixabay Content License: libre, comercial, SIN atribución.
-// Busca por tema, la IA elige el mejor momento -> SHORT 9:16 con el AUDIO ORIGINAL del clip
-// (si lo trae; muchos son mudos -> música). Ideal para "gracioso / satisfying" descargable y legal.
+// clip_pixabay_short.mjs — CLIPEADOR since Pixabay (API oficial, descarga DIRECTA of mp4, without
+// yt-dlp nor bloqueo of bots). Licencia Pixabay Content License: libre, comercial, WITHOUT atribución.
+// Search by topic, the IA elige the best momento -> SHORT 9:16 with the AUDIO ORIGINAL of the clip
+// (if lo trae; many are mudos -> music). Ideal for "gracioso / satisfying" descargable and legal.
 //
 // Uso: node pipeline/clip_pixabay_short.mjs "<tema>" <categoria> <out.mp4>
-// Env: PIXABAY_API_KEY (gratis en pixabay.com/api/docs), GEMINI_API_KEY(,2). music.mp3 opcional.
+// Env: PIXABAY_API_KEY (free in pixabay.com/API/docs), GEMINI_API_KEY(,2). music.mp3 optional.
 import fs from "node:fs";
 import { execSync } from "node:child_process";
 import { sourceWH, smartCropVf, finishClip } from "./clip_frame.mjs";
@@ -18,13 +18,13 @@ const work = "clipwork"; fs.mkdirSync(work, { recursive: true });
 const sh = (c) => execSync(c, { stdio: ["ignore", "pipe", "pipe"] }).toString();
 if (!KEY) { console.error("Falta PIXABAY_API_KEY (gratis en pixabay.com/api/docs)."); process.exit(3); }
 
-// 1) Buscar en Pixabay (populares, seguro). Elegir un hit con duración usable.
+// 1) Search in Pixabay (populares, safe). Elegir a hit with duration usable.
 console.log(`Buscando en Pixabay: "${topic}"…`);
 const api = `https://pixabay.com/api/videos/?key=${KEY}&q=${encodeURIComponent(topic)}&per_page=40&safesearch=true&order=popular`;
 const j = await (await tf(api)).json();
 const hits = (j.hits || []).filter((h) => (h.duration || 0) >= 4 && (h.duration || 0) <= 300);
 if (!hits.length) { console.error("Pixabay: sin resultados usables para ese tema"); process.exit(1); }
-// Preferir el más popular con una variante mp4 <=1080 de ancho.
+// Preferir the more popular with a variante mp4 <=1080 of ancho.
 let src = null, mp4 = null;
 for (const h of hits) {
   const vs = h.videos || {};
@@ -45,7 +45,7 @@ fs.writeFileSync(film, Buffer.from(await r.arrayBuffer()));
 const dur = parseFloat(sh(`ffprobe -v error -show_entries format=duration -of csv=p=0 "${film}"`).trim()) || 0;
 if (dur < 4) { console.error("clip muy corto"); process.exit(1); }
 
-// 3) Miniaturas + IA elige el mejor momento (adaptativo a la duración).
+// 3) Thumbnails + IA elige the best momento (adaptativo to the duration).
 const a0 = dur * 0.05, a1 = Math.max(a0 + 1, dur * 0.92), N = Math.min(12, Math.max(3, Math.floor(dur / 3))), step = (a1 - a0) / N, thumbs = [];
 for (let i = 0; i < N; i++) { const t = Math.round(a0 + i * step), p = `${work}/th${i}.jpg`; try { execSync(`ffmpeg -y -ss ${t} -i "${film}" -frames:v 1 -vf "scale=320:-1" "${p}"`, { stdio: "ignore" }); if (fs.existsSync(p)) thumbs.push({ t, p }); } catch {} }
 async function pick() {
@@ -59,7 +59,7 @@ let mo = await pick(); if (!mo || !isFinite(+mo.start)) mo = { start: Math.round
 const clipLen = Math.min(CLIP, Math.max(4, dur - 0.5));
 const start = Math.max(0, Math.min(+mo.start, dur - clipLen));
 
-// 4) Corte PRECISO + 9:16 con sujeto centrado (smart crop), conservando el AUDIO ORIGINAL.
+// 4) Cut PRECISO + 9:16 with sujeto centrado (smart crop), conservando the AUDIO ORIGINAL.
 const { w: srcW, h: srcH } = sourceWH(film);
 const sx = isFinite(+mo.subject_x) ? +mo.subject_x : 0.5;
 const vf = smartCropVf(W, H, srcW, srcH, sx, "eq=contrast=1.06:saturation=1.06");
@@ -68,7 +68,7 @@ execSync(`ffmpeg -y -ss ${pre} -i "${film}" -ss ${fine} -t ${clipLen} -vf "${vf}
 const hadAudio = finishClip(raw, outPath);
 console.log("audio original: " + (hadAudio ? "sí" : "no (solo música)"));
 
-// 5) Paquete + manifiesto (licencia Pixabay: sin atribución obligatoria; añadimos crédito discreto).
+// 5) Paquete + manifiesto (licencia Pixabay: without atribución obligatoria; añadimos crédito discreto).
 fs.mkdirSync("publish", { recursive: true });
 const pkg = { title: (mo.title || vtitle).slice(0, 92) + " #Shorts", description: `#Shorts\n\nSource: Pixabay (Pixabay Content License). Edited/clipped.`, tags: ["shorts", niche, "funny"], language: "en" };
 fs.writeFileSync("publish/package.json", JSON.stringify(pkg, null, 2));

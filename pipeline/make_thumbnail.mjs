@@ -1,14 +1,14 @@
-// make_thumbnail.mjs — genera una MINIATURA 9:16 para el Short: toma un frame llamativo del propio
-// video (así la miniatura SIEMPRE coincide con el contenido) y le pone el gancho corto (thumb_text)
-// en grande, con contorno y un degradado oscuro abajo para que se lea sobre cualquier fondo. Gratis, sin API.
+// make_thumbnail.mjs — generates a THUMBNAIL 9:16 for the Short: toma a frame llamativo of the propio
+// video (así the thumbnail ALWAYS coincide with the contenido) and le pone the hook corto (thumb_text)
+// in grande, with contorno and a degradado oscuro abajo for that is lea about cualquier background. Free, without API.
 //
-// Uso: node pipeline/make_thumbnail.mjs <video.mp4> <script.json> <out.jpg>
+// Usage: node pipeline/make_thumbnail.mjs <video.mp4> <script.JSON> <out.jpg>
 import fs from "node:fs";
 import { execSync } from "node:child_process";
 
 const [video = "short.mp4", scriptPath = "script.json", out = "thumbnail.jpg"] = process.argv.slice(2);
 const script = (() => { try { return JSON.parse(fs.readFileSync(scriptPath, "utf8")); } catch { return {}; } })();
-// Preferir el FONDO sin subtítulos quemados (spacework/bg.mp4) para que la miniatura no tenga doble texto.
+// Preferir the BACKGROUND without subtitles quemados (spacework/bg.mp4) for that the thumbnail not tenga double texto.
 const src = fs.existsSync("spacework/bg.mp4") ? "spacework/bg.mp4" : video;
 const dur = parseFloat(execSync(`ffprobe -v error -show_entries format=duration -of csv=p=0 "${src}"`).toString().trim()) || 30;
 const at = (dur * 0.42).toFixed(1);  // un frame ~40% del video (buen momento de contenido)
@@ -16,7 +16,7 @@ const at = (dur * 0.42).toFixed(1);  // un frame ~40% del video (buen momento de
 const FONTS = ["/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"];
 const FONT = FONTS.find((f) => fs.existsSync(f)) || "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf";
 
-// Gancho corto (2-4 palabras). Si es largo, lo parte en 2 líneas para que quepa grande.
+// Hook corto (2-4 palabras). If is largo, lo part in 2 lines for that quepa grande.
 let text = String(script.thumb_text || script.topic || "DEEP SPACE").toUpperCase().replace(/[^A-Z0-9 &'-]/g, "").trim().slice(0, 24) || "DEEP SPACE";
 if (text.length > 12 && text.includes(" ")) {
   const w = text.split(/\s+/), mid = Math.ceil(w.length / 2);
@@ -35,7 +35,7 @@ const vf = [
 try {
   execSync(`ffmpeg -y -ss ${at} -i "${src}" -frames:v 1 -vf "${vf}" -q:v 2 "${out}"`, { stdio: "ignore" });
 } catch (e) {
-  // Respaldo sin text_align (ffmpeg viejo): centra por y fijo.
+  // Respaldo without text_align (ffmpeg viejo): centra by and fijo.
   const vf2 = vf.replace(":text_align=C", "").replace("y=h-tw-360", "y=1480");
   execSync(`ffmpeg -y -ss ${at} -i "${src}" -frames:v 1 -vf "${vf2}" -q:v 2 "${out}"`, { stdio: "ignore" });
 }

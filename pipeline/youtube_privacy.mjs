@@ -1,4 +1,4 @@
-// youtube_privacy.mjs — cambia la privacidad de un video (private/unlisted/public).
+// YouTube_privacy.mjs — cambia the privacidad of a video (private/unlisted/public).
 // Uso: node pipeline/youtube_privacy.mjs <VIDEO_ID> <public|private|unlisted>
 import fs from "node:fs";
 

@@ -1,20 +1,20 @@
-// monetization.mjs — Monetization Readiness + War Room (Brain OS Fase 6, corregido por la auditoría). PURO.
-// CORRECCIÓN BR-01/BR-02: las metas son SOLO requisitos reales del YouTube Partner Program y se miden por
-// VENTANA (vistas de Shorts 90 días; horas vistas sin Shorts 365 días). Se eliminaron "likes" y "vistas
-// 200k", que no son requisitos. Un dato ausente queda en null (sin dato), nunca en cero.
-// El detalle por niveles (intermedio/completo) y la viabilidad viven en lib/ypp.mjs.
+// monetization.mjs — Monetization Readiness + War Room (Brain OS Phase 6, corregido by the auditoría). PURO.
+// CORRECCIÓN BR-01/BR-02: the metas are ONLY requisitos reales of the YouTube Partner Program and is miden by
+// VENTANA (vistas of Shorts 90 days; hours vistas without Shorts 365 days). Is eliminaron "likes" and "vistas
+// 200k", that not are requisitos. A dato ausente queda in null (without dato), never in cero.
+// The detalle by niveles (intermedio/completo) and the viabilidad viven in lib/ypp.mjs.
 
 const DAY = 86400000;
 const dstr = (ms) => new Date(ms).toISOString().slice(0, 10);
 const num = (x) => (x === null || x === undefined || !Number.isFinite(Number(x)) ? null : Number(x));
 
-// Metas YPP por canal. kind: stock (se acumula) | rolling (ventana móvil de `window` días).
+// Metas YPP by channel. kind: stock (is acumula) | rolling (ventana móvil of `window` days).
 export const MONET_GOALS = {
   "data-lens": { path: "longform", deadline: "2026-12-31", goal_tier: "full", targets: [
     { key: "subs", label: "Suscriptores", target: 1000, kind: "stock" },
     { key: "watch_hours_365d", label: "Horas vistas sin Shorts (365 días)", target: 4000, kind: "rolling", window: 365, pace_key: "watch_hours_per_day_28d" },
   ] },
-  // Oddly: meta del año = nivel intermedio (decisión de Juan, 2026-09-14). La completa queda como largo plazo.
+  // Oddly: meta of the año = nivel intermedio (decisión of Juan, 2026-09-14). The completa queda as largo plazo.
   "auto2": { path: "shorts", deadline: "2026-12-31", goal_tier: "expanded", targets: [
     { key: "subs", label: "Suscriptores", target: 500, kind: "stock" },
     { key: "shorts_views_90d", label: "Vistas de Shorts (90 días)", target: 3000000, kind: "rolling", window: 90, pace_key: "shorts_views_per_day_28d" },
@@ -67,14 +67,14 @@ export function readiness(history, goal, nowMs = Date.now()) {
   return { path: goal.path, deadline: goal.deadline, days_left: daysLeft, status, reqs };
 }
 
-// Acción según el requisito que limita. Sin recetas de "más volumen": el volumen solo si no diluye.
+// Acción según the requisito that limita. Without recipes of "more volumen": the volumen only if not diluye.
 const ACTION_BY_KEY = {
   subs: "Sube la conversión a suscriptor: serie reconocible, CTA al final y temas que invitan a volver. Mide suscriptores por video.",
   watch_hours_365d: "Sube horas sin Shorts: retención del primer minuto y duración de los videos largos.",
   shorts_views_90d: "Sube la mediana de vistas por Short (gancho de 1 segundo, nicho con mejor mediana). Más volumen solo si la cohorte reciente no rinde peor.",
 };
 
-// warRoom(readiness): foco = requisito atrasado con dato; sin dato se declara como tal (no se inventa foco).
+// warRoom(readiness): foco = requisito atrasado with dato; without dato is declara as tal (not is inventa foco).
 export function warRoom(rd, opts = {}) {
   if (!rd) return null;
   const windowDays = opts.windowDays || 60;

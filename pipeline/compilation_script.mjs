@@ -1,6 +1,6 @@
-// compilation_script.mjs — guionista de COMPILACIONES para el canal auto (Oddly Loop).
-// La IA escribe una narración CALMADA con un dato/curiosidad por clip (formato satisfying/
-// ASMR + facts) = valor original TRANSFORMADOR (no solo re-subir clips). Salida = voicemap
+// compilation_script.mjs — guionista of COMPILACIONES for the channel auto (Oddly Loop).
+// The IA writes a narration CALMADA with a dato/curiosidad by clip (formato satisfying/
+// ASMR + facts) = valor original TRANSFORMADOR (not only re-upload clips). Output = voicemap
 // compatible con tts_kokoro.py y build_compilation.mjs: {title, beats:[{text,query,tipo,...}]}.
 //
 // Uso: node pipeline/compilation_script.mjs <niche> <out.json>
@@ -11,11 +11,11 @@ import { revisar } from "./lib/titulos.mjs";
 
 const [niche = "satisfying", out = "voicemap.json", variant = "narrado", kind = "video"] = process.argv.slice(2);
 
-// Titulos ya publicados en el canal (los baja el workflow desde R2). Oddly repetia titulos:
-// el 2026-10-03 habia 3 titulos exactos duplicados entre 45 Shorts. Es mucho menos que en
-// Data Lens (22 de 45), pero es gratis evitarlo. AQUI SOLO se vigila el duplicado, NO la
-// plantilla generica: en Oddly el listicle rinde mejor que el resto (mediana 53 vs 36) y
-// ademas es el brazo de control del experimento de formato.
+// Titles already publicados in the channel (the downloads the workflow since R2). Oddly repetia titles:
+// the 2026-10-03 habia 3 titles exactos duplicados between 45 Shorts. Is much less that in
+// Data Lens (22 of 45), but is free evitarlo. HERE ONLY is vigila the duplicado, NOT the
+// plantilla generica: in Oddly the listicle rinde best that the resto (mediana 53 vs 36) and
+// ademas is the brazo of control of the experiment of formato.
 let titulosUsados = [];
 try { titulosUsados = JSON.parse(fs.readFileSync("oddly_titles.json", "utf8")); } catch {}
 if (!Array.isArray(titulosUsados)) titulosUsados = [];
@@ -39,24 +39,24 @@ const KEYS = [process.env.GEMINI_API_KEY, process.env.GEMINI_API_KEY2, process.e
 const sleep = (ms) => new Promise((s) => setTimeout(s, ms));
 const tf = (u, o = {}, ms = 30000) => fetch(u, { ...o, signal: AbortSignal.timeout(ms) });
 
-// Sugerencia de queries de stock por nicho (la IA puede refinarlas). Sale de sources.json.
+// Sugerencia of queries of stock by niche (the IA can refinarlas). Sale of sources.JSON.
 let sources = {};
 try { sources = JSON.parse(fs.readFileSync("channel/auto2/sources.seed.json", "utf8")); } catch {}
 const nicheCfg = (sources.niches || {})[niche] || {};
 const label = nicheCfg.label || niche;
 const pool = (nicheCfg.queries || ["satisfying"]).join(", ");
-// Duración del SHORT por CATEGORÍA: ASMR aguanta más largo (retención alta); ciencia va corto.
-// Es un RANGO -> la IA/producción alarga solo si el material realmente engancha ("lo entretenido").
+// Duration of the SHORT by CATEGORÍA: ASMR aguanta more largo (retención alta); ciencia va corto.
+// Is a RANGO -> the IA/producción alarga only if the material really engancha ("lo entretenido").
 const SHORT = nicheCfg.short || { min_beats: 6, max_beats: 8, clip_sec: 6 };
 
-// ESTILO EXPERTO por nicho (destilado de investigación de canales faceless que funcionan).
+// ESTILO EXPERTO by niche (destilado of investigación of channels faceless that funcionan).
 const NICHE_STYLE = {
   satisfying: "compilación 'oddly satisfying' con narración CALMADA y suave (vibra ASMR/relax); cada clip trae un dato curioso corto sobre lo que se ve (por qué es satisfactorio / la ciencia detrás).",
   narrativas: "HISTORIA con tensión real: gancho de intriga en 2s (giro/pregunta/afirmación contraintuitiva), narración TENSA y ajustada (frases cortas, ritmo), cada beat sube la apuesta con un giro, y un FINAL con vuelta de tuerca que da ganas de compartir. Recontrata la atención a la mitad con un cambio (revelación). Nada de relleno.",
   ciencia_humor: "DATO asombroso + HUMOR: estructura de chiste (montaje serio o predecible -> giro absurdo/inesperado = punchline). Timing: una pausa antes del remate. Observacional y relatable, no forzado. Ágil y punchy. Cada beat = un hecho que sorprende + un toque de humor seco.",
   naturaleza_relax: "naturaleza relajante con narración calmada y datos de la naturaleza; ritmo lento, cada beat una imagen bella con un dato asombroso.",
 }[niche] || "narración calmada con un dato curioso por clip.";
-// Reglas de RETENCIÓN que aplican a todo guion narrado (lo que separa lo pro de lo genérico).
+// Reglas of RETENCIÓN that aplican to everything script narrated (lo that separa lo pro of lo genérico).
 const EXPERT_RULES = "REGLAS DE RETENCIÓN: (1) el PRIMER beat engancha en los primeros 2 segundos (pattern interrupt / brecha de curiosidad / algo contraintuitivo); NADA de 'in this video'. (2) Frases CORTAS y rítmicas, aptas para voz. (3) A la mitad, un cambio que re-engancha. (4) El ÚLTIMO beat cierra fuerte (giro, remate o CTA de 3 palabras). (5) Cero relleno: si un beat no sube la apuesta, va fuera. (6) EDITA COMO CINE: piensa como EDITOR CINEMATOGRÁFICO — planifica VARIEDAD de planos (general → detalle → macro), RITMO que corta con el sonido, CONTRASTE visual entre beats consecutivos, y un ARCO emocional (calma → clímax → cierre). Elige queries de tomas con MOVIMIENTO y TEXTURA (cámara lenta, macro, dron), nunca estáticas ni genéricas.";
 
 async function gemini(prompt) {
@@ -84,16 +84,16 @@ async function gemini(prompt) {
   return null;
 }
 
-// IDEA del plan del cerebro (brain_live): ángulo o brazo de experimento que esta pieza debe respetar.
+// IDEA of the plan of the brain (brain_live): ángulo or brazo of experiment that esta pieza must respetar.
 const IDEA = (process.env.ODDLY_IDEA || "").trim().slice(0, 300);
 const ideaBlock = IDEA ? `ÁNGULO QUE EL CEREBRO QUIERE PROBAR EN ESTA PIEZA (respétalo; no inventes datos falsos): ${IDEA}\n` : "";
 
-// Sanea lo que devuelve el modelo antes de escribirlo. Gemini es una fuente de red: su
-// respuesta no es de fiar por definicion, aunque el prompt sea nuestro. Aqui no puede causar
-// dano directo (el texto va a un JSON, y el subtitulo se pasa a ffmpeg por `textfile=`, que
-// lee el archivo en vez de interpolarlo en el filtro), pero se acota igual: fuera caracteres
-// de control, espacios colapsados y un tope de largo. De paso evita que un modelo que se va
-// por las ramas meta un parrafo donde debia ir una frase.
+// Sanea lo that devuelve the modelo before of escribirlo. Gemini is a fuente of red: its
+// respuesta not is of fiar by definicion, aunque the prompt sea nuestro. Here not can causar
+// dano directo (the texto va to a JSON, and the subtitulo is pasa to ffmpeg by `textfile=`, that
+// lee the file in vez of interpolarlo in the filtro), but is acota igual: fuera caracteres
+// of control, espacios colapsados and a tope of largo. Of step avoids that a modelo that is va
+// by the branches meta a parrafo where debia ir a frase.
 function limpiar(valor, max) {
   return String(valor ?? "")
     .replace(/[\u0000-\u001f\u007f]/g, " ")
@@ -103,18 +103,18 @@ function limpiar(valor, max) {
 }
 
 // VARIANTE "un_hecho" (EXPERIMENTO de formato, 2026-10-03): UN sujeto, UN hecho, corto.
-// Por que: el canal lleva 518 videos con mediana de 46 vistas haciendo LISTAS de 10-14 hechos
-// genericos. El unico Short que desperto fue "Why Baby Otters Hold Hands" (918 vistas, 20x la
-// mediana): 18,7 segundos, un solo animal, un solo dato, metraje real de ESE animal y un titulo
-// que es una pregunta concreta. Esta variante produce esa forma para poder medirla contra la
+// By that: the channel lleva 518 videos with mediana of 46 vistas haciendo READY of 10-14 hechos
+// genericos. The unico Short that desperto was "Why Baby Otters Hold Hands" (918 vistas, 20x the
+// mediana): 18,7 seconds, a only animal, a only dato, metraje real of ESE animal and a title
+// that is a pregunta concreta. Esta variante produce esa way for poder medirla contra the
 // lista (A/B "formato_un_hecho_vs_lista" en ab_tests.mjs).
 //
-// Las diferencias que se prueban, todas a la vez porque son UNA forma, no cinco ajustes:
-//   - UN sujeto en todo el video (no 14 cosas distintas)
-//   - UN hecho sorprendente y especifico (no "14 triggers que resetean tu cerebro")
-//   - 3-4 clips DEL MISMO sujeto (no un clip por hecho)
+// The diferencias that is prueban, all to the vez because are A way, not cinco ajustes:
+//   - A sujeto in everything the video (not 14 cosas distintas)
+//   - A hecho sorprendente and especifico (not "14 triggers that resetean tu brain")
+//   - 3-4 clips OF THE SAME sujeto (not a clip by hecho)
 //   - ~15-20 s (no 60-91)
-//   - titulo = pregunta concreta sobre ese sujeto
+//   - title = pregunta concreta about ese sujeto
 if (variant === "un_hecho") {
   const scr = await gemini(
     `Eres guionista de un canal faceless en INGLES (audiencia EEUU) tipo "${label}". ${ideaBlock}${bloqueNoRepetir}` +
@@ -157,9 +157,9 @@ if (variant === "un_hecho") {
   process.exit(0);
 }
 
-// VARIANTE "puro" (ASMR sin voz): NO hay narración. Solo curamos clips (queries) + título.
-// Es lo más fiel al ASMR real: mandan el SONIDO y el VISUAL. Robusto: si Gemini no está,
-// armamos la lista con el pool del nicho -> la producción NO depende de la IA.
+// VARIANTE "puro" (ASMR without voice): NOT hay narration. Only curamos clips (queries) + title.
+// Is lo more fiel to the ASMR real: mandan the SOUND and the VISUAL. Robusto: if Gemini not is,
+// armamos the ready with the pool of the niche -> the producción NOT depende of the IA.
 if (variant === "puro") {
   const scr = await gemini(
     `Eres curador de un canal ASMR / "oddly satisfying" en YouTube (audiencia EEUU). ${ideaBlock}${bloqueNoRepetir}` +
@@ -169,8 +169,8 @@ if (variant === "puro") {
     `Devuelve SOLO JSON: {"title":"título en inglés de alto CTR estilo 'Oddly Satisfying' (SIN clickbait falso)","beats":[{"query":"término stock en inglés","insight":"short text/fact on screen","tipo":"clip"}]}`
   );
   const rawBeats = (scr && Array.isArray(scr.beats) && scr.beats.length) ? scr.beats : (nicheCfg.queries || ["satisfying"]).map((q) => ({ query: q, insight: "Satisfying ASMR visual", tipo: "clip" }));
-  // El fallback llevaba un titulo FIJO, asi que a partir del segundo video sin Gemini
-  // chocaba consigo mismo siempre. Se diferencia por nicho y dia para que no colisione.
+  // The fallback llevaba a title FIJO, asi that to partir of the second video without Gemini
+  // chocaba consigo same always. Is diferencia by niche and day for that not colisione.
   const sello = new Date().toISOString().slice(0, 10);
   const tituloBase = (scr && scr.title)
     || (isShort ? `Oddly Satisfying ${niche} (${sello}) #Shorts` : `The Most Oddly Satisfying ${niche} Video (${sello})`);
@@ -188,8 +188,8 @@ if (variant === "puro") {
   process.exit(0);
 }
 
-// APRENDIZAJE: los titulos que MAS rinden en este canal (vistas/dia), inyectados por produce_oddly
-// desde el reporte. El guion imita su ESTILO de gancho/estructura (no copia el tema) -> replicar lo top.
+// LEARNING: the titles that MORE rinden in este channel (vistas/day), inyectados by produce_Oddly
+// since the reporte. The script imita its ESTILO of hook/estructura (not copia the topic) -> replicar lo top.
 const LEARN = (process.env.ODDLY_LEARN || "").trim();
 const learnBlock = LEARN ? `LO QUE MAS RINDE EN ESTE CANAL (estudia el ESTILO de gancho y estructura de estos ganadores y escribe en ese espiritu; NO copies el tema): ${LEARN}\n` : "";
 

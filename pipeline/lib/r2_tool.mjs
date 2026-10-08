@@ -1,5 +1,5 @@
-// r2_tool.mjs — CLI minimalista para R2 via la API REST de Cloudflare
-// (mismo patron que pipeline/comment_reply.mjs; sin wrangler).
+// r2_tool.mjs — CLI minimalista for R2 via the API REST of Cloudflare
+// (same patron that pipeline/comment_reply.mjs; without wrangler).
 //
 // Uso:
 //   node pipeline/lib/r2_tool.mjs get    <key> <outFile>
@@ -42,7 +42,7 @@ async function run() {
     if (!r.ok && r.status !== 404) { console.error(`delete ${a}: ${r.status}`); process.exit(1); }
     console.log(`r2 delete ${a}`);
   } else if (cmd === "copy") {
-    // La API REST de Cloudflare no tiene copy server-side: get + put.
+    // The API REST of Cloudflare not tiene copy server-side: get + put.
     const src = await fetch(u(a), { headers: H });
     if (!src.ok) { console.error(`copy: ${a} no existe (${src.status})`); process.exit(1); }
     const buf = Buffer.from(await src.arrayBuffer());

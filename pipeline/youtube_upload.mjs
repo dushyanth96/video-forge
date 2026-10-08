@@ -1,9 +1,9 @@
-// youtube_upload.mjs — sube el video a YouTube usando el refresh token (OAuth).
-// Lee el paquete SEO (package.json) para titulo/descripcion/tags. Sube como PRIVADO
-// (Juan lo revisa en YouTube antes de hacerlo publico), marca "NO para ninos" y el
-// disclosure de contenido sintetico (voz IA). Deja el link en publish/youtube_result.txt.
+// YouTube_upload.mjs — uploads the video to YouTube usando the refresh token (OAuth).
+// Lee the paquete SEO (package.JSON) for title/description/tags. Uploads as PRIVATE
+// (Juan lo revisa in YouTube before of hacerlo public), marca "NOT for ninos" and the
+// disclosure of contenido sintetico (voice IA). Deja the link in publish/YouTube_result.txt.
 //
-// Uso: node pipeline/youtube_upload.mjs <video.mp4> [package.json]
+// Usage: node pipeline/YouTube_upload.mjs <video.mp4> [package.JSON]
 import fs from "node:fs";
 
 const [videoPath, pkgPath = "publish/package.json"] = process.argv.slice(2);
@@ -19,7 +19,7 @@ fs.mkdirSync("publish", { recursive: true });
 
 const sleep = (ms) => new Promise((s) => setTimeout(s, ms));
 
-// 1) Access token a partir del refresh token — con REINTENTOS (un blip de red no debe tumbar la subida).
+// 1) Access token to partir of the refresh token — with RETRIES (a blip of red not must tumbar the upload).
 async function getAccessToken() {
   for (let i = 0; i < 4; i++) {
     try {
@@ -31,7 +31,7 @@ async function getAccessToken() {
       });
       const j = await r.json();
       if (j.access_token) return j.access_token;
-      // 4xx de credenciales (no 429) = permanente -> no reintentar en vano.
+      // 4xx of credenciales (not 429) = permanente -> not retry in vano.
       if (r.status >= 400 && r.status < 500 && r.status !== 429) { console.error("Error de token (permanente):", JSON.stringify(j)); process.exit(1); }
       console.error(`token intento ${i + 1}: HTTP ${r.status}`);
     } catch (e) { console.error(`token intento ${i + 1}: ${e.message}`); }
@@ -41,7 +41,7 @@ async function getAccessToken() {
 }
 const token = await getAccessToken();
 
-// 2) Metadatos del video (del paquete SEO)
+// 2) Metadatos of the video (of the paquete SEO)
 const snippet = {
   title: (pkg.title || "The Data Lens").slice(0, 100),
   description: (pkg.description || "").slice(0, 4900),
@@ -55,8 +55,8 @@ const status = {
   containsSyntheticMedia: true,      // disclosure: voz IA
 };
 
-// 3) Subida "resumable" — con REINTENTOS ante 429/5xx/corte (antes fallaba a la primera).
-// Una sola lectura: tamaño y contenido siempre coinciden (sin carrera entre stat y read).
+// 3) Upload "resumable" — with RETRIES ante 429/5xx/cut (before fallaba to the first).
+// A sola lectura: tamaño and contenido always coinciden (without carrera between stat and read).
 const body = fs.readFileSync(videoPath);
 const size = body.length;
 
@@ -103,7 +103,7 @@ if (!videoId) { console.error("Subida a YouTube fallida tras reintentos."); proc
 const url = `https://youtu.be/${videoId}`;
 console.log("VIDEO_ID=" + videoId);
 console.log("VIDEO_URL=" + url);
-// Guarda el ID (para actualizar el SEO/metadata luego sin re-subir el video).
+// Stores the ID (for actualizar the SEO/metadata then without re-upload the video).
 fs.writeFileSync("publish/video_id.txt", videoId);
 fs.writeFileSync(
   "publish/youtube_result.txt",

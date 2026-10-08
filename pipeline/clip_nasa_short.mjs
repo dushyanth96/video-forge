@@ -1,6 +1,6 @@
-// clip_nasa_short.mjs — CLIPEADOR de shorts desde el catálogo de NASA (dominio público, RECIENTE:
+// clip_nasa_short.mjs — CLIPEADOR of Shorts since the catálogo of NASA (dominio public, RECIENTE:
 // lanzamientos, ISS, planetas, telescopios). API oficial images-api.nasa.gov -> descarga DIRECTA
-// (más confiable que YouTube). La IA elige el mejor momento y arma un SHORT 9:16 con nuestro audio.
+// (more confiable that YouTube). The IA elige the best momento and arma a SHORT 9:16 with nuestro audio.
 //
 // Uso: node pipeline/clip_nasa_short.mjs "<tema>" <categoria> <out.mp4>
 // Env: GEMINI_API_KEY(,2). music.mp3 opcional.
@@ -16,7 +16,7 @@ const tf = (u, o = {}, ms = 60000) => fetch(u, { ...o, signal: AbortSignal.timeo
 const work = "clipwork"; fs.mkdirSync(work, { recursive: true });
 const sh = (c) => execSync(c, { stdio: ["ignore", "pipe", "pipe"] }).toString();
 
-// 1) Buscar video en NASA + resolver el .mp4 grande.
+// 1) Search video in NASA + resolver the .mp4 grande.
 console.log(`Buscando en NASA: "${topic}"…`);
 const s = await (await tf(`https://images-api.nasa.gov/search?q=${encodeURIComponent(topic)}&media_type=video&page_size=25`)).json();
 const items = (s.collection && s.collection.items) || [];
@@ -25,7 +25,7 @@ const wantNasa = kwOf(topic);
 for (const it of items) {
   try {
     const d = it.data && it.data[0];
-    // FILTRO compartido: fuera episodios producidos (texto quemado)/hardware/misión; exige el sujeto.
+    // FILTRO compartido: fuera episodios producidos (texto quemado)/hardware/misión; exige the sujeto.
     if (d && !keepFootage((d.title || "") + " " + (d.description || ""), wantNasa)) continue;
     const col = await (await tf(it.href)).json();
     const urls = (Array.isArray(col) ? col : []).filter((u) => /\.mp4$/i.test(u));
@@ -43,7 +43,7 @@ fs.writeFileSync(film, Buffer.from(await r.arrayBuffer()));
 const dur = parseFloat(sh(`ffprobe -v error -show_entries format=duration -of csv=p=0 "${film}"`).trim()) || 0;
 if (dur < 8) { console.error("clip NASA muy corto"); process.exit(1); }
 
-// 2) Miniaturas + IA (si el video es corto, igual elige un buen inicio).
+// 2) Thumbnails + IA (if the video is corto, igual elige a buen inicio).
 const a0 = dur * 0.05, a1 = Math.max(a0 + 1, dur * 0.9), N = Math.min(12, Math.max(3, Math.floor(dur / 4))), step = (a1 - a0) / N, thumbs = [];
 for (let i = 0; i < N; i++) { const t = Math.round(a0 + i * step), p = `${work}/th${i}.jpg`; try { execSync(`ffmpeg -y -ss ${t} -i "${film}" -frames:v 1 -vf "scale=320:-1" "${p}"`, { stdio: "ignore" }); if (fs.existsSync(p)) thumbs.push({ t, p }); } catch {} }
 async function pick() {
@@ -57,13 +57,13 @@ let mo = await pick(); if (!mo || !isFinite(+mo.start)) mo = { start: Math.round
 const clipLen = Math.min(CLIP, Math.max(6, dur - 1));
 const start = Math.max(0, Math.min(+mo.start, dur - clipLen));
 
-// 3) 9:16 profesional con sujeto centrado (smart crop) + música.
+// 3) 9:16 profesional with sujeto centrado (smart crop) + music.
 const { w: srcW, h: srcH } = sourceWH(film);
 const sx = isFinite(+mo.subject_x) ? +mo.subject_x : 0.5;
 const vf = smartCropVf(W, H, srcW, srcH, sx, "eq=contrast=1.05:saturation=1.08");
 const pre = Math.max(0, start - 3), fine = (start - pre).toFixed(2);
 const raw = `${work}/raw.mp4`;
-// Corte conservando el AUDIO ORIGINAL de NASA (sin -an).
+// Cut conservando the AUDIO ORIGINAL of NASA (without -an).
 execSync(`ffmpeg -y -ss ${pre} -i "${film}" -ss ${fine} -t ${clipLen} -vf "${vf}" -r 30 -c:v libx264 -preset medium -crf 19 -pix_fmt yuv420p -profile:v high -c:a aac -b:a 160k "${raw}"`, { stdio: "inherit" });
 const hadAudio = finishClip(raw, outPath);
 console.log("audio original: " + (hadAudio ? "sí" : "no (solo música)"));

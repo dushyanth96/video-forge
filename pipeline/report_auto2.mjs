@@ -1,12 +1,12 @@
-// report_auto2.mjs — trae el estado REAL del 2do canal (Oddly Loop, YT2) y lo guarda en
-// auto2_state.json (el workflow lo sube a channel/auto2/state.json; la app lo muestra).
-// Correcciones de la auditoría:
-//  - BR-12: trae la DURACIÓN de cada video (contentDetails) -> los Shorts dejan de clasificarse como largos.
-//  - BR-09: marca niche_inferred cuando la categoría se adivinó por el título (el ranking la excluye).
-//  - BR-07: niche_rank = mediana de la cohorte de 5-30 días (lib/niche_rank.mjs), no media acumulada.
-//  - BR-08: mejores horas por MEDIANA de vistas/día por hora con mínimo de videos, no suma.
-//  - Registra las vistas de cada video al día 3 y al día 7 (views_at_age.json) para comparar cohortes
-//    a la MISMA edad (regla de escalado).
+// report_auto2.mjs — trae the estado REAL of the 2do channel (Oddly Loop, YT2) and lo stores in
+// auto2_state.JSON (the workflow lo uploads to channel/auto2/state.JSON; the app lo muestra).
+// Correcciones of the auditoría:
+//  - BR-12: trae the DURATION of cada video (contentDetails) -> the Shorts dejan of clasificarse as largos.
+//  - BR-09: marca niche_inferred when the categoría is adivinó by the title (the ranking the excluye).
+//  - BR-07: niche_rank = mediana of the cohorte of 5-30 days (lib/niche_rank.mjs), not media acumulada.
+//  - BR-08: best hours by MEDIANA of vistas/day by hour with mínimo of videos, not suma.
+//  - Registra the vistas of cada video to the day 3 and to the day 7 (views_at_age.JSON) for comparar cohortes
+//    to the SAME edad (regla of escalado).
 // Uso: node pipeline/report_auto2.mjs   (lee niche_map.json y views_at_age.json si existen)
 import fs from "node:fs";
 import { rankNiches, median } from "./lib/niche_rank.mjs";
@@ -33,13 +33,13 @@ try {
   if (up) { do { const j = await (await tf(`https://www.googleapis.com/youtube/v3/playlistItems?part=contentDetails&maxResults=50&playlistId=${up}&pageToken=${page}`, { headers: H })).json(); ids.push(...(j.items || []).map((i) => i.contentDetails.videoId)); page = j.nextPageToken || ""; } while (page && ids.length < 200); }
   let nicheMap = {};
   try { nicheMap = JSON.parse(fs.readFileSync("niche_map.json", "utf8")); } catch {}
-  // Videos OCULTOS (despublicados o sacados de la cola): no existen para la app ni para el cerebro.
+  // Videos OCULTOS (despublicados or sacados of the queue): not existen for the app nor for the brain.
   let hidden = new Set();
   try { const h = JSON.parse(fs.readFileSync("hidden_videos.json", "utf8")); if (Array.isArray(h)) hidden = new Set(h); } catch {}
   let hiddenSkipped = 0;
   const NICHE_LABEL = { satisfying: "Satisfying / ASMR", narrativas: "Narrativas", ciencia_humor: "Ciencia + humor", naturaleza_relax: "Naturaleza / relax", animales_tiernos: "Animales tiernos / ASMR", remix: "Remix", graciosos: "Graciosos", space: "Espacio" };
-  // Si un video no está en el niche_map se INFIERE por el título para mostrarlo, pero queda marcado
-  // niche_inferred y NO cuenta para decidir el reparto.
+  // If a video not is in the niche_map is INFIERE by the title for mostrarlo, but queda marcado
+  // niche_inferred and NOT account for decidir the reparto.
   function inferNiche(title) {
     const t = (title || "").toLowerCase();
     if (/puppy|kitten|\bcat\b|\bdog\b|\bpet\b|bunny|rabbit|hamster|panda|otter|corgi|kitty|cute animal|baby animal/.test(t)) return "animales_tiernos";
@@ -54,7 +54,7 @@ try {
     const j = await (await tf(`https://www.googleapis.com/youtube/v3/videos?part=snippet,status,statistics,contentDetails&id=${ids.slice(i, i + 50).join(",")}`, { headers: H })).json();
     for (const v of j.items || []) {
       if (hidden.has(v.id)) { hiddenSkipped++; continue; }
-      // El mapa trae string (videos viejos) u {n, v} (desde que se registra la variante).
+      // The mapa trae string (videos viejos) or {n, v} (since that is registra the variante).
       const ent = leerEntrada(nicheMap[v.id]);
       const mapped = ent.niche;
       const nk = mapped || inferNiche(v.snippet.title);
@@ -76,20 +76,20 @@ try {
   for (const v of pubs) { const days = Math.max(0.5, (now - Date.parse(v.pub_iso)) / DAY); v.vpd = +(v.views / days).toFixed(1); v._h = etHour(v.pub_iso); }
   const top = [...pubs].sort((a, b) => (b.vpd || 0) - (a.vpd || 0)).slice(0, 5).map((v) => ({ video_id: v.video_id, title: v.title, views: v.views, vpd: v.vpd, niche_label: v.niche_label }));
 
-  // Ranking legado (media, todos los videos) — solo para compatibilidad de lectura. NO decide.
+  // Ranking legado (media, all the videos) — only for compatibilidad of lectura. NOT decide.
   const byNiche = {}; for (const v of pubs) { const k = v.niche_label || "Satisfying / ASMR"; (byNiche[k] = byNiche[k] || { vpd: 0, n: 0 }); byNiche[k].vpd += v.vpd || 0; byNiche[k].n++; }
   const niche_ranking = Object.entries(byNiche).map(([label, d]) => ({ label, avg_vpd: +(d.vpd / d.n).toFixed(1), videos: d.n })).sort((a, b) => b.avg_vpd - a.avg_vpd);
-  // Ranking que DECIDE: mediana de la cohorte comparable, sin inferidos.
+  // Ranking that DECIDE: mediana of the cohorte comparable, without inferidos.
   const niche_rank = rankNiches(list, { nowMs: now });
 
-  // Mejores horas: mediana de vistas/día por hora ET, cohorte de 5-60 días, mínimo 3 videos por hora.
+  // Best hours: mediana of vistas/day by hour ET, cohorte of 5-60 days, mínimo 3 videos by hour.
   let best_hours = null;
   const hourCohort = pubs.filter((v) => { const a = (now - Date.parse(v.pub_iso)) / DAY; return a >= 5 && a <= 60 && v._h != null; });
   const byHour = {}; for (const v of hourCohort) (byHour[v._h] = byHour[v._h] || []).push(v.vpd || 0);
   const hourRows = Object.entries(byHour).filter(([, vals]) => vals.length >= 3).map(([h, vals]) => ({ h: +h, med: median(vals), n: vals.length })).sort((a, b) => b.med - a.med);
   if (hourRows.length >= 3) best_hours = { hours: hourRows.slice(0, 4).map((r) => r.h).sort((a, b) => a - b), data_driven: true, method: "mediana por hora, cohorte 5-60 días, n≥3", based_on: hourCohort.length, detail: hourRows.slice(0, 6) };
 
-  // Vistas a la MISMA edad (día 3 y día 7): se registran una sola vez, cuando el video cruza esa edad.
+  // Vistas to the SAME edad (day 3 and day 7): is registran a sola vez, when the video cruza esa edad.
   let atAge = {};
   try { atAge = JSON.parse(fs.readFileSync("views_at_age.json", "utf8")) || {}; } catch {}
   for (const v of pubs) {

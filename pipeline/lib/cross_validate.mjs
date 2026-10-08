@@ -1,13 +1,13 @@
 // cross_validate.mjs — Protocolo de 2 agentes (Growth Roadmap Fase 5). PURO y testeable.
-// Cruza el AGENTE EXTERNO (Growth Radar: investigación web, afirmaciones tagueadas por evidencia)
-// con el AGENTE INTERNO (nuestra data medida: hipótesis + A/B + outliers) y clasifica cada
-// afirmación: CONFIRMADA / PROBABLE / CONTRADICTORIA / REQUIERE_EXPERIMENTO / INCIERTA.
-// Regla de oro: nunca dar por cierto un "hack" externo sin cruzarlo con nuestros datos.
+// Cruza the AGENTE EXTERNO (Growth Radar: investigación web, afirmaciones tagueadas by evidencia)
+// with the AGENTE INTERNO (nuestra data medida: hipótesis + to/B + outliers) and clasifica cada
+// afirmación: CONFIRMADA / PROBABLE / CONTRADICTORIA / REQUIRES_EXPERIMENT / INCIERTA.
+// Regla of oro: never dar by cierto a "hack" externo without cruzarlo with nuestros datos.
 
 const STOP = new Set(["para","con","que","los","las","del","una","por","como","más","mas","the","and","for","with","your","you","este","esta","son","the","de","en","un","a","o","y","of","to","in","is","it","que"]);
-// Normaliza: minúsculas, sin acentos.
+// Normaliza: minúsculas, without acentos.
 export function norm(s) { return String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); }
-// Sinónimos ES/EN de las palancas clave -> un token canónico (para que "pregunta" case con "question").
+// Sinónimos IS/IN of the palancas key -> a token canónico (for that "pregunta" case with "question").
 const SYN = { pregunta: "hook_question", question: "hook_question", questions: "hook_question", interrogacion: "hook_question",
   gancho: "hook", hook: "hook", hooks: "hook", titulo: "title", title: "title", titulos: "title",
   miniatura: "thumbnail", thumbnail: "thumbnail", thumb: "thumbnail", duracion: "duration", duration: "duration",
@@ -22,7 +22,7 @@ export function tokenize(s) {
 }
 
 const EV = ["OFICIAL", "FUERTE", "EXPERIMENTAL", "HIPOTESIS", "RUMOR"];
-// Extrae afirmaciones del reporte del Radar: líneas que traen un tag de evidencia [OFICIAL]...[RUMOR].
+// Extrae afirmaciones of the reporte of the Radar: lines that traen a tag of evidencia [OFICIAL]...[RUMOR].
 export function parseClaims(reportText) {
   const claims = [];
   for (const raw of String(reportText || "").split(/\r?\n/)) {
@@ -37,8 +37,8 @@ export function parseClaims(reportText) {
   return claims;
 }
 
-// --- AGENTE INTERNO: findings normalizados desde lo que YA medimos ---
-// polarity: "supports" (nuestros datos apoyan la palanca) | "refutes" | "neutral". strength 0-1.
+// --- AGENTE INTERNO: findings normalizados since lo that ALREADY medimos ---
+// polarity: "supports" (nuestros datos apoyan the palanca) | "refutes" | "neutral". strength 0-1.
 export function findingsFromHypotheses(hyps) {
   return (hyps || []).filter((h) => h && h.id).map((h) => {
     const support = Number(h.support) || 0;
@@ -60,10 +60,10 @@ export function findingFromOutliers(scores) {
   return [{ topic: `outlier:${hook}`, keywords: tokenize(`${hook} ${fmt || ""}`), polarity: "supports", strength: Math.min(0.9, 0.4 + o.count * 0.05), source: "outlier" }];
 }
 
-// Cuenta keywords en común entre una afirmación y un finding.
+// Account keywords in común between a afirmación and a finding.
 function overlap(a, b) { const s = new Set(b); return a.filter((k) => s.has(k)).length; }
 
-// Cruza afirmaciones externas con findings internos. minOverlap = keywords en común para "matchear".
+// Cruza afirmaciones externas with findings internos. minOverlap = keywords in común for "matchear".
 export function reconcile(claims, findings, opts = {}) {
   const minOverlap = opts.minOverlap != null ? opts.minOverlap : 1;
   const results = (claims || []).map((c) => {
@@ -90,7 +90,7 @@ export function reconcile(claims, findings, opts = {}) {
   return { results, summary };
 }
 
-// Texto para Telegram: prioriza contradicciones y confirmaciones.
+// Texto for Telegram: prioriza contradicciones and confirmaciones.
 export function formatCross(cross, name) {
   const r = (cross && cross.results) || [];
   const ORDER = { CONTRADICTORIA: 0, CONFIRMADA: 1, REQUIERE_EXPERIMENTO: 2, PROBABLE: 3, INCIERTA: 4 };

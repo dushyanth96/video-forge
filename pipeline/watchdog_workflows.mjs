@@ -1,16 +1,16 @@
-// watchdog_workflows.mjs — vigila que los CRONS DE PRODUCCIÓN sigan vivos. Detecta tres muertes silenciosas:
-//   1) DESACTIVADO: GitHub apaga los workflows con cron tras 60 días o por fallos -> dejan de correr sin avisar.
-//   2) ATRASADO: el último run es más viejo que la tolerancia -> el cron se detuvo.
-//   3) FALLA REPETIDO: 2+ de los últimos 3 runs fallaron -> algo se rompió y no se auto-cura.
-// Lee la API de Actions del propio repo (token de Actions con permiso actions:read).
-// Salidas: wf_report.txt (legible) + wf_fail.txt (nº de problemas, para decidir si avisar).
+// watchdog_workflows.mjs — vigila that the CRONS OF PRODUCCIÓN sigan vivos. Detecta tres muertes silenciosas:
+//   1) DESACTIVADO: GitHub apaga the workflows with cron after 60 days or by fallos -> dejan of correr without avisar.
+//   2) ATRASADO: the last run is more viejo that the tolerancia -> the cron is detuvo.
+//   3) FAILS REPETIDO: 2+ of the últimos 3 runs fallaron -> something is rompió and not is auto-cura.
+// Lee the API of Actions of the propio repo (token of Actions with permiso Actions:read).
+// Outputs: wf_report.txt (legible) + wf_fail.txt (nº of problemas, for decidir if avisar).
 import fs from "node:fs";
 
 const REPO = process.env.GITHUB_REPOSITORY || "juanberrio0399/video-forge";
 const TOKEN = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || "";
 const H = { Authorization: `Bearer ${TOKEN}`, Accept: "application/vnd.github+json", "User-Agent": "video-forge-watchdog" };
 
-// Workflows CLAVE + tolerancia de atraso (≈ intervalo del cron × 2.5). Si el último run es más viejo -> muerto.
+// Workflows KEY + tolerancia of atraso (≈ intervalo of the cron × 2.5). If the last run is more viejo -> muerto.
 const CRIT = [
   { f: "report_auto2.yml", label: "Reporte Oddly (feed de la app)", maxAgeH: 6 },   // cada 2h
   { f: "channel_report.yml", label: "Reporte Data Lens", maxAgeH: 16 },              // cada 6h
@@ -26,7 +26,7 @@ const CRIT = [
 
 async function jget(url) { const r = await fetch(url, { headers: H }); if (!r.ok) throw new Error(r.status + " " + (await r.text().catch(() => "")).slice(0, 80)); return r.json(); }
 
-// Estado de cada workflow (active / disabled_inactivity / disabled_manually) por su nombre de archivo.
+// Estado of cada workflow (active / disabled_inactivity / disabled_manually) by its nombre of file.
 const states = {};
 try { const wf = await jget(`https://api.github.com/repos/${REPO}/actions/workflows?per_page=100`); (wf.workflows || []).forEach((w) => { states[w.path.split("/").pop()] = w.state; }); } catch (e) { console.error("no pude listar workflows:", e.message); }
 

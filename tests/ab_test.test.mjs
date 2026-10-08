@@ -35,7 +35,7 @@ describe("decide", () => {
     expect(d.lift).toBe(70);
   });
   it("usa MEDIANA, no media (robusto a virales)", () => {
-    // statement tiene media alta por un viral, pero mediana baja -> gana question por mediana.
+    // statement tiene media alta by a viral, but mediana downloads -> gana question by mediana.
     const m = { question: { n: 6, mean: 45, median: 50 }, statement: { n: 6, mean: 300, median: 10 } };
     expect(decide(m, { minPerVariant: 4, minLift: 20 }).verdict).toBe("WINNER:question");
   });

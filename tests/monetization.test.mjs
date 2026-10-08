@@ -3,7 +3,7 @@ import { readiness, warRoom, MONET_GOALS } from "../pipeline/lib/monetization.mj
 
 const DAY = 86400000;
 const dstr = (ms) => new Date(ms).toISOString().slice(0, 10);
-// Genera un historial lineal de 8 días para un objetivo (crecimiento perDay).
+// Generates a historial lineal of 8 days for a objetivo (crecimiento perDay).
 function hist(key, start, perDay, nowMs, extra = {}) {
   const out = [];
   for (let i = 7; i >= 0; i--) {
@@ -22,7 +22,7 @@ describe("readiness", () => {
     expect(rd.status).toBe("done");
   });
   it("ritmo suficiente -> ontrack, con proyección", () => {
-    // faltan ~600 subs en ~60 días -> ~10/día. Le doy 20/día.
+    // faltan ~600 subs in ~60 days -> ~10/day. Le doy 20/day.
     const rd = readiness(hist("subs", 400, 20, NOW), goal, NOW);
     const r = rd.reqs[0];
     expect(r.on_track).toBe(true);

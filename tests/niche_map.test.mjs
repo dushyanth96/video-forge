@@ -3,7 +3,7 @@ import { leerEntrada, nuevaEntrada, anotarVideos, conVariante } from "../pipelin
 
 describe("niche_map", () => {
   it("lee el formato VIEJO (string) sin romperse", () => {
-    // Los ~518 videos ya publicados estan guardados asi.
+    // The ~518 videos already publicados are guardados asi.
     expect(leerEntrada("animales_tiernos")).toEqual({ niche: "animales_tiernos", variant: null });
   });
 
@@ -28,10 +28,10 @@ describe("niche_map", () => {
     const mapa = { a: { n: "animales_tiernos", v: "un_hecho" }, b: "satisfying" };
     const out = anotarVideos(videos, mapa);
     expect(out[0]).toMatchObject({ niche: "animales_tiernos", variant: "un_hecho" });
-    // Video viejo: tiene nicho pero NO variante. Es lo correcto: no sabemos con que
-    // formato se hizo, asi que no debe entrar en el A/B.
+    // Video viejo: tiene niche but NOT variante. Is lo correct: not sabemos with that
+    // formato is hizo, asi that not must entrar in the to/B.
     expect(out[1]).toMatchObject({ niche: "satisfying", variant: null });
-    // Video que no esta en el mapa: ninguno de los dos.
+    // Video that not esta in the mapa: ninguno of the dos.
     expect(out[2]).toMatchObject({ niche: null, variant: null });
   });
 
@@ -63,7 +63,7 @@ describe("niche_map", () => {
   });
 });
 
-// --- Alternancia de variantes dentro de un mismo nicho (lo que hace medible el A/B) ---
+// --- Alternancia of variantes dentro of a same niche (lo that hace medible the to/B) ---
 import { elegirVariante } from "../pipeline/lib/lineup.mjs";
 
 describe("elegirVariante", () => {

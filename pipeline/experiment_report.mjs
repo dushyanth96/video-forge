@@ -1,6 +1,6 @@
-// experiment_report.mjs — runner del reporte semanal de experimentos (Growth Fase 3).
-// Mantiene el BANCO de creativos (lo siembra desde los outliers de Fase 2) y ENSAMBLA el reporte
-// del canal desde los registros que ya viven en R2. Escribe report + bank e imprime el texto.
+// experiment_report.mjs — runner of the reporte semanal of experiments (Growth Phase 3).
+// Mantiene the BANCO of creativos (lo siembra since the outliers of Phase 2) and ENSAMBLA the reporte
+// of the channel since the registros that already viven in R2. Writes report + bank and imprime the texto.
 // Uso: node pipeline/experiment_report.mjs <channel> <scores> <hyps> <monet> <decision> <bankIn> <reportOut> <bankOut> [ab]
 import fs from "node:fs";
 import { seedFromOutliers } from "./lib/creative_bank.mjs";
@@ -17,7 +17,7 @@ const ab = read(abF, {});
 let bank = read(bankInF, []);
 if (!Array.isArray(bank)) bank = bank.items || [];
 
-// Sembrar el banco con el patrón ganador (idempotente).
+// Sembrar the banco with the patrón ganador (idempotente).
 bank = seedFromOutliers(bank, scores.outliers, channel);
 
 const report = buildReport({ channel, scores, hypotheses, monetization, decision, bank, ab });

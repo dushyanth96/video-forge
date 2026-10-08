@@ -1,4 +1,4 @@
-// generate_script.mjs — guion EN INGLES para motion graphics (canal SkillGroX).
+// generate_script.mjs — script IN INGLES for motion graphics (channel SkillGroX).
 //
 // SkillGroX: Computer Science, System Architecture, Web/Cloud Engineering y
 // AI Engineering. Tono preciso, autoritativo, alta densidad — cero relleno
@@ -7,19 +7,19 @@
 // Estructura fija (Phase C): EXACTAMENTE 4 beats —
 //   beat_1 hook       15-20s  problema / cuello de botella arquitectonico
 //   beat_2 concept    50-65s  mecanica central (diagramas SVG animados)
-//   beat_3 deep_dive  50-65s  bajo el capo, comparacion codigo/datos
+//   beat_3 deep_dive  50-65s  bajo the capo, comparacion code/datos
 //   beat_4 takeaway   15-20s  resumen + referencia a SkillGroX
 // Total 120-180s (16:9 landscape): satisface AtoPlay (>60s) y YouTube.
 //
-// Rotacion autonoma: sin tema (ni arg ni MOTIONGFX_TOPIC), elige el siguiente
+// Rotacion autonoma: without topic (nor arg nor MOTIONGFX_TOPIC), elige the siguiente
 // tema no usado de 4 pilares curados y lo registra en pipeline/data/past_topics.json
-// para no repetir tema entre corridas diarias (orden fijo = determinista).
+// for not repetir topic between corridas diarias (orden fijo = determinista).
 //
-// Con GEMINI_API_KEY pide el guion a Gemini; sin la key usa un guion
+// With GEMINI_API_KEY pide the script to Gemini; without the key uses a script
 // deterministico incorporado (determinista = render reproducible).
 //
 // Uso: node pipeline/motiongfx/generate_script.mjs <out script.json> [topic]
-// Env: GEMINI_API_KEY (opcional), MOTIONGFX_TOPIC (tema por defecto)
+// Env: GEMINI_API_KEY (optional), MOTIONGFX_TOPIC (topic by defecto)
 import fs from "node:fs";
 import path from "node:path";
 
@@ -47,7 +47,7 @@ const PILLARS = [
 ];
 const ALL_TOPICS = PILLARS.flatMap((p) => p.topics.map((topic) => ({ topic, pillar: p.pillar })));
 
-// ---- Estructura de beats: la unica forma valida de guion ----
+// ---- Estructura of beats: the unica way validates of script ----
 const BEAT_SPEC = [
   { id: "beat_1", type: "hook", min: 15, max: 20, def: 18 },
   { id: "beat_2", type: "concept", min: 50, max: 65, def: 60 },
@@ -66,9 +66,9 @@ const BASE_TAGS = ["SkillGroX", "Computer Science", "System Design", "Web Develo
 const CTA_URL = "https://skillgrox.com";
 const WPS = 2.6; // palabras/segundo de narracion (mismo estimador que render.mjs)
 
-// ---- Resolucion del tema: arg CLI > MOTIONGFX_TOPIC > rotacion autonoma ----
+// ---- Resolucion of the topic: arg CLI > MOTIONGFX_TOPIC > rotacion autonoma ----
 function titleCase(t) {
-  // Capitaliza solo si la palabra empieza en minuscula: preserva siglas
+  // Capitaliza only if the palabra empieza in minuscula: preserva siglas
   // (SSE, GGUF, LLM) y camel case (WebSockets, Micro-SaaS, B-Trees).
   return String(t).trim().replace(/\s+/g, " ")
     .split(" ").map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w)).join(" ");
@@ -83,8 +83,8 @@ function readHistory() {
   }
 }
 
-// Elige el primer tema no usado (orden fijo = determinista) y lo registra.
-// Si los 14 ya se usaron, reinicia el ciclo desde el principio.
+// Elige the primer topic not used (orden fijo = determinista) and lo registra.
+// If the 14 already is usaron, reinicia the ciclo since the principio.
 function rotateTopic() {
   let history = readHistory();
   const used = new Set(history);
@@ -116,8 +116,8 @@ const chosen = explicit
 const TOPIC = chosen.topic;
 const PILLAR = chosen.pillar || "Custom";
 
-// ---- Guion deterministico de respaldo, por pilar ----
-// ${T} se interpola con el tema elegido. Ingles preciso, ~150s, 4 beats.
+// ---- Script deterministico of respaldo, by pilar ----
+// ${T} is interpola with the topic elegido. Ingles preciso, ~150s, 4 beats.
 const FALLBACKS = {
   "System Design": (T) => [
     {
@@ -255,8 +255,8 @@ Respond with ONLY a JSON object, no markdown, no commentary, exactly this shape:
 
 const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
 
-// Normaliza la salida de Gemini al schema exacto de Phase C.
-// Devuelve null si no rinde exactamente 4 beats usables (la spec es fija).
+// Normaliza the output of Gemini to the schema exacto of Phase C.
+// Devuelve null if not rinde exactamente 4 beats usables (the spec is fija).
 function normalizeGemini(parsed) {
   if (!parsed || typeof parsed !== "object") return null;
   const usable = (Array.isArray(parsed.beats) ? parsed.beats : [])
@@ -270,7 +270,7 @@ function normalizeGemini(parsed) {
     const spec = BEAT_SPEC[i];
     const words = b.text.trim().split(/\s+/).length;
     const declared = parseFloat(b.duration);
-    // Prefiere la duracion declarada; si no la hay, estima por palabras.
+    // Prefiere the duration declarada; if not the hay, estima by palabras.
     const duration = Number.isFinite(declared) && declared > 0
       ? clamp(Math.round(declared), spec.min, spec.max)
       : clamp(Math.round(words / WPS), spec.min, spec.max);
@@ -282,7 +282,7 @@ function normalizeGemini(parsed) {
       duration,
     };
   });
-  // Forzar el CTA de SkillGroX en la description si Gemini lo omitio.
+  // Forzar the CTA of SkillGroX in the description if Gemini lo omitio.
   let description = typeof parsed.description === "string" ? parsed.description.trim().slice(0, 4000) : "";
   if (!/skillgrox\.com/i.test(description)) {
     description = `${description.replace(/\s+$/, "")} More under-the-hood engineering deep dives from SkillGroX at ${CTA_URL}.`;
@@ -330,13 +330,13 @@ async function viaGemini() {
   return null;
 }
 
-// ---- Ensamblaje + autochequeo del schema ----
+// ---- Ensamblaje + autochequeo of the schema ----
 let script = await viaGemini();
 if (!script) script = fallbackScript(TOPIC, PILLAR);
 script.duration_target = script.beats.reduce((s, b) => s + b.duration, 0);
 
-// La spec es un contrato: validar antes de escribir, fallar ruidoso en CI
-// si algo sale del rango (nunca escribir un guion invalido).
+// The spec is a contrato: validar before of write, fallar ruidoso in CI
+// if something sale of the rango (never write a script invalid).
 const problems = [];
 if (script.beats.length !== BEAT_SPEC.length) problems.push(`beats != ${BEAT_SPEC.length}`);
 script.beats.forEach((b, i) => {

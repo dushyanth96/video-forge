@@ -8,8 +8,8 @@ from urllib.parse import quote
 
 from src import tools
 
-# SIN filtro de Creative Commons - buscar cualquier video
-# Eliminamos el filtro sp=EgIwAQ== que era para CC
+# WITHOUT filtro of Creative Commons - search cualquier video
+# Eliminamos the filtro sp=EgIwAQ== that era for CC
 YT_NO_FILTER = ""
 
 
@@ -19,7 +19,7 @@ def _run(args, timeout=120):
 
 
 def _buscar(tema: str, n: int) -> list:
-    # URL sin filtro de licencia - busca cualquier video
+    # URL without filtro of licencia - search cualquier video
     url = f"https://www.youtube.com/results?search_query={quote(tema)}"
     out, rc = _run(tools.ytdlp() + ["--flat-playlist", "-J", "--no-warnings", "--playlist-end", str(n), url])
     if rc != 0 or not out:

@@ -2,9 +2,9 @@ import { describe, it, expect } from "vitest";
 import { normalizarInventario } from "../pipeline/lib/inventario.mjs";
 import { segundosISO, esLargo } from "../pipeline/lib/duracion.mjs";
 
-// El resolvedor es un script (lee argv, escribe un archivo), pero su decision es pura y es
-// lo que importa: cual de las dos fuentes manda. Se reproduce aqui sin lanzar procesos —
-// lanzarlos ya nos costo un test inestable antes.
+// The resolvedor is a script (lee argv, writes a file), but its decision is pura and is
+// lo that importa: cual of the dos fuentes sends. Is reproduce here without lanzar procesos —
+// lanzarlos already nos costo a test inestable before.
 function resolver(cache, state) {
   const deCache = normalizarInventario(cache);
   const deState = normalizarInventario(state);
@@ -19,7 +19,7 @@ const largo = (id) => ({ video_id: id, seconds: 838, privacy: "public" });
 
 describe("resolver el inventario de Data Lens", () => {
   it("EL CASO QUE LO ORIGINO: cache borrado -> usa state.json en vez de quedarse en cero", () => {
-    // Siete workflows borran el cache. Antes esto daba 0 videos y congelaba el analisis.
+    // Siete workflows borran the cache. Before esto daba 0 videos and congelaba the analisis.
     const r = resolver({}, { published: [{ video_id: "a", stats: { views: 406 } }] });
     expect(r.fuente).toBe("channel/state.json");
     expect(r.list).toHaveLength(1);
@@ -39,7 +39,7 @@ describe("resolver el inventario de Data Lens", () => {
   });
 
   it("reparte largos y shorts por DURACION, no por la etiqueta del origen", () => {
-    // El cache podria llamar "longs" a cualquier cosa; aqui manda la duracion real.
+    // The cache podria llamar "longs" to cualquier cosa; here sends the duration real.
     const r = resolver({ longs: [corto("mal_etiquetado"), largo("de_verdad")] }, {});
     expect(r.longs.map((v) => v.video_id)).toEqual(["de_verdad"]);
     expect(r.shorts.map((v) => v.video_id)).toEqual(["mal_etiquetado"]);

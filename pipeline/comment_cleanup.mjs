@@ -1,5 +1,5 @@
-// comment_cleanup.mjs — Borra MIS respuestas recientes (última(s) hora(s)) que quedaron en ESPAÑOL
-// por el primer test (canal en inglés). Las quita del anti-duplicado para que se re-respondan en inglés.
+// comment_cleanup.mjs — Deletes MIS respuestas recientes (last(s) hour(s)) that quedaron in ESPAÑOL
+// by the primer test (channel in inglés). The quita of the anti-duplicado for that is re-respondan in inglés.
 // Uso: node pipeline/comment_cleanup.mjs <label> [horas]
 import fs from "node:fs";
 
@@ -11,7 +11,7 @@ const tf = (u, o = {}, ms = 15000) => fetch(u, { ...o, signal: AbortSignal.timeo
 const R2_BASE = `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/r2/buckets/${BUCKET}/objects`;
 const R2_KEY = `channel/${label}/replied_comments.json`;
 
-// Marcadores de español (no aparecen en inglés): abre-signos, palabras típicas.
+// Marcadores of español (not aparecen in inglés): abre-signos, palabras típicas.
 const isSpanish = (t) => /¡|¿|jajaja|gracias|alegra|viste|totalmente|combo de|encanta|qué |está |también/i.test(t || "");
 
 async function ytToken() {
@@ -46,6 +46,6 @@ for (const th of threads) {
     await new Promise((r) => setTimeout(r, 800));
   }
 }
-// guardar anti-duplicado sin los padres desmarcados (se re-responden en inglés)
+// save anti-duplicado without the padres desmarcados (is re-responden in inglés)
 try { await tf(`${R2_BASE}/${encodeURIComponent(R2_KEY)}`, { method: "PUT", headers: { Authorization: `Bearer ${CLOUDFLARE_API_TOKEN}`, "content-type": "application/json" }, body: JSON.stringify([...repliedSet].slice(-2000)) }); } catch {}
 console.log(`BORRADAS=${del} (canal ${label})`);

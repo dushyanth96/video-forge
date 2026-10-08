@@ -1,6 +1,6 @@
-// pinterest_pin.mjs — Auto-pin de los Shorts PÚBLICOS de Oddly a un tablero de Pinterest (tráfico gratis).
-// Desacoplado del render: lee el inventario público (channel/auto2/state.json) y pinea los que faltan.
-// Anti-duplicado (channel/pinterest_pinned.json). Máx 5/corrida (rate limit). No pinea privados.
+// Pinterest_pin.mjs — Auto-pin of the Shorts PÚBLICOS of Oddly to a tablero of Pinterest (tráfico free).
+// Desacoplado of the render: lee the inventario public (channel/auto2/state.JSON) and pinea the that faltan.
+// Anti-duplicado (channel/Pinterest_pinned.JSON). Máx 5/corrida (rate limit). Not pinea privados.
 //
 // Uso: node pipeline/pinterest_pin.mjs
 // Env: PINTEREST_ACCESS_TOKEN, PINTEREST_BOARD_ID. Lee (cwd): auto2_state.json, pinterest_pinned.json.
@@ -13,7 +13,7 @@ const rj = (p, d) => { try { return JSON.parse(fs.readFileSync(p, "utf8")); } ca
 const state = rj("auto2_state.json", {});
 const list = Array.isArray(state.list) ? state.list : [];
 const pinned = new Set(rj("pinterest_pinned.json", []));
-// Públicos, con id, no pineados aún. Máx 5 por corrida (respeta el rate limit de Pinterest).
+// Públicos, with id, not pineados still. Máx 5 by corrida (respeta the rate limit of Pinterest).
 const pubs = list.filter((v) => v && v.privacy === "public" && v.video_id && !pinned.has(v.video_id)).slice(0, 5);
 if (!pubs.length) { console.log("Pinterest: nada nuevo que pinear."); process.exit(0); }
 

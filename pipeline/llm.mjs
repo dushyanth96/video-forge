@@ -1,8 +1,8 @@
-// llm.mjs — Generación de TEXTO con CADENA de proveedores de IA GRATIS (sin tarjeta), para máxima
-// capacidad y CERO frenos por cuota. Prueba en orden y usa el primero que tenga key y responda:
+// llm.mjs — Generación of TEXTO with CADENA of proveedores of IA FREE (without tarjeta), for máxima
+// capacidad and CERO frenos by cuota. Test in orden and uses the first that tenga key and responda:
 //   Gemini -> Cerebras -> Groq -> Cloudflare Workers AI -> SambaNova -> OpenRouter -> GitHub Models.
-// Los proveedores SIN key se saltan solos: Juan va agregando keys (secrets) y se activan automáticamente.
-// Casi todos son OpenAI-compatible; Gemini y Cloudflare son nativos. Con json=true pide JSON válido.
+// The proveedores WITHOUT key is saltan solos: Juan va agregando keys (secrets) and is activan automáticamente.
+// Casi all are OpenAI-compatible; Gemini and Cloudflare are nativos. With JSON=true pide JSON valid.
 //
 //   import { genText } from "./llm.mjs";
 //   const raw = await genText(PROMPT, { json: true });
@@ -39,7 +39,7 @@ async function cloudflare(prompt, json) {
       const res = await tf(`https://api.cloudflare.com/client/v4/accounts/${A}/ai/run/${m}`, { method: "POST", headers: { Authorization: `Bearer ${T}`, "content-type": "application/json" }, body: JSON.stringify({ messages: [...(json ? [{ role: "system", content: "Respond ONLY with a single valid, minified JSON object. No markdown, no prose." }] : []), { role: "user", content: prompt }], temperature: 0.9, max_tokens: 2048 }) });
       if (!res.ok) { if (process.env.LLM_DIAG) cloudflare._err = m + " → " + res.status + " " + (await res.text().catch(() => "")).replace(/\s+/g, " ").slice(0, 140); continue; }
       const j = await res.json();
-      // Workers AI devuelve o {result:{response:"..."}} (clásico) o formato OpenAI {result:{choices:[{message:{content}}]}} (modelos nuevos).
+      // Workers AI devuelve or {result:{response:"..."}} (clásico) or formato OpenAI {result:{choices:[{message:{content}}]}} (modelos new).
       let raw = j?.result?.choices?.[0]?.message?.content ?? j?.result?.response ?? j?.result?.output_text ?? j?.result;
       if (raw && typeof raw === "object") raw = raw.response || raw.output_text || raw.text || (Array.isArray(raw) ? raw.map((x) => (typeof x === "string" ? x : x?.text || "")).join("") : "");
       const t = String(raw || "").trim();
@@ -51,9 +51,9 @@ async function cloudflare(prompt, json) {
 }
 
 // ---- OpenAI-compatible genérico (Groq, Cerebras, SambaNova, OpenRouter, GitHub Models)
-// Proveedor OpenAI-compatible con RESOLUCIÓN DINÁMICA de modelo: en vez de un nombre fijo (que se
-// rompe cuando el proveedor renombra/retira modelos), consulta /models en vivo y elige el mejor según
-// una lista de preferencias. Así la cadena "no falla" aunque cambien los catálogos. Cachea el elegido.
+// Proveedor OpenAI-compatible with RESOLUCIÓN DINÁMICA of modelo: in vez of a nombre fijo (that is
+// rompe when the proveedor renombra/retira modelos), consulta /models in vivo and elige the best según
+// a ready of preferencias. Así the cadena "not fails" aunque cambien the catálogos. Cachea the elegido.
 function oai(name, url, key, prefs, extra = {}) {
   if (!key) return null;
   const base = url.replace(/\/chat\/completions$/, "");
@@ -68,7 +68,7 @@ function oai(name, url, key, prefs, extra = {}) {
         const j = await r.json().catch(() => ({}));
         let ids = ((j && (j.data || j.models || j.body)) || []).map((m) => m.id || m.name).filter(Boolean);
         if (process.env.LLM_DIAG && self) self._models = ids.slice(0, 40).join(" | ");
-        // Descartar modelos que NO son de chat (clasificación/guard/audio/embeddings/etc.) para no elegir uno inválido.
+        // Discard modelos that NOT are of chat (clasificación/guard/audio/embeddings/etc.) for not elegir uno invalid.
         const CHAT = ids.filter((id) => !/guard|whisper|tts|embed|moderat|safety|rerank|vision|audio|transcri|prompt-guard|classif/i.test(id));
         ids = CHAT.length ? CHAT : ids;
         for (const p of wanted) { const hit = ids.find((id) => (p instanceof RegExp ? p.test(id) : id === p)); if (hit) { model = hit; break; } }
@@ -87,7 +87,7 @@ function oai(name, url, key, prefs, extra = {}) {
       if (!m) { if (process.env.LLM_DIAG && !this._err) this._err = "sin modelo disponible"; return null; }
       const mk = (withFmt) => { const b = { model: m, messages: [...(json ? [{ role: "system", content: "Respond ONLY with a single valid, minified JSON object. No markdown, no code fences, no prose." }] : []), { role: "user", content: prompt }], temperature: 0.9 }; if (json && withFmt) b.response_format = { type: "json_object" }; return b; };
       let r = await tf(url, { method: "POST", headers: { Authorization: `Bearer ${key}`, "content-type": "application/json", ...extra }, body: JSON.stringify(mk(true)) });
-      // Algunos modelos no soportan response_format -> reintentar sin él antes de rendirse.
+      // Algunos modelos not soportan response_format -> retry without él before of rendirse.
       if (!r.ok && json && r.status === 400) r = await tf(url, { method: "POST", headers: { Authorization: `Bearer ${key}`, "content-type": "application/json", ...extra }, body: JSON.stringify(mk(false)) });
       if (!r.ok) { if (process.env.LLM_DIAG) this._err = "(" + m + ") " + r.status + " " + (await r.text().catch(() => "")).replace(/\s+/g, " ").slice(0, 150); return null; }
       const j = await r.json();
@@ -97,10 +97,10 @@ function oai(name, url, key, prefs, extra = {}) {
   } };
 }
 
-// Cadena de proveedores GRATIS. Orden = los CONFIRMADOS que responden primero (Gemini→Groq→OpenRouter→
-// Cloudflare); Cerebras/SambaNova van al final como respaldo (hoy piden tarjeta: fallan rápido y se saltan,
-// pero se activan solos si algún día tienen cupo gratis). GitHub Models se quitó (GitHub lo está retirando).
-// Se saltan los que no tengan key. Cada oai() auto-resuelve el modelo vía /models (a prueba de renombres).
+// Cadena of proveedores FREE. Orden = the CONFIRMADOS that responden first (Gemini→Groq→OpenRouter→
+// Cloudflare); Cerebras/SambaNova van to the final as respaldo (today piden tarjeta: fallan fast and is saltan,
+// but is activan solos if algún day tienen cupo free). GitHub Models is quitó (GitHub lo is retirando).
+// Is saltan the that not tengan key. Cada oai() auto-resuelve the modelo vía /models (to test of renombres).
 const PROVIDERS = [
   { name: "Gemini", run: gemini, on: GKEYS.length ? 1 : 0 },
   oai("Groq", "https://api.groq.com/openai/v1/chat/completions", process.env.GROQ_API_KEY, [/llama-3\.3-70b-versatile/i, /llama.*3\.3.*70b/i, /llama.*70b.*versatile/i, /llama.*70b/i, /llama.*instruct/i]),
@@ -110,7 +110,7 @@ const PROVIDERS = [
   oai("SambaNova", "https://api.sambanova.ai/v1/chat/completions", process.env.SAMBANOVA_API_KEY, [/Meta-Llama-3\.3-70B-Instruct/i, /llama.*3\.3.*70b/i, /llama.*70b/i, /llama/i]),
 ].filter(Boolean).filter((p) => p.on !== 0);
 
-// Chequeo de salud: prueba CADA proveedor con key y dice cuál responde (para validar keys nuevas).
+// Chequeo of salud: test CADA proveedor with key and dice cuál responde (for validar keys new).
 export async function health() {
   const out = [];
   for (const p of PROVIDERS) {
@@ -124,7 +124,7 @@ export async function health() {
   return out;
 }
 
-// Genera texto probando la cadena de proveedores gratis. Devuelve string o null.
+// Generates texto probando the cadena of proveedores free. Devuelve string or null.
 export async function genText(prompt, { json = true } = {}) {
   for (const p of PROVIDERS) {
     try { const t = await p.run(prompt, json); if (t) { if (p.name !== "Gemini") console.error(`Texto por ${p.name} (proveedor gratis de respaldo)`); return t; } } catch {}

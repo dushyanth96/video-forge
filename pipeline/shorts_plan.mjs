@@ -1,6 +1,6 @@
-// shorts_plan.mjs — la IA analiza el video y SUGIERE los Shorts: cuantos, de que
-// momentos (timestamps reales), que tan largos, con titulo/gancho/hashtags/caption.
-// Juan aprueba uno por uno. No genera nada: solo propone el plan.
+// Shorts_plan.mjs — the IA analiza the video and SUGIERE the Shorts: cuantos, of that
+// momentos (timestamps reales), that tan largos, with title/hook/hashtags/caption.
+// Juan aprueba uno by uno. Not generates nothing: only propone the plan.
 //
 // Uso: node pipeline/shorts_plan.mjs <voicemap.json> <timing.json> <plan_out.json>
 import fs from "node:fs";
@@ -15,7 +15,7 @@ const vmBeats = vm.beats || vm;
 const tBeats = timing.beats || [];
 const total = timing.total || (tBeats.length ? tBeats[tBeats.length - 1].end : 0);
 
-// Transcripcion con timestamps por beat (para que la IA elija momentos reales).
+// Transcripcion with timestamps by beat (for that the IA elija momentos reales).
 const lines = vmBeats.map((b, i) => {
   const t = tBeats[i] || {};
   const s = t.start != null ? Math.round(t.start) : "?";
@@ -54,7 +54,7 @@ const prompt =
 
 const plan = (await gemini(prompt)) || { reasoning: "Sin IA; propongo 1 short del gancho.", shorts: [{ title: "The number that never stops", start_sec: 0, end_sec: 40, hook: "YouTube makes $1,900 every second.", hashtags: ["#youtube", "#money", "#shorts"], caption: "How much YouTube makes every second." }] };
 
-// Limpieza + limites (duracion 15-58s, dentro del video).
+// Limpieza + limites (duration 15-58s, dentro of the video).
 plan.shorts = (plan.shorts || []).slice(0, 5).map((s, i) => {
   let a = Math.max(0, Math.round(+s.start_sec || 0));
   let b = Math.round(+s.end_sec || a + 40);

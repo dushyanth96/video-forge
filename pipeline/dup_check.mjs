@@ -1,7 +1,7 @@
-// dup_check.mjs — GUARDA anti-duplicados: evita producir un tema que YA existe en el canal.
+// dup_check.mjs — STORES anti-duplicados: avoids producir a topic that ALREADY existe in the channel.
 import { TEXT_MODELS } from "./_models.mjs";
-// Usa Gemini para comparar por SIGNIFICADO (robusto a redacciones distintas: "1,000,000" vs "1 million").
-// Sale 1 si es DUPLICADO (para que produce_video aborte). Sale 0 si es tema nuevo (o si no puede juzgar).
+// Uses Gemini for comparar by SIGNIFICADO (robusto to redacciones distintas: "1,000,000" vs "1 million").
+// Sale 1 if is DUPLICADO (for that produce_video aborte). Sale 0 if is topic new (or if not can juzgar).
 // Uso: node pipeline/dup_check.mjs "<topic>"
 // Env: GEMINI_API_KEY, YT_CLIENT_ID/SECRET/REFRESH
 const topic = process.argv[2] || "";
@@ -17,7 +17,7 @@ async function getTitles() {
     const ch = await api("https://www.googleapis.com/youtube/v3/channels?part=contentDetails&mine=true");
     const up = ch?.items?.[0]?.contentDetails?.relatedPlaylists?.uploads; if (!up) return [];
     const pl = await api(`https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${up}`);
-    // Solo LARGOS (los shorts no cuentan como duplicado de tema).
+    // Only LARGOS (the Shorts not cuentan as duplicado of topic).
     return (pl?.items || []).map((i) => i.snippet?.title || "").filter((t) => t && !/#shorts/i.test(t));
   } catch { return []; }
 }

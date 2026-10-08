@@ -1,6 +1,6 @@
-// gen_image.mjs — Generación de imagen: Gemini nativo con fallback a Pollinations (Flux, GRATIS).
-// Nota: Hugging Face DEPRECÓ Flux.1-schnell en su capa gratis (hf-inference, 410), así que el Flux
-// gratis lo da Pollinations (image.pollinations.ai?model=flux). Uso: node pipeline/gen_image.mjs "PROMPT" [out.png]
+// gen_image.mjs — Generación of image: Gemini nativo with fallback to Pollinations (Flux, FREE).
+// Score: Hugging Face DEPRECÓ Flux.1-schnell in its capa free (hf-inference, 410), así that the Flux
+// free lo da Pollinations (image.pollinations.ai?model=flux). Usage: node pipeline/gen_image.mjs "PROMPT" [out.png]
 
 import fs from "node:fs";
 import path from "node:path";
@@ -76,7 +76,7 @@ export async function generateImage(prompt, outPath = "out.png") {
     }
   }
 
-  // Fallback seguro a Pollinations (Flux gratis)
+  // Fallback safe to Pollinations (Flux free)
   try {
     return await dlPollinations(prompt, outPath);
   } catch (err) {

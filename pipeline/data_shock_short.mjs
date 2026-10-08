@@ -1,6 +1,6 @@
-// data_shock_short.mjs — Ensambla el Short VISUAL "DATA SHOCK": por cada fact, imagen icónica de Wikimedia
-// (Ken Burns) con el NÚMERO gigante + etiqueta quemados; hook card los primeros 2.5s; música que empuja;
-// SIN narración (sound-off first). Corto y agresivo (~22-26s). Solo imágenes con licencia libre.
+// data_shock_short.mjs — Ensambla the Short VISUAL "DATA SHOCK": by cada fact, image icónica of Wikimedia
+// (Ken Burns) with the NUMBER gigante + tag quemados; hook card the primeros 2.5s; music that empuja;
+// WITHOUT narration (sound-off first). Corto and agresivo (~22-26s). Only images with licencia libre.
 // Uso: node pipeline/data_shock_short.mjs [script.json] [out.mp4]   (music.mp3 opcional en cwd)
 import fs from "node:fs";
 import { execSync } from "node:child_process";
@@ -42,7 +42,7 @@ async function wikimediaImage(query) {
   return { url: pick.ii.thumburl || pick.ii.url, page: pick.ii.descriptionshorturl || pick.ii.descriptionurl, lic: pick.lic, artist: stripHtml(ex.Artist?.value) || "Wikimedia Commons", title: pick.t.replace(/^File:/, "") };
 }
 
-// Ken Burns OSCURECIDO (para que el número en oro resalte) desde una imagen de alta resolución.
+// Ken Burns OSCURECIDO (for that the number in oro resalte) since a image of alta resolución.
 function kbDim(imgPath, dur, idx) {
   const frames = Math.max(2, Math.round(dur * FPS));
   const z = idx % 2 === 0 ? `'min(zoom+0.0009,1.2)'` : `'if(eq(on,0),1.2,max(zoom-0.0009,1.0))'`;
@@ -57,7 +57,7 @@ if (!facts.length) { console.error("El guion no trajo datos (facts vacío): no h
 const PER = 5.0;
 const total = +(facts.length * PER).toFixed(2);
 
-// 1) Reunir TODAS las imágenes que existan (los números abstractos no tienen foto propia -> se usan de fondo).
+// 1) Reunir ALL the images that existan (the números abstractos not tienen photo propia -> is usan of background).
 const imgPaths = [];
 async function grabImg(query, tag) {
   let img = null; try { img = await wikimediaImage(query); } catch {}
@@ -70,24 +70,24 @@ async function grabImg(query, tag) {
   } catch { return false; }
 }
 for (let i = 0; i < facts.length; i++) await grabImg(facts[i].query, `f${i}`);
-// FALLBACK: DATA SHOCK VIVE de la imagen icónica. Si Wikimedia devolvió poco, busca por tema/título/etiquetas
-// (y términos de época) hasta tener al menos 2 imágenes, para no quedar en gradiente pelado.
+// FALLBACK: DATA SHOCK VIVE of the image icónica. If Wikimedia devolvió little, search by topic/title/tags
+// (and términos of época) until tener to the less 2 images, for not quedar in gradiente pelado.
 if (imgPaths.length < 2) {
-  // Solo consultas basadas en el TEMA (las etiquetas sueltas traían basura: "conquer Europe" -> "Obstacle Course").
+  // Only consultas basadas in the TOPIC (the tags sueltas traían basura: "conquer Europe" -> "Obstacle Course").
   const extra = [`${script.topic} historical painting`, `${script.topic} history engraving`, `${script.topic} historical photograph`, `${script.topic} medieval art`, script.topic]
     .filter(Boolean);
   for (const q of extra) { if (imgPaths.length >= 3) break; await grabImg(q, "x"); }
 }
 console.log(`imágenes: ${imgPaths.length}/${facts.length}`);
 
-// 2) FONDO oscurecido para TODA la duración: Ken Burns sobre las imágenes cicladas; si no hay ninguna, gradiente sobrio.
+// 2) BACKGROUND oscurecido for ALL the duration: Ken Burns about the images cicladas; if not hay ninguna, gradiente sobrio.
 const bg = `${work}/bg.mp4`;
 if (imgPaths.length) {
   const per = total / imgPaths.length;
   const segs = imgPaths.map((p, i) => kbDim(p, per, i));
   fs.writeFileSync(`${work}/bglist.txt`, segs.map((s) => `file '${s.split("/").pop()}'`).join("\n"));
-  // Unir sin recodificar es lo rápido; si un segmento quedó con parámetros distintos (p.ej. una imagen
-  // rara de Wikimedia), -c copy falla y tumbaba el Short entero. Fallback: recodificar la unión.
+  // Join without recodificar is lo fast; if a segmento quedó with parámetros distintos (p.e.g.. a image
+  // rara of Wikimedia), -c copy fails and tumbaba the Short entero. Fallback: recodificar the join.
   try {
     execSync(`ffmpeg -y -f concat -safe 0 -i ${work}/bglist.txt -c copy "${bg}"`, { stdio: "ignore" });
   } catch {
@@ -98,7 +98,7 @@ if (imgPaths.length) {
   execSync(`ffmpeg -y -f lavfi -i color=c=0x0d1b2a:s=${W}x${H}:d=${total}:r=${FPS} -vf "vignette=a=PI/6" -c:v libx264 -preset medium -crf 20 -pix_fmt yuv420p "${bg}"`, { stdio: "ignore" });
 }
 
-// 3) Overlays: hook card (0-2.5s) + cada número+etiqueta en su ventana de tiempo, sobre el fondo.
+// 3) Overlays: hook card (0-2.5s) + cada number+tag in its ventana of tiempo, about the background.
 const hookCard = String(script.hook_card || script.title || "DATA SHOCK").toUpperCase().replace(/[\r\n]+/g, " ").slice(0, 32);
 fs.writeFileSync(`${work}/hook.txt`, hookCard);
 const hookFs = Math.max(42, Math.min(80, Math.round(900 / Math.max(7, hookCard.length) / 0.66)));
@@ -107,7 +107,7 @@ facts.forEach((f, i) => {
   const lbl = String(f.label || "");
   fs.writeFileSync(`${work}/num${i}.txt`, String(f.num || "")); fs.writeFileSync(`${work}/lbl${i}.txt`, lbl);
   const numFs = Math.max(56, Math.min(146, Math.round(900 / Math.max(5, String(f.num || "").length) / 0.66)));
-  // Etiqueta también ADAPTATIVA: nunca se sale del cuadro (presupuesto ~980px, ~0.60/char), tope 72 para no competir con el número en oro.
+  // Tag también ADAPTATIVA: never is sale of the cuadro (presupuesto ~980px, ~0.60/char), tope 72 for not competir with the number in oro.
   const lblFs = Math.max(36, Math.min(72, Math.round(980 / Math.max(8, lbl.length) / 0.60)));
   const en = `enable='between(t\\,${(i * PER).toFixed(2)}\\,${((i + 1) * PER).toFixed(2)})'`;
   if (FONT) {
@@ -116,7 +116,7 @@ facts.forEach((f, i) => {
   }
 });
 
-// 4) Música (o silencio) + render final.
+// 4) Music (or silencio) + render final.
 const hasMusic = fs.existsSync("music.mp3");
 if (hasMusic) {
   execSync(`ffmpeg -y -i "${bg}" -stream_loop -1 -i music.mp3 -filter_complex "[0:v]format=yuv420p${ov}[v];[1:a]volume=0.5,afade=t=in:st=0:d=0.6,afade=t=out:st=${(total - 0.8)}:d=0.8[a]" -map "[v]" -map "[a]" -t ${total} -r ${FPS} -c:v libx264 -preset medium -crf 19 -pix_fmt yuv420p -c:a aac -b:a 192k -shortest -movflags +faststart "${outPath}"`, { stdio: "inherit" });

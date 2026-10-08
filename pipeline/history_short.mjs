@@ -1,9 +1,9 @@
-// history_short.mjs — Ensambla un SHORT 9:16 de "Historia que cambio el mundo".
-// Por cada beat busca material RELEVANTE al tema y sin repetir:
+// history_short.mjs — Ensambla a SHORT 9:16 of "Historia that cambio the mundo".
+// By cada beat search material RELEVANTE to the topic and without repetir:
 //   1) imagen historica de alta resolucion en Wikimedia Commons (PD/CC0/CC-BY) -> Ken Burns (zoom/pan)
-//   2) respaldo: video de archivo dominio-publico en Archive.org (relevancia por titulo)
-// Debajo va la NARRACION de historiador (voz Gemini TTS) con subtitulos KARAOKE + musica con ducking.
-// Solo fuentes con descarga permitida y licencia libre (sin evasion). Calidad alta (crf 18).
+//   2) respaldo: video of file dominio-public in Archive.org (relevancia by title)
+// Debajo va the NARRATION of historiador (voice Gemini TTS) with subtitles KARAOKE + music with ducking.
+// Only fuentes with descarga permitida and licencia libre (without evasion). Quality alta (crf 18).
 //
 // Uso: node pipeline/history_short.mjs <script.json> <narration.mp3> <out.mp4>
 // Requiere en cwd: words.json (Whisper, opcional), music.mp3 (opcional).
@@ -47,9 +47,9 @@ async function wikimediaImage(query) {
     .filter((x) => x.ii && x.ii.width >= 700 && /\.(jpe?g|png)(\?|$)/i.test(x.ii.thumburl || x.ii.url || ""))
     .map((x) => ({ ...x, lic: imgLicense(x.ii.extmetadata) }))
     .filter((x) => x.lic && !usedImg.has(x.t))
-    // Evitar fotos de CATÁLOGO de museo (aburridas para un Short): monedas con regla, especímenes, logos, mapas, banderas…
+    // Avoid photos of CATÁLOGO of museo (aburridas for a Short): monedas with regla, especímenes, logos, mapas, banderas…
     .filter((x) => !/portable antiquities|scale bar|\bruler\b|specimen|catalogue|\bobverse\b|\breverse\b|\blogo\b|diagram|infographic|\bicon\b|screenshot/i.test(x.t))
-    // RELEVANCIA: el titulo de la imagen debe compartir >=1 palabra clave con la query (evita fotos fuera de tema).
+    // RELEVANCIA: the title of the image must compartir >=1 palabra key with the query (avoids photos fuera of topic).
     .filter((x) => { if (!want.length) return true; const tw = kw(x.t); return want.some((w) => tw.includes(w)); })
     .sort((a, b) => (b.ii.width || 0) - (a.ii.width || 0));
   const pick = cand[0];
@@ -65,11 +65,11 @@ async function wikimediaImage(query) {
   };
 }
 
-// Segmento Ken Burns (zoom/pan lento) a 9:16 desde una imagen de alta resolucion -> nitido.
+// Segmento Ken Burns (zoom/pan slow) to 9:16 since a image of alta resolucion -> nitido.
 function kenBurns(imgPath, dur, idx) {
   const frames = Math.max(2, Math.round(dur * FPS));
   const zoomIn = idx % 2 === 0;
-  // Escala a un lienzo mayor que 9:16 (para tener margen de paneo) y hace zoompan hacia 1080x1920.
+  // Escala to a lienzo mayor that 9:16 (for tener margen of paneo) and hace zoompan hacia 1080x1920.
   const z = zoomIn ? `'min(zoom+0.0010,1.28)'` : `'if(eq(on,0),1.28,max(zoom-0.0010,1.0))'`;
   const panX = idx % 3 === 0 ? `'(iw-iw/zoom)/2'` : idx % 3 === 1 ? `'(iw-iw/zoom)*0.15'` : `'(iw-iw/zoom)*0.85'`;
   const vf = `scale=${Math.round(W * 1.35)}:${Math.round(H * 1.35)}:force_original_aspect_ratio=increase,crop=${Math.round(W * 1.35)}:${Math.round(H * 1.35)},` +
@@ -80,7 +80,7 @@ function kenBurns(imgPath, dur, idx) {
   return seg;
 }
 
-// ---------- Archive.org: video de archivo dominio-publico (respaldo) ----------
+// ---------- Archive.org: video of file dominio-public (respaldo) ----------
 const PD_COLLECTIONS = ["prelinger", "universal_newsreels", "newsandpublicaffairs", "academic_films", "AENN", "usnationalarchives", "FedFlix"];
 function vidLicense(licenseurl, collections) {
   const u = (Array.isArray(licenseurl) ? licenseurl[0] : licenseurl || "").toLowerCase();
@@ -99,7 +99,7 @@ async function archiveVideo(query, dur, idx) {
   let docs = [];
   try { docs = (((await (await tf(u)).json()).response) || {}).docs || []; } catch { return null; }
   const want = new Set(kw(query));
-  // Relevancia: exige que el TITULO comparta al menos una palabra clave con la query. Y dedup por id.
+  // Relevancia: exige that the TITLE comparta to the less a palabra key with the query. and dedup by id.
   // + filtro compartido: fuera videos producidos con texto quemado / presentadores / diagramas.
   const relevant = docs.filter((d) => !usedVid.has(d.identifier)).filter((d) => {
     const title = (Array.isArray(d.title) ? d.title[0] : d.title) || "";
@@ -134,7 +134,7 @@ async function archiveVideo(query, dur, idx) {
   return null;
 }
 
-// Fondo cinematografico generado (ultima red de seguridad: un beat SIN material no tumba el short).
+// Background cinematografico generated (last red of security: a beat WITHOUT material not tumba the short).
 function fallbackSegment(dur, idx) {
   const seg = `${work}/seg${idx}.mp4`;
   try {
@@ -145,9 +145,9 @@ function fallbackSegment(dur, idx) {
   return seg;
 }
 
-// ---------- Un segmento por beat: imagen Wikimedia (Ken Burns) -> respaldo video Archive -> fondo ----------
+// ---------- A segmento by beat: image Wikimedia (Ken Burns) -> respaldo video Archive -> background ----------
 async function buildSegment(beat, dur, idx) {
-  // Escalera de queries que ACORTA (de especifica a general) -> Wikimedia no devuelve 0 por frases largas.
+  // Escalera of queries that ACORTA (of especifica to general) -> Wikimedia not devuelve 0 by frases largas.
   const q0 = beat.query || topic;
   const noYear = q0.replace(/\b(1[0-9]{3}|20\d{2})\b/g, "").replace(/\s+/g, " ").trim();
   const sig = q0.split(/\s+/).filter((w) => /^[A-Z]/.test(w) || w.length > 3);
@@ -169,12 +169,12 @@ async function buildSegment(beat, dur, idx) {
       return { seg, kind: "img", page: img.page, license: img.lic };
     } catch {}
   }
-  // 2) Respaldo: video de archivo relevante.
+  // 2) Respaldo: video of file relevante.
   for (const q of queries) {
     let v = null; try { v = await archiveVideo(q, dur, idx); } catch {}
     if (v) { console.log(`  beat ${idx}: VIDEO archivo (${v.license})`); credits.push(v.cred); return { seg: v.seg, kind: "vid", page: v.page, license: v.license }; }
   }
-  // 3) Ultima red: fondo cinematografico (nunca aborta la categoria).
+  // 3) Last red: background cinematografico (never aborta the categoria).
   console.error(`  beat ${idx}: sin material real para "${beat.query}" -> fondo cinematografico`);
   return { seg: fallbackSegment(dur, idx), kind: "fallback", page: "", license: "" };
 }
@@ -189,7 +189,7 @@ for (let i = 0; i < beats.length; i++) {
 if (!built.length) { console.error("No conseguí NINGÚN material -> no puedo armar el short"); process.exit(1); }
 while (built.length < beats.length) built.push(built[built.length % built.length]);
 
-// Concatenar con xfade -> fondo del largo de la narracion.
+// Concatenar with xfade -> background of the largo of the narration.
 const bg = `${work}/bg.mp4`;
 if (built.length === 1) {
   execSync(`ffmpeg -y -stream_loop -1 -i "${built[0].seg}" -t ${narrDur.toFixed(2)} -r ${FPS} -c:v libx264 -preset medium -crf 18 -pix_fmt yuv420p "${bg}"`, { stdio: "ignore" });
@@ -206,7 +206,7 @@ if (built.length === 1) {
   execSync(`ffmpeg -y ${inputs} -filter_complex "${filter}" -map "${acc}" -t ${narrDur.toFixed(2)} -r ${FPS} -c:v libx264 -preset medium -crf 18 -pix_fmt yuv420p "${bg}"`, { stdio: "ignore" });
 }
 
-// Subtitulos KARAOKE desde words.json (Whisper). Fallback: frases de los beats.
+// Subtitles KARAOKE since words.JSON (Whisper). Fallback: frases of the beats.
 function assTime(s) { const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60; return `${h}:${String(m).padStart(2, "0")}:${sec.toFixed(2).padStart(5, "0")}`; }
 const asc = (s) => String(s).replace(/[{}\\]/g, "").replace(/[\r\n]+/g, " ");
 const dia = [];
@@ -237,18 +237,18 @@ Style: Kar,Liberation Sans,108,&H0022D3EE,&H00FFFFFF,&H00000000,&H96000000,-1,0,
 fs.writeFileSync("captions.ass", ass + `\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n${dia.join("\n")}\n`);
 console.log(`captions.ass: ${dia.length} lineas`);
 
-// GANCHO VISUAL: texto grande en los primeros ~2.8s (85% ve SIN sonido -> el hook debe LEERSE al instante).
+// HOOK VISUAL: texto grande in the primeros ~2.8s (85% ve WITHOUT sound -> the hook must LEERSE to the instante).
 const hookCard = String(script.hook_card || (script.hook || script.title || "").split(/\s+/).slice(0, 5).join(" ") || "HISTORY").toUpperCase().replace(/[\r\n]+/g, " ").slice(0, 32);
 fs.writeFileSync("hookcard.txt", hookCard);
 const HOOKFONT = ["/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf", "/usr/share/fonts/truetype/liberation2/LiberationSans-Bold.ttf"].find((p) => fs.existsSync(p)) || "";
-// Tamaño adaptativo para que NUNCA se salga del cuadro (1080px con margen). ~0.6*fontsize por char en bold.
+// Tamaño adaptativo for that NEVER is salga of the cuadro (1080px with margen). ~0.6*fontsize by char in bold.
 const hookFs = Math.max(42, Math.min(80, Math.round(900 / Math.max(7, hookCard.length) / 0.66)));
 const hookVf = HOOKFONT
   ? `,drawtext=textfile='hookcard.txt':fontfile='${HOOKFONT}':expansion=none:fontcolor=white:fontsize=${hookFs}:borderw=9:bordercolor=black@0.9:shadowcolor=black@0.55:shadowx=4:shadowy=4:x=(w-text_w)/2:y=(h*0.26):text_align=C:line_spacing=10:enable='lt(t\\,2.8)':alpha='if(lt(t\\,0.35)\\,t/0.35\\,if(lt(t\\,2.3)\\,1\\,max(0\\,(2.8-t)/0.5)))'`
   : "";
 console.log(`Hook card: "${hookCard}"${HOOKFONT ? "" : " (⚠️ sin fuente, sin overlay)"}`);
 
-// Mezcla final: fondo + hook + subtitulos quemados + narracion + musica con ducking (asplit: la voz no se puede reusar).
+// Mezcla final: background + hook + subtitles quemados + narration + music with ducking (asplit: the voice not is can reusar).
 const hasMusic = fs.existsSync("music.mp3");
 if (hasMusic) {
   execSync(`ffmpeg -y -i "${bg}" -i "${narrPath}" -stream_loop -1 -i music.mp3 ` +

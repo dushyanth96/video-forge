@@ -1,6 +1,6 @@
-// render_fallback.mjs — RESPALDO cuando HyperFrames se cuelga/falla. Arma el video de la
-// fase con ffmpeg usando el b-roll YA descargado (bg/*.mp4) + subtítulos quemados desde
-// timing.json + la voz. Video simple pero COMPLETO (nunca deja la fase sin salida).
+// render_fallback.mjs — RESPALDO when HyperFrames is cuelga/fails. Arma the video of the
+// phase with ffmpeg usando the b-roll ALREADY descargado (bg/*.mp4) + subtitles quemados since
+// timing.JSON + the voice. Video simple but COMPLETO (never deja the phase without output).
 // Uso: node pipeline/render_fallback.mjs <timing.json> <voiceover.mp3> <bgDir> <out.mp4>
 import fs from "node:fs";
 import { execSync } from "node:child_process";
@@ -11,7 +11,7 @@ const beats = timing.beats || [];
 const total = timing.total || beats.reduce((s, b) => Math.max(s, b.end || 0), 0) || 60;
 const W = 1920, H = 1080;
 
-// 1) Fondo: concatenar los clips de b-roll ya bajados (loop hasta cubrir la duración).
+// 1) Background: concatenar the clips of b-roll already bajados (loop until cubrir the duration).
 const segs = fs.existsSync(bgDir) ? fs.readdirSync(bgDir).filter((f) => /\.(mp4|mov|webm)$/i.test(f)).sort().map((f) => `${bgDir}/${f}`) : [];
 if (segs.length) {
   fs.writeFileSync("bgconcat.txt", segs.map((s) => `file '${process.cwd()}/${s}'`).join("\n") + "\n");
@@ -20,7 +20,7 @@ if (segs.length) {
   execSync(`ffmpeg -y -f lavfi -i color=c=0x0a0e18:s=${W}x${H}:d=${total}:r=30 bgfull.mp4`, { stdio: "inherit" });
 }
 
-// 2) Subtítulos .ass desde los beats (grandes, centrados, con borde).
+// 2) Subtitles .ass since the beats (grandes, centrados, with borde).
 const ts = (s) => { const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = (s % 60).toFixed(2); return `${h}:${String(m).padStart(2, "0")}:${String(sec).padStart(5, "0")}`; };
 let acc = 0; const events = [];
 for (const b of beats) {
@@ -43,6 +43,6 @@ ${events.join("\n")}
 `;
 fs.writeFileSync("caps.ass", ass);
 
-// 3) Quemar subtítulos + mux voz -> video final de la fase.
+// 3) Quemar subtitles + mux voice -> video final of the phase.
 execSync(`ffmpeg -y -i bgfull.mp4 -i "${voiceover}" -vf "subtitles=caps.ass" -map 0:v -map 1:a -c:v libx264 -preset medium -crf 22 -pix_fmt yuv420p -c:a aac -b:a 128k -shortest "${out}"`, { stdio: "inherit" });
 console.log("Fallback render listo:", out);

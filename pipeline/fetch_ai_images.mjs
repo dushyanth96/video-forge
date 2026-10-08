@@ -1,6 +1,6 @@
-// fetch_ai_images.mjs — genera MUCHAS imagenes IA (una cada ~5s, un plano nuevo por
-// tramo) con Pollinations.ai (GRATIS, sin key), para un flujo cinematografico tipo
-// pelicula. Cada plano se relaciona con lo que dice la voz en ese momento.
+// fetch_ai_images.mjs — generates MANY images IA (a cada ~5s, a shot new by
+// tramo) with Pollinations.ai (FREE, without key), for a flujo cinematografico type
+// pelicula. Cada shot is relaciona with lo that dice the voice in ese momento.
 //
 // Uso: node pipeline/fetch_ai_images.mjs <timing.json> [outDir=aiimg] [maxSeconds]
 import fs from "node:fs";
@@ -14,7 +14,7 @@ fs.mkdirSync(outDir, { recursive: true });
 const SEG = 5.0; // segundos por plano (ritmo de pelicula)
 const STYLE = "cinematic film still, 35mm, dramatic volumetric lighting, highly detailed, shallow depth of field, teal and emerald and warm gold color grade, moody atmosphere, photorealistic, 8k, no text, no watermark, no words, no letters";
 
-// Deriva el SUJETO del plano segun lo que dice la voz en ese tramo.
+// Deriva the SUJETO of the shot segun lo that dice the voice in ese tramo.
 function subject(text) {
   const t = text.toLowerCase();
   const has = (...w) => w.some((x) => t.includes(x));
@@ -32,7 +32,7 @@ function subject(text) {
   return "abstract cinematic visualization of money and data, glowing particles, dark";
 }
 
-// Agrupa beats en segmentos de ~SEG segundos (un plano por segmento).
+// Agrupa beats in segmentos of ~SEG seconds (a shot by segmento).
 const beats = timing.beats.filter((b) => b.start < total);
 const segs = [];
 let cur = null;

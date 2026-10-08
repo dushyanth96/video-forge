@@ -1,11 +1,11 @@
-// weekly_stats.mjs — historial SEMANA A SEMANA de un canal, desde YouTube Analytics.
+// weekly_stats.mjs — historial WEEK to WEEK of a channel, since YouTube Analytics.
 // Uso: node pipeline/weekly_stats.mjs data_lens | oddly
-// Lee weekly_stats.json (lo baja el workflow), actualiza la sección del canal con
-// vistas/min/subs ganados por semana (ISO, lunes) de los últimos ~63 días, conserva
-// las semanas viejas ya guardadas, y reescribe el archivo (el workflow lo sube a R2).
+// Lee weekly_stats.JSON (lo downloads the workflow), actualiza the section of the channel with
+// vistas/min/subs ganados by week (ISO, lunes) of the últimos ~63 days, conserva
+// the weeks viejas already guardadas, and reescribe the file (the workflow lo uploads to R2).
 //
-// Por qué así: es la ÚNICA fuente que da vistas por día reales (= YouTube Studio).
-// Analytics va 2-3 días atrasado -> la semana en curso siempre queda PARCIAL (marcada).
+// By qué así: is the ÚNICA fuente that da vistas by day reales (= YouTube Studio).
+// Analytics va 2-3 days atrasado -> the week in curso always queda PARCIAL (marcada).
 import fs from "node:fs";
 
 const CH = process.argv[2];
@@ -19,7 +19,7 @@ if (!P.refresh) { console.error(CH, "sin refresh token en env"); process.exit(1)
 const FILE = "weekly_stats.json";
 const tf = (u, o = {}, ms = 15000) => fetch(u, { ...o, signal: AbortSignal.timeout(ms) });
 const isoDay = (d) => d.toISOString().slice(0, 10);
-// lunes de la semana ISO de una fecha 'YYYY-MM-DD' (en UTC)
+// lunes of the week ISO of a fecha 'YYYY-MM-DD' (in UTC)
 function mondayUTC(dstr) {
   const dt = new Date(dstr + "T00:00:00Z");
   const back = (dt.getUTCDay() + 6) % 7; // 0=lunes
@@ -28,7 +28,7 @@ function mondayUTC(dstr) {
 }
 
 (async () => {
-  // 1) access token desde el refresh token
+  // 1) access token since the refresh token
   const tr = await (await tf("https://oauth2.googleapis.com/token", {
     method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({ client_id: P.id, client_secret: P.secret, refresh_token: P.refresh, grant_type: "refresh_token" }),
@@ -37,8 +37,8 @@ function mondayUTC(dstr) {
   if (!token) { console.error(CH, "no access_token:", JSON.stringify(tr).slice(0, 200)); process.exit(1); }
   const H = { Authorization: `Bearer ${token}` };
 
-  // 2) info del canal PRIMERO: nombre, subs y vistas de por vida + fecha de creación
-  //    (para bajar la serie DESDE EL DÍA 1 del canal, no solo los últimos días).
+  // 2) info of the channel FIRST: nombre, subs and vistas of by vida + fecha of creación
+  //    (for download the serie SINCE THE DAY 1 of the channel, not only the últimos days).
   let subs = 0, total_views = 0, name = "", created = "";
   try {
     const ch = await (await tf("https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&mine=true", { headers: H })).json();
@@ -46,12 +46,12 @@ function mondayUTC(dstr) {
     if (it) { subs = +((it.statistics || {}).subscriberCount) || 0; total_views = +((it.statistics || {}).viewCount) || 0; name = (it.snippet || {}).title || ""; created = ((it.snippet || {}).publishedAt || "").slice(0, 10); }
   } catch {}
 
-  // 3) serie diaria de Analytics DESDE EL INICIO del canal (respaldo 2025-01-01).
-  //    Métricas: vistas, minutos, likes, subs ganados/perdidos. Si el permiso no da todas, baja el set.
+  // 3) serie diaria of Analytics SINCE THE INICIO of the channel (respaldo 2025-01-01).
+  //    Métricas: vistas, minutes, likes, subs ganados/perdidos. If the permiso not da all, downloads the set.
   const end = isoDay(new Date());
   const start = (created && created >= "2015-01-01") ? created : "2025-01-01";
   const base = `https://youtubeanalytics.googleapis.com/v2/reports?ids=channel==MINE&startDate=${start}&endDate=${end}&dimensions=day&sort=day`;
-  // sets ordenados: se prueban de más completo a más básico; 'cols' dice qué columna es qué.
+  // sets ordenados: is prueban of more completo to more básico; 'cols' dice qué columna is qué.
   const SETS = [
     { m: "views,estimatedMinutesWatched,likes,subscribersGained,subscribersLost", cols: { views: 1, min: 2, likes: 3, sg: 4, sl: 5 } },
     { m: "views,estimatedMinutesWatched,likes", cols: { views: 1, min: 2, likes: 3 } },
@@ -65,7 +65,7 @@ function mondayUTC(dstr) {
   }
   const g = (row, i) => (i == null ? 0 : (+row[i] || 0));
 
-  // 3) agrupar por semana (lunes)
+  // 3) agrupar by week (lunes)
   const wk = {};
   for (const row of rows) {
     const k = mondayUTC(row[0]);
@@ -77,11 +77,11 @@ function mondayUTC(dstr) {
     wk[k].subs_lost += g(row, cols.sl);
     wk[k].days++;
   }
-  // subs_net por semana (ganados - perdidos)
+  // subs_net by week (ganados - perdidos)
   const fresh = Object.values(wk).sort((a, b) => (a.week < b.week ? -1 : 1))
     .map((w) => ({ ...w, subs_net: w.subs_gained - w.subs_lost }));
 
-  // 5) merge: conservar semanas viejas (antes de la ventana) + reemplazar las recientes
+  // 5) merge: conservar weeks viejas (before of the ventana) + reemplazar the recientes
   let all = {};
   try { all = JSON.parse(fs.readFileSync(FILE, "utf8")); } catch {}
   if (!all.channels) all.channels = {};

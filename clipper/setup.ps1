@@ -1,4 +1,4 @@
-# Oddly Clipper - SETUP (una sola vez por PC). Instala todo lo gratis y detecta tu hardware.
+# Oddly Clipper - SETUP (a sola vez by PC). Instala everything lo free and detecta tu hardware.
 $ErrorActionPreference = "Stop"
 Set-Location $PSScriptRoot
 Write-Host "=== Oddly Clipper - setup ===" -ForegroundColor Cyan
@@ -11,7 +11,7 @@ if (-not $pv) {
 }
 Write-Host "[OK] $pv"
 
-# 2) Entorno virtual + dependencias (salida detallada -> a un log; en pantalla solo el resumen)
+# 2) Entorno virtual + dependencias (output detallada -> to a log; in pantalla only the resumen)
 if (-not (Test-Path ".\venv")) { Write-Host "Creando entorno virtual..."; python -m venv venv }
 Write-Host "Instalando dependencias (esto tarda unos minutos, es 1 sola vez)..." -ForegroundColor Yellow
 $log = Join-Path $PSScriptRoot "setup_install.log"

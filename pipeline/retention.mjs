@@ -1,6 +1,6 @@
-// retention.mjs — RetentionNeuron (Fase 4). Baja la curva de audienceRetention de los N videos
-// recientes MADUROS y PÚBLICOS del canal (YouTube Analytics API) y la analiza -> retention.json.
-// El workflow lo sube a channel/retention.json (YT1) o channel/auto2/retention.json (YT2).
+// retention.mjs — RetentionNeuron (Phase 4). Downloads the curva of audienceRetention of the N videos
+// recientes MADUROS and PÚBLICOS of the channel (YouTube Analytics API) and the analiza -> retention.JSON.
+// The workflow lo uploads to channel/retention.JSON (YT1) or channel/auto2/retention.JSON (YT2).
 // Uso: node pipeline/retention.mjs <yt1|yt2> <inventarioR2.json> <salida.json>
 import fs from "node:fs";
 import { analyzeRetention } from "./lib/retention_calc.mjs";
@@ -26,7 +26,7 @@ const MAX_VIDEOS = 15, MATURE_DAYS = 5, DAY = 86400000;
   if (!token) { console.error("retention: no access_token:", JSON.stringify(tr).slice(0, 150)); process.exit(0); }
   const H = { Authorization: `Bearer ${token}` };
 
-  // Inventario -> videos recientes, MADUROS y PÚBLICOS (los privados no tienen retención pública).
+  // Inventario -> videos recientes, MADUROS and PÚBLICOS (the privados not tienen retención pública).
   let inv = {};
   try { inv = JSON.parse(fs.readFileSync(invFile, "utf8")); } catch {}
   let vids = [];

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { pausaDe, decideSobre, lineaPausa } from "../pipeline/lib/enfoque.mjs";
 
-// Entrada real del ledger, tal como la escribe brain_live.mjs.
+// Input real of the ledger, tal as the writes brain_live.mjs.
 const PAUSA_DL = {
   type: "channel_pause", channel: "data-lens", at: "2026-09-14T00:00:00Z",
   review_at: "2026-10-05T00:00:00Z", metric: "dl_best_views_7d",
@@ -39,8 +39,8 @@ describe("decideSobre", () => {
   });
 
   it("sin ledger, el Cerebro decide (no se queda mudo por falta de archivo)", () => {
-    // Importante: fallar ABIERTO aqui. Si el ledger no se pudo bajar, es peor dejar de
-    // opinar sobre todo que seguir opinando de mas.
+    // Important: fallar ABIERTO here. If the ledger not is pudo download, is worse dejar of
+    // opinar about everything that seguir opinando of more.
     expect(decideSobre([], "data-lens")).toBe(true);
     expect(decideSobre(null, "oddly")).toBe(true);
   });
@@ -52,7 +52,7 @@ describe("lineaPausa", () => {
     expect(l).toMatch(/2026-09-14/);
     expect(l).toMatch(/2026-10-05/);
     expect(l).toMatch(/dl_best_views_7d >= 500/);
-    // Y deja claro que las metricas NO se dejan de medir.
+    // and deja claro that the metricas NOT is dejan of medir.
     expect(l).toMatch(/métricas se siguen midiendo/);
   });
 

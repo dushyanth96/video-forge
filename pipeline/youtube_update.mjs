@@ -1,7 +1,7 @@
-// youtube_update.mjs — actualiza el SEO/metadata de un video YA subido (sin re-subirlo).
-// Usa videos.update de la API con el refresh token. Toma titulo/descripcion/tags del
-// paquete SEO nuevo. Sirve para "Regenerar SEO": se rehace el paquete y se aplica al
-// video que ya esta en YouTube (privado).
+// YouTube_update.mjs — actualiza the SEO/metadata of a video ALREADY uploaded (without re-subirlo).
+// Uses videos.update of the API with the refresh token. Toma title/description/tags of the
+// paquete SEO new. Sirve for "Regenerar SEO": is rehace the paquete and is aplica to the
+// video that already esta in YouTube (private).
 //
 // Uso: node pipeline/youtube_update.mjs <VIDEO_ID> [package.json]
 import fs from "node:fs";

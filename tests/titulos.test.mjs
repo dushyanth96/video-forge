@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { normalizar, esDuplicado, esGenerico, revisar } from "../pipeline/lib/titulos.mjs";
 
-// Titulos REALES del canal, con sus vistas reales (2026-10-03).
+// Titles REALES of the channel, with its vistas reales (2026-10-03).
 const GENERICOS = [
   "The Deadliest Siege in Human History #Shorts",      // x7 veces, mediana 2 vistas
   "The Deadliest Volcano Eruption in History #Shorts", // x6 veces
@@ -29,7 +29,7 @@ describe("esGenerico", () => {
   });
 
   it("hace falta el superlativo Y el 'in History': uno solo no basta", () => {
-    // "Deadliest" sin la coletilla no es la plantilla.
+    // "Deadliest" without the coletilla not is the plantilla.
     expect(esGenerico("The Deadliest Day of the Chernobyl Cleanup")).toBe(false);
     // "in history" sin superlativo tampoco.
     expect(esGenerico("The Strangest Bet in History")).toBe(false);
@@ -99,10 +99,10 @@ describe("normalizar", () => {
   });
 });
 
-// --- Oddly: SOLO antiduplicados, la plantilla listicle NO se prohibe ---
+// --- Oddly: ONLY antiduplicados, the plantilla listicle NOT is prohibe ---
 describe("revisar con prohibirGenerico:false (Oddly)", () => {
-  // Medido 2026-10-03: en Oddly el listicle rinde MEJOR que el resto (mediana 53 vs 36),
-  // y ademas es el brazo de control del experimento de formato. Prohibirlo seria doble error.
+  // Medido 2026-10-03: in Oddly the listicle rinde BEST that the resto (mediana 53 vs 36),
+  // and ademas is the brazo of control of the experiment of formato. Prohibirlo seria double error.
   const sinGenerico = { prohibirGenerico: false };
 
   it("deja pasar el listicle, que es el control del A/B", () => {
@@ -112,7 +112,7 @@ describe("revisar con prohibirGenerico:false (Oddly)", () => {
 
   it("deja pasar incluso la plantilla que SI se prohibe en Data Lens", () => {
     expect(revisar("The Deadliest Siege in Human History", [], sinGenerico).ok).toBe(true);
-    // ...pero en Data Lens (por defecto) se sigue rechazando.
+    // ...but in Data Lens (by defecto) is sigue rechazando.
     expect(revisar("The Deadliest Siege in Human History", []).ok).toBe(false);
   });
 

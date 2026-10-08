@@ -1,10 +1,10 @@
-// make_review.mjs — arma el item de Review-Before-Upload (estado: pending).
+// make_review.mjs — arma the item of Review-Before-Upload (estado: pending).
 //
-// Uso: node pipeline/motiongfx/make_review.mjs <script.json> <video.mp4> <out review.json>
+// Usage: node pipeline/motiongfx/make_review.mjs <script.JSON> <video.mp4> <out review.JSON>
 //      [r2Prefix]   (default "motiongfx/pending")
 //
-// El video YA esta renderizado; aqui solo se registra para revision.
-// La subida a YouTube NO ocurre aqui: solo con el approve del owner.
+// The video ALREADY esta renderizado; here only is registra for revision.
+// The upload to YouTube NOT ocurre here: only with the approve of the owner.
 import fs from "node:fs";
 import path from "node:path";
 import { execSync } from "node:child_process";

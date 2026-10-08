@@ -1,6 +1,6 @@
-// compliance_check.mjs — PUERTA LEGAL del canal automático #2. Antes de publicar una
-// compilación, verifica que TODO el material sea usable legalmente y que la pieza sea
-// TRANSFORMADORA. Sale 1 (BLOQUEA la publicación) si algo no cumple. Sale 0 si es seguro.
+// compliance_check.mjs — GATE LEGAL of the channel automático #2. Before of publish a
+// compilation, verifies that EVERYTHING the material sea usable legalmente and that the pieza sea
+// TRANSFORMADORA. Sale 1 (BLOQUEA the publishing) if something not cumple. Sale 0 if is safe.
 //
 // Uso: node pipeline/compliance_check.mjs <manifest.json> [sources.json]
 // manifest.json = { niche, clips:[{clip_id,source,license,url,attribution}], transform:{narration,editing,original_script} }
@@ -26,15 +26,15 @@ if (!m || !Array.isArray(m.clips) || !m.clips.length) {
     if (deny.has(source)) fails.push(`${tag}: fuente PROHIBIDA (${source})`);
     else if (denyLic.has(lic)) fails.push(`${tag}: licencia PROHIBIDA (${lic} — share-alike/no-comercial no sirven para monetizar)`);
     else if (!allow.has(lic)) fails.push(`${tag}: licencia no permitida (${lic || "sin licencia"})`);
-    // CC-BY (y CC-BY-SA si se colara) exigen atribución.
+    // CC-BY (and CC-BY-SA if is colara) exigen atribución.
     if ((lic === "cc-by") && !String(c.attribution || "").trim()) fails.push(`${tag}: CC-BY sin atribución`);
   });
 }
 
-// La pieza debe ser TRANSFORMADORA. Dos caminos válidos:
-//  a) narración original (voz que agrega valor), o
-//  b) piezas de SONIDO (ASMR/relax): curaduría + edición/secuencia + diseño de sonido original.
-// Basta con UNO. Lo que NO vale es re-subir clips tal cual, sin edición ni curaduría.
+// The pieza must ser TRANSFORMADORA. Dos caminos válidos:
+//  to) narration original (voice that agrega valor), or
+//  b) piezas of SOUND (ASMR/relax): curaduría + edición/secuencia + diseño of sound original.
+// Basta with UNO. Lo that NOT vale is re-upload clips tal cual, without edición nor curaduría.
 const tr = (m && m.transform) || {};
 const transformador = !!tr.narration || (!!tr.editing && !!tr.original_script) || !!tr.sound_design;
 if (!transformador) fails.push("la pieza no es transformadora (sin narración, ni edición/guion, ni diseño de sonido original)");

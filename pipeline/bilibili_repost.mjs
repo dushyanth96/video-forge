@@ -1,11 +1,11 @@
-// bilibili_repost.mjs — FASE 2: repostea a Bilibili los Shorts de Oddly que quedaron en la cola
-// (channel/oddly/bilibili_queue.json). Por cada uno: baja el MP4 de R2, lo sube a Bilibili con el
-// uploader de Playwright (en la nube), y SI SALE BIEN: borra el MP4 de R2 (ya está en YouTube + Bilibili
-// = "en todo lado", no llena R2) y lo saca de la cola. Si falla: lo deja en la cola para reintentar mañana.
-// Avisa a Telegram el resultado de cada uno (detectar si funcionó o no).
+// Bilibili_repost.mjs — PHASE 2: repostea to Bilibili the Shorts of Oddly that quedaron in the queue
+// (channel/Oddly/Bilibili_queue.JSON). By cada uno: downloads the MP4 of R2, lo uploads to Bilibili with the
+// uploader of Playwright (in the nube), and IF SALE BIEN: deletes the MP4 of R2 (already is in YouTube + Bilibili
+// = "in everything lado", not llena R2) and lo saca of the queue. If fails: lo deja in the queue for retry tomorrow.
+// Avisa to Telegram the result of cada uno (detectar if funcionó or not).
 //
 // Lee (cwd): bilibili_queue.json, bilibili_posted.json. Escribe: bilibili_queue_new.json, bilibili_posted_new.json.
-// Env: CLOUDFLARE_* (para wrangler), BILIBILI_COOKIE (lo usa el uploader), TELEGRAM_* (avisos).
+// Env: CLOUDFLARE_* (for wrangler), BILIBILI_COOKIE (lo uses the uploader), TELEGRAM_* (avisos).
 import fs from "node:fs";
 import { execSync } from "node:child_process";
 
@@ -37,7 +37,7 @@ for (const item of toDo) {
   console.log(`\n▶ ${item.title} (${item.video_id})`);
   try { fs.rmSync("video.mp4", { force: true }); } catch {}
   if (!r2get(key, "video.mp4")) { console.log("  ⚠️ no está el MP4 en R2 (¿ya se borró?). Lo saco de la cola."); posted.add(item.video_id); continue; }
-  // Subir a Bilibili con el uploader de Playwright (reusa el script probado). Título/tags por env.
+  // Upload to Bilibili with the uploader of Playwright (reusa the script probado). Title/tags by env.
   try { fs.rmSync("result.txt", { force: true }); } catch {}
   try {
     execSync("node pipeline/bilibili_playwright.mjs video.mp4", {
@@ -60,7 +60,7 @@ for (const item of toDo) {
   try { fs.rmSync("video.mp4", { force: true }); } catch {}
 }
 
-// Nueva cola = lo que quedó (sacando lo ya posteado). Posted acotado.
+// New queue = lo that quedó (sacando lo already posteado). Posted acotado.
 const newQueue = queue.filter((q) => q && q.video_id && !posted.has(q.video_id));
 fs.writeFileSync("bilibili_queue_new.json", JSON.stringify(newQueue));
 fs.writeFileSync("bilibili_posted_new.json", JSON.stringify([...posted].slice(-800)));

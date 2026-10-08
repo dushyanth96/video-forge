@@ -1,6 +1,6 @@
-// error_learn.mjs — IDENTIFICA los errores (runs fallidos), los ANALIZA con IA, los REGISTRA en un
-// ledger que crece, detecta PATRONES recurrentes y sugiere la mejora. Asi el sistema "aprende dia
-// con dia": lo transitorio ya lo reintenta el watchdog; lo recurrente/codigo sale como patron para
+// error_learn.mjs — IDENTIFICA the errores (runs fallidos), the ANALIZA with IA, the REGISTRA in a
+// ledger that crece, detecta PATRONES recurrentes and sugiere the mejora. Asi the sistema "learns day
+// with day": lo transitorio already lo retries the watchdog; lo recurrente/code sale as patron for
 // resolverlo de raiz.
 // Uso: node pipeline/error_learn.mjs <ledger_in.json> <ledger_out.json>
 // Env: GH_TOKEN, GH_REPO (owner/repo), GEMINI_API_KEY
@@ -36,7 +36,7 @@ let ledger = { incidents: [], patterns: [], updated_at: null };
 try { ledger = JSON.parse(fs.readFileSync(inLedger, "utf8")); } catch {}
 if (!Array.isArray(ledger.incidents)) ledger.incidents = [];
 
-// 1) Runs fallidos recientes (48h), uno por workflow (el ultimo).
+// 1) Runs fallidos recientes (48h), uno by workflow (the last).
 const runsJson = await gh(`/repos/${GH_REPO}/actions/runs?per_page=50`);
 const failed = (runsJson?.workflow_runs || []).filter((r) => r.conclusion === "failure" && (Date.now() - Date.parse(r.updated_at)) < 48 * 3600 * 1000);
 const seen = new Set(); const fresh = [];
@@ -69,7 +69,7 @@ for (const r of fresh) {
 }
 
 ledger.incidents = ledger.incidents.slice(-60); // historial acotado
-// Patrones: cuenta por (workflow · categoria); recurrente = >=2.
+// Patrones: account by (workflow · categoria); recurrente = >=2.
 const counts = {};
 for (const i of ledger.incidents) { const k = i.workflow + " · " + i.category; counts[k] = (counts[k] || 0) + 1; }
 ledger.patterns = Object.entries(counts).map(([key, count]) => ({ key, count })).filter((p) => p.count >= 2).sort((a, b) => b.count - a.count).slice(0, 8);

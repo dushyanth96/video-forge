@@ -1,5 +1,5 @@
-// data_shock_script.mjs — Guion del formato VISUAL "DATA SHOCK" para The Data Lens (experimento paralelo
-// al narrado). Números/estadísticas GIGANTES de historia sobre imágenes icónicas, sound-off first.
+// data_shock_script.mjs — Script of the formato VISUAL "DATA SHOCK" for The Data Lens (experiment paralelo
+// to the narrated). Números/estadísticas GIGANTES of historia about images icónicas, sound-off first.
 // Uso: node pipeline/data_shock_script.mjs [topic]   -> escribe script.json
 import { genText } from "./llm.mjs";
 import fs from "node:fs";

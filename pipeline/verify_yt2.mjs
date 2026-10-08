@@ -1,6 +1,6 @@
-// verify_yt2.mjs — confirma que el OAuth del 2º canal (YT2_*) lee el canal CORRECTO.
-// Renueva el token, pregunta channels.list?mine=true y reporta id + titulo. Compara con el
-// canal esperado (Oddly Loop). Uso: node pipeline/verify_yt2.mjs
+// verify_yt2.mjs — confirma that the OAuth of the 2º channel (YT2_*) lee the channel CORRECT.
+// Renueva the token, pregunta channels.list?mine=true and reporta id + title. Compara with the
+// channel esperado (Oddly Loop). Usage: node pipeline/verify_yt2.mjs
 const { YT2_CLIENT_ID, YT2_CLIENT_SECRET, YT2_REFRESH_TOKEN } = process.env;
 const EXPECTED = "UC6HjFkzmP0LlXeNtK7yMQgQ"; // Oddly Loop
 const tf = (u, o = {}, ms = 12000) => fetch(u, { ...o, signal: AbortSignal.timeout(ms) });

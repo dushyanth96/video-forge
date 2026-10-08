@@ -1,7 +1,7 @@
-// baseline.mjs — BaselineNeuron (Fase 1). Lee weekly_stats.json y escribe el baseline por canal:
-//   baseline.json        (Data Lens)  -> el workflow lo sube a channel/baseline.json
-//   baseline_auto2.json  (Oddly)      -> el workflow lo sube a channel/auto2/baseline.json
-// Permite juzgar cada video/semana por rendimiento RELATIVO (+X% vs baseline) en vez de umbrales fijos.
+// baseline.mjs — BaselineNeuron (Phase 1). Lee weekly_stats.JSON and writes the baseline by channel:
+//   baseline.JSON        (Data Lens)  -> the workflow lo uploads to channel/baseline.JSON
+//   baseline_auto2.JSON  (Oddly)      -> the workflow lo uploads to channel/auto2/baseline.JSON
+// Allows juzgar cada video/week by performance RELATIVO (+X% vs baseline) in vez of umbrales fijos.
 // Uso: node pipeline/baseline.mjs [weekly_stats.json]
 import fs from "node:fs";
 import { computeBaseline } from "./lib/baseline_calc.mjs";

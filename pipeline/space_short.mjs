@@ -1,7 +1,7 @@
-// space_short.mjs — Short 9:16 CALMADO de espacio ("space facts to fall asleep to" como vibe).
-// Footage de VIDEO REAL (no fotos): por cada beat busca un clip de VIDEO de la NASA (dominio público),
-// respaldo video de Archive.org, y solo si no hay video cae a imagen (Ken Burns) o fondo estelar.
-// Narración calmada (voz suave) + lecho ambiental generado (original) con ducking + subtítulos suaves.
+// space_short.mjs — Short 9:16 CALMADO of espacio ("space facts to fall asleep to" as vibe).
+// Footage of VIDEO REAL (not photos): by cada beat search a clip of VIDEO of the NASA (dominio public),
+// respaldo video of Archive.org, and only if not hay video cae to image (Ken Burns) or background estelar.
+// Narration calmada (voice suave) + lecho ambiental generated (original) with ducking + subtitles suaves.
 //
 // Uso: node pipeline/space_short.mjs <script.json> <narration.mp3> <out.mp4>
 // Requiere en cwd: words.json (Whisper, opcional).
@@ -26,14 +26,14 @@ console.log(`Narración: ${narrDur.toFixed(1)}s · beats: ${beats.length}`);
 const usedVid = new Set(), usedImg = new Set();
 const credits = [];
 
-// ---------- NASA images-api: CLIP DE VIDEO real (dominio público) ----------
+// ---------- NASA images-API: CLIP OF VIDEO real (dominio public) ----------
 async function nasaVideo(query, dur, idx) {
   let items = [];
   try {
     const s = await (await tf(`https://images-api.nasa.gov/search?q=${encodeURIComponent(query)}&media_type=video&page_size=20`)).json();
     items = (s.collection && s.collection.items) || [];
   } catch { return null; }
-  // FILTRO COMPARTIDO: fuera producido/ingeniería/misión (texto quemado, naves, cohetes); exige el SUJETO.
+  // FILTRO COMPARTIDO: fuera producido/ingeniería/misión (texto quemado, naves, cohetes); exige the SUJETO.
   const want = kwOf(query);
   const txtOf = (it) => (it.data[0].title || "") + " " + (it.data[0].description || "");
   const cands = items.filter((it) => {
@@ -45,7 +45,7 @@ async function nasaVideo(query, dur, idx) {
     const title = (it.data[0].title || query).slice(0, 90);
     let urls = [];
     try { const col = await (await tf(it.href, {}, 30000)).json(); urls = (Array.isArray(col) ? col : []).filter((u) => /\.mp4$/i.test(u)); } catch {}
-    // Preferir "large"/"medium" (calidad buena, peso manejable); evitar "orig" (puede pesar cientos de MB).
+    // Preferir "large"/"medium" (quality buena, peso manejable); avoid "orig" (can pesar cientos of MB).
     const pick = urls.find((u) => /~large\.mp4$/i.test(u)) || urls.find((u) => /~medium\.mp4$/i.test(u)) || urls.find((u) => !/~orig\.mp4$/i.test(u)) || urls[0];
     if (!pick) continue;
     try {
@@ -67,7 +67,7 @@ async function nasaVideo(query, dur, idx) {
   return null;
 }
 
-// ---------- Archive.org: VIDEO dominio-público de espacio (respaldo) ----------
+// ---------- Archive.org: VIDEO dominio-public of espacio (respaldo) ----------
 const PD_COLLECTIONS = ["nasa", "spaceflight", "nasaimages", "newsandpublicaffairs", "usnationalarchives"];
 function vidLicense(licenseurl, collections) {
   const u = (Array.isArray(licenseurl) ? licenseurl[0] : licenseurl || "").toLowerCase();
@@ -112,11 +112,11 @@ async function archiveVideo(query, dur, idx) {
   return null;
 }
 
-// ---------- Imagen NASA (Ken Burns) — solo si no hay VIDEO ----------
+// ---------- Image NASA (Ken Burns) — only if not hay VIDEO ----------
 async function nasaImage(query, dur, idx) {
   let items = [];
   try { const s = await (await tf(`https://images-api.nasa.gov/search?q=${encodeURIComponent(query)}&media_type=image&page_size=16`)).json(); items = (s.collection && s.collection.items) || []; } catch { return null; }
-  // Mismo filtro compartido: fuera diagramas/hardware/misión; exige el sujeto. (Las fotos de telescopio son limpias.)
+  // Same filtro compartido: fuera diagramas/hardware/misión; exige the sujeto. (The photos of telescopio are limpias.)
   const want = kwOf(query);
   for (const it of items) {
     const nasaId = it.data && it.data[0] && it.data[0].nasa_id;
@@ -156,7 +156,7 @@ function fallbackSegment(dur, idx) {
   return { seg, kind: "fallback", license: "", page: "" };
 }
 
-// Escalera de queries (acorta de específica a general) para no quedar sin material.
+// Escalera of queries (acorta of específica to general) for not quedar without material.
 function queryLadder(beat) {
   const q0 = beat.query || topic;
   const core = q0.split(/\s+/).filter((w) => /^[A-Z]/.test(w) || w.length > 3).slice(0, 3).join(" ");
@@ -164,7 +164,7 @@ function queryLadder(beat) {
   return [...new Set([q0, core, two, topic].filter(Boolean))];
 }
 
-// Descarga un clip, corta una tajada y recorta a 9:16 (smart crop). Devuelve el segmento o null.
+// Descarga a clip, cuts a tajada and recorta to 9:16 (smart crop). Devuelve the segmento or null.
 async function cutClip(url, dur, idx, id) {
   try {
     const film = `${work}/clip${idx}.mp4`;
@@ -183,7 +183,7 @@ async function cutClip(url, dur, idx, id) {
   } catch { return null; }
 }
 
-// ---------- STOCK (Pexels + Pixabay): video de espacio LIMPIO y cinematográfico (sin texto quemado) ----------
+// ---------- STOCK (Pexels + Pixabay): video of espacio LIMPIO and cinematográfico (without texto quemado) ----------
 async function stockVideo(query, dur, idx) {
   const bad = (txt) => FOOTAGE_BAD.test(String(txt || "").toLowerCase()); // el buscador ya filtra por tema -> solo rechazamos basura
   const PEX = process.env.PEXELS_API_KEY;
@@ -218,24 +218,24 @@ async function stockVideo(query, dur, idx) {
   return null;
 }
 
-// Temas donde el VIDEO real de la NASA es LIMPIO (feeds crudos, sin anotaciones): Tierra/ISS, Sol/SDO, auroras.
-// El resto (nebulosas, galaxias, planetas, espacio profundo) casi solo tiene video PRODUCIDO con texto quemado
-// -> para esos usamos IMAGEN Hubble limpia (con Ken Burns). Así ningún clip trae basura.
+// Topics where the VIDEO real of the NASA is LIMPIO (feeds crudos, without anotaciones): Tierra/ISS, Sol/SDO, auroras.
+// The resto (nebulosas, galaxias, planetas, espacio profundo) casi only tiene video PRODUCIDO with texto quemado
+// -> for esos usamos IMAGE Hubble cleans (with Ken Burns). Así ningún clip trae basura.
 const VIDEO_OK = /\bearth\b|\biss\b|space station|\bsun\b|\bsolar\b|flare|prominence|corona|aurora|from orbit|re-?entry|\bcloud|storm|hurricane|lightning|\blimb\b|day and night|city lights/i;
 
 async function buildSegment(beat, dur, idx) {
   const queries = queryLadder(beat);
   const dynamic = VIDEO_OK.test(beat.query || "");
   const tryVideo = async () => { for (const q of queries) { let v = null; try { v = await nasaVideo(q, dur, idx); } catch {} if (v) { console.log(`  beat ${idx}: NASA VIDEO`); credits.push(v.cred); return v; } } return null; };
-  // Stock: prueba las queries del beat y, si no hay, queries GENÉRICAS de espacio (siempre hay video limpio)
-  // -> así casi nunca cae a imagen (Juan: nada de fotos, se ve básico).
+  // Stock: test the queries of the beat and, if not hay, queries GENÉRICAS of espacio (always hay video limpio)
+  // -> así casi never cae to image (Juan: nothing of photos, is ve básico).
   const SPACE_GENERIC = ["nebula", "galaxy", "cosmos", "deep space", "starfield", "aurora borealis", "milky way", "space stars"];
   const tryStock = async () => { for (const q of [...queries, ...SPACE_GENERIC]) { let v = null; try { v = await stockVideo(q, dur, idx); } catch {} if (v) { console.log(`  beat ${idx}: STOCK video (${v.license})`); credits.push(v.cred); return v; } } return null; };
   const tryImage = async () => { for (const q of queries) { let im = null; try { im = await nasaImage(q, dur, idx); } catch {} if (im) { console.log(`  beat ${idx}: imagen NASA (Ken Burns)`); credits.push(im.cred); return im; } } return null; };
-  // STOCK primero para TODO: es la única fuente de video LIMPIO y confiable (sin texto quemado ni gráficos).
-  // Luego imagen NASA real (Hubble/Spitzer, siempre limpia, con Ken Burns). NASA video queda de ÚLTIMO recurso
-  // (aun con filtros mete gráficos de laboratorio con texto quemado), y solo para temas dinámicos (Tierra/Sol).
-  // NUNCA Archive.org (basura).
+  // STOCK first for EVERYTHING: is the única fuente of video LIMPIO and confiable (without texto quemado nor graphics).
+  // Then image NASA real (Hubble/Spitzer, always cleans, with Ken Burns). NASA video queda of LAST recurso
+  // (still with filtros mete graphics of laboratorio with texto quemado), and only for topics dinámicos (Tierra/Sol).
+  // NEVER Archive.org (basura).
   const r = (await tryStock()) || (await tryImage()) || (dynamic ? await tryVideo() : null);
   if (r) return r;
   console.error(`  beat ${idx}: sin material limpio para "${beat.query}" -> fondo estelar`);
@@ -248,7 +248,7 @@ const built = [];
 for (let i = 0; i < beats.length; i++) built.push(await buildSegment(beats[i], segDur, i));
 if (!built.length) { console.error("Sin material -> no puedo armar el short"); process.exit(1); }
 
-// Concatenar con xfade -> fondo del largo de la narración.
+// Concatenar with xfade -> background of the largo of the narration.
 const bg = `${work}/bg.mp4`;
 if (built.length === 1) {
   execSync(`ffmpeg -y -stream_loop -1 -i "${built[0].seg}" -t ${narrDur.toFixed(2)} -r ${FPS} -c:v libx264 -preset veryfast -crf 20 -pix_fmt yuv420p "${bg}"`, { stdio: "ignore" });
@@ -264,7 +264,7 @@ if (built.length === 1) {
   execSync(`ffmpeg -y ${inputs} -filter_complex "${filter}" -map "${acc}" -t ${narrDur.toFixed(2)} -r ${FPS} -c:v libx264 -preset veryfast -crf 20 -pix_fmt yuv420p "${bg}"`, { stdio: "ignore" });
 }
 
-// Subtítulos suaves (Whisper karaoke). Fallback: frases de los beats.
+// Subtitles suaves (Whisper karaoke). Fallback: frases of the beats.
 function assTime(s) { const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60; return `${h}:${String(m).padStart(2, "0")}:${sec.toFixed(2).padStart(5, "0")}`; }
 const asc = (s) => String(s).replace(/[{}\\]/g, "").replace(/[\r\n]+/g, " ");
 const dia = [];
@@ -279,7 +279,7 @@ if (fs.existsSync("words.json")) {
     dia.push(`Dialogue: 0,${assTime(start)},${assTime(end)},Kar,,0,0,0,,${parts.join(" ")}`);
   }
 } else {
-  // Sin Whisper: parte cada frase en trozos cortos (<=6 palabras) para NO llenar la pantalla (máx ~2 líneas).
+  // Without Whisper: part cada frase in trozos cortos (<=6 palabras) for NOT llenar the pantalla (máx ~2 lines).
   const per = narrDur / Math.max(1, beats.length);
   beats.forEach((b, i) => {
     const w = asc(b.text || "").split(/\s+/).filter(Boolean);
@@ -290,7 +290,7 @@ if (fs.existsSync("words.json")) {
     chunks.forEach((c, j) => dia.push(`Dialogue: 0,${assTime(i * per + j * seg)},${assTime(i * per + (j + 1) * seg)},Kar,,0,0,0,,${c}`));
   });
 }
-// Estilo calmado: blanco suave, contorno leve (menos agresivo que un short de hype).
+// Estilo calmado: blanco suave, contorno leve (less agresivo that a short of hype).
 const ass = `[Script Info]
 ScriptType: v4.00+
 PlayResX: ${W}
@@ -303,14 +303,14 @@ Style: Kar,Liberation Sans,98,&H00FFFFFF,&H0060E0FF,&H00141414,&H7A000000,-1,0,0
 `;
 fs.writeFileSync("captions.ass", ass + `\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n${dia.join("\n")}\n`);
 
-// OUTRO suave: cola de ~2.6s con CTA de marca (gana suscriptores) + fundido. El ambiente sigue sonando.
+// OUTRO suave: queue of ~2.6s with CTA of marca (gana suscriptores) + fundido. The ambiente sigue sonando.
 const OUTRO = 2.6, TOTAL = +(narrDur + OUTRO).toFixed(2);
 const NDUR = narrDur.toFixed(2);
 const FONTS = ["/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"];
 const FONT = FONTS.find((f) => fs.existsSync(f)) || "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf";
 fs.writeFileSync(`${work}/outro.txt`, "Follow for more\ncalm space");
 
-// Lecho ambiental generado (pad de La menor + brisa cósmica + eco). Dura TOTAL (sigue en el outro). tremolo f>=0.1.
+// Lecho ambiental generated (pad of The menor + brisa cósmica + eco). Dura TOTAL (sigue in the outro). tremolo f>=0.1.
 const amb = `${work}/ambient.m4a`;
 try {
   execSync(`ffmpeg -y -f lavfi -i "sine=frequency=110:duration=${TOTAL}" -f lavfi -i "sine=frequency=164.81:duration=${TOTAL}" -f lavfi -i "sine=frequency=220:duration=${TOTAL}" -f lavfi -i "anoisesrc=duration=${TOTAL}:color=pink:amplitude=0.06" -filter_complex "[0:a]volume=0.5,tremolo=f=0.10:d=0.35[d0];[1:a]volume=0.28,tremolo=f=0.12:d=0.4[d1];[2:a]volume=0.12[d2];[3:a]lowpass=f=650,volume=0.5[nz];[d0][d1][d2][nz]amix=inputs=4:normalize=0[mx];[mx]lowpass=f=1500,aecho=0.8:0.85:900|1700:0.35|0.25,volume=1.1,afade=t=in:d=1.5,afade=t=out:st=${(TOTAL - 2).toFixed(2)}:d=2[a]" -map "[a]" -c:a aac -b:a 160k "${amb}"`, { stdio: "pipe" });
@@ -319,7 +319,7 @@ try {
   execSync(`ffmpeg -y -f lavfi -i "anullsrc=r=44100:cl=stereo" -t ${TOTAL} -c:a aac -b:a 96k "${amb}"`, { stdio: "ignore" });
 }
 
-// Mezcla final PRO: fondo + cola/outro con CTA de marca + subtítulos + audio con ducking y fundidos suaves.
+// Mezcla final PRO: background + queue/outro with CTA of marca + subtitles + audio with ducking and fundidos suaves.
 const ctaVf = `drawtext=textfile='${work}/outro.txt':fontfile='${FONT}':fontcolor=white:fontsize=66:line_spacing=14:borderw=5:bordercolor=black@0.85:shadowcolor=black@0.6:shadowx=3:shadowy=3:x=(w-text_w)/2:y=(h-text_h)/2:text_align=C:alpha='if(lt(t\\,${NDUR})\\,0\\,min(1\\,(t-${NDUR})/0.6))':enable='gte(t\\,${NDUR})'`;
 execSync(`ffmpeg -y -i "${bg}" -i "${narrPath}" -i "${amb}" ` +
   `-filter_complex "[0:v]tpad=stop_mode=clone:stop_duration=${OUTRO},subtitles=captions.ass,${ctaVf},fade=t=in:d=0.6,fade=t=out:st=${(TOTAL - 1.3).toFixed(2)}:d=1.3[v];` +

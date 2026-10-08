@@ -1,10 +1,10 @@
 // manage_playlists.mjs <data-lens|auto2>
-// Crea UNA playlist de YouTube por subcategoria y agrega cada video del canal a la suya.
-// - Idempotente: no re-agrega lo ya agregado (lleva registro en playlists.json).
-// - Cuota-seguro: tope de inserts por corrida (PLAYLIST_MAX, default 60). Se completa en varias
-//   corridas (el cron diario va terminando lo pendiente + lo nuevo). Cada insert cuesta 50 unidades.
-// La categoria se infiere del titulo (o se respeta el niche_map de Oddly si ya lo tiene).
-// El workflow baja/sube playlists.json (y niche_map.json de Oddly) a R2.
+// Creates A playlist of YouTube by subcategoria and agrega cada video of the channel to the suya.
+// - Idempotente: not re-agrega lo already agregado (lleva registro in playlists.JSON).
+// - Cuota-safe: tope of inserts by corrida (PLAYLIST_MAX, default 60). Is completa in several
+//   corridas (the cron diario va terminando lo pendiente + lo new). Cada insert cuesta 50 unidades.
+// The categoria is infiere of the title (or is respeta the niche_map of Oddly if already lo tiene).
+// The workflow downloads/uploads playlists.JSON (and niche_map.JSON of Oddly) to R2.
 import fs from "node:fs";
 import { leerEntrada } from "./lib/niche_map.mjs";
 
@@ -16,12 +16,12 @@ const CSEC = A2 ? process.env.YT2_CLIENT_SECRET : process.env.YT_CLIENT_SECRET;
 const RTOK = A2 ? process.env.YT2_REFRESH_TOKEN : process.env.YT_REFRESH_TOKEN;
 if (!CID || !CSEC || !RTOK) { console.error("Faltan credenciales YT del canal", CH); process.exit(1); }
 
-// Subcategorias por canal (key -> titulo publico de la playlist)
+// Subcategorias by channel (key -> title public of the playlist)
 const CATS = A2
   ? { satisfying: "Satisfying / ASMR", narrativas: "Narrativas", ciencia_humor: "Ciencia + humor", naturaleza_relax: "Naturaleza / Relax", animales_tiernos: "Animales tiernos / ASMR", graciosos: "Graciosos / Fails", remix: "Remix" }
   : { big_tech: "Big Tech · Como ganan dinero las empresas", creator_economy: "Creator Economy · Cuanto pagan las plataformas", costos_ocultos: "Costos ocultos · A donde va tu dinero", dinero_mercados: "Dinero y mercados" };
 
-// Inferencia de nicho por titulo (misma logica que el resto del sistema)
+// Inferencia of niche by title (same logica that the resto of the sistema)
 function oddlyNiche(t) { t = (t || "").toLowerCase();
   if (/satisfying|slime|kinetic|hydraulic|soap|paint|resin|\bsand\b|oddly sat|asmr/.test(t)) return "satisfying";
   if (/deep sleep|relax|nature|rain|ocean|forest|\bcalm\b|10 hours|for sleep|sleep/.test(t)) return "naturaleza_relax";
@@ -45,7 +45,7 @@ async function token() {
 const AT = await token();
 const H = { Authorization: `Bearer ${AT}`, "content-type": "application/json" };
 
-// Todos los videos del canal (id + titulo) via la playlist de subidas
+// All the videos of the channel (id + title) via the playlist of subidas
 async function myVideos() {
   const ch = await (await tf("https://www.googleapis.com/youtube/v3/channels?part=contentDetails&mine=true", { headers: H })).json();
   const up = ch.items && ch.items[0] && ch.items[0].contentDetails && ch.items[0].contentDetails.relatedPlaylists && ch.items[0].contentDetails.relatedPlaylists.uploads;
@@ -59,7 +59,7 @@ async function myVideos() {
   return out;
 }
 
-// niche_map de Oddly (si existe local) para respetar la categoria ya asignada por la produccion
+// niche_map of Oddly (if existe local) for respetar the categoria already asignada by the produccion
 let nicheMap = {}; if (A2) { try { nicheMap = JSON.parse(fs.readFileSync("niche_map.json", "utf8")); } catch {} }
 
 // Estado persistente: { map: categoria->playlist_id, added: ["cat|video_id"...] }
@@ -72,7 +72,7 @@ PL.titles = PL.titles || {};
 async function ensurePlaylist(cat) {
   const want = CATS[cat] || cat;
   if (PL.map[cat]) {
-    // Auto-sanacion: si el titulo guardado no coincide (p.ej. una playlist vieja "undefined"), renombrar.
+    // Auto-sanacion: if the title saved not coincide (p.e.g.. a playlist vieja "undefined"), renombrar.
     if (PL.titles[cat] !== want) {
       const r = await tf("https://www.googleapis.com/youtube/v3/playlists?part=snippet", { method: "PUT", headers: H, body: JSON.stringify({ id: PL.map[cat], snippet: { title: want, description: "Playlist por categoria (automatica)." } }) });
       if (r.ok) { PL.titles[cat] = want; console.log(`~ playlist renombrada -> ${want}`); }
@@ -86,7 +86,7 @@ async function ensurePlaylist(cat) {
 }
 async function addToPlaylist(plid, vid) {
   const body = { snippet: { playlistId: plid, resourceId: { kind: "youtube#video", videoId: vid } } };
-  // Reintenta en SERVICE_UNAVAILABLE (503): una playlist recien creada tarda un momento en estar lista.
+  // Retries in SERVICE_UNAVAILABLE (503): a playlist recien creada tarda a momento in estar ready.
   for (let attempt = 0; attempt < 3; attempt++) {
     const r = await tf("https://www.googleapis.com/youtube/v3/playlistItems?part=snippet", { method: "POST", headers: H, body: JSON.stringify(body) });
     if (r.ok) return true;

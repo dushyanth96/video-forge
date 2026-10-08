@@ -54,7 +54,7 @@ def editar(video_path: str, clip: dict, words: list, cfg: dict, out_mp4: str, mu
     if cfg.get("subtitulos", {}).get("on", True):
         _ass(words, start, end, ass)
 
-    # Reencuadre 9:16: escala para llenar alto y recorta el centro.
+    # Reencuadre 9:16: escala for llenar alto and recorta the centro.
     vf = f"scale=-2:{H},crop={W}:{H}"
     if cfg.get("subtitulos", {}).get("on", True) and os.path.exists(ass):
         ass_esc = ass.replace("\\", "/").replace(":", "\\:")

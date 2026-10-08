@@ -1,4 +1,4 @@
-// yt_title.mjs — imprime el titulo de un video de YouTube (para armar su miniatura).
+// yt_title.mjs — imprime the title of a video of YouTube (for armar its thumbnail).
 // Uso: node pipeline/yt_title.mjs <VIDEO_ID>
 const id = process.argv[2];
 const { YT_CLIENT_ID, YT_CLIENT_SECRET, YT_REFRESH_TOKEN } = process.env;
