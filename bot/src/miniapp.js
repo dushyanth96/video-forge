@@ -611,7 +611,7 @@ export const APP_HTML = `<!doctype html>
       var d=new Date(iso);
       var et=d.toLocaleString("en-US",{timeZone:"America/New_York",weekday:"short",day:"numeric",month:"short",hour:"numeric",minute:"2-digit",hour12:true});
       var lo=d.toLocaleString("en-US",{timeZone:"America/Bogota",hour:"numeric",minute:"2-digit",hour12:true});
-      return et+" ET · tu "+lo;
+      return et+" ET · your "+lo;
     }catch(e){return iso;}
   }
   // Queue horizon: how many days ahead we're scheduled. The brain schedules the DAY
