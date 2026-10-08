@@ -51,10 +51,10 @@ const seenText = new Set();
 const journalRecent = (Array.isArray(journal) ? journal : []).slice(-60).reverse().filter((j) => { const k = String(j.text || ""); if (seenText.has(k)) return false; seenText.add(k); return true; }).slice(0, 20).reverse();
 const activity = journalRecent.map((j) => ({ at: j.at, agent: AGENT_BY_KIND[j.kind] || "Content Agent", text: j.text, kind: j.kind, trust: "executed" }));
 for (const r of (Array.isArray(runs) ? runs : []).filter((x) => x.conclusion === "failure" && now - Date.parse(x.createdAt) < 24 * 3600e3)) {
-  activity.push({ at: r.updatedAt || r.createdAt, agent: "Orchestrator", text: `Falló: ${r.workflowName}`, kind: "error", trust: "executed", result: "revisar el run" });
+  activity.push({ at: r.updatedAt || r.createdAt, agent: "Orchestrator", text: `Failed: ${r.workflowName}`, kind: "error", trust: "executed", result: "review the run" });
 }
 
-// ---- Tareas: producciones reales ----
+// ---- Tasks: real productions ----
 const tasks = produce.slice(0, 8).map((r) => ({
   id: String(r.databaseId), name: r.displayTitle && r.displayTitle !== r.workflowName ? r.displayTitle : "Producir Short", agent: "Publishing Agent",
   status: r.status === "queued" ? "QUEUED" : r.status !== "completed" ? "RUNNING" : r.conclusion === "success" ? "COMPLETED" : r.conclusion === "cancelled" ? "CANCELLED" : "FAILED",

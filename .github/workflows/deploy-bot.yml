@@ -98,11 +98,11 @@ jobs:
             echo "::error::La puerta del webhook no responde como se espera; verifica que el Worker tenga el mismo TELEGRAM_WEBHOOK_SECRET (wrangler secret list)"
             exit 1
           fi
-          # Boton de menu del bot -> abre la Mini App (interfaz tipo app).
+          # Bot menu button -> opens the Mini App (app-style interface).
           MB=$(curl -s "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/setChatMenuButton" \
             --data-urlencode 'menu_button={"type":"web_app","text":"Brain","web_app":{"url":"'"$URL"'/os?v='"${GITHUB_SHA::7}"'"}}')
           echo "MenuButton: $MB"
-          # Identidad del bot "Video Forge": descripcion corta (perfil), descripcion (chat vacio) y comandos.
+          # Bot identity "Video Forge": short description (profile), description (empty chat) and commands.
           TB="https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}"
           curl -s "$TB/setMyShortDescription" --data-urlencode "short_description=Video Forge — SkillGroX control center for automated content generation and publishing (The Data Lens & Oddly Loop)." >/dev/null
           curl -s "$TB/setMyDescription" --data-urlencode "description=Video Forge — SkillGroX control center for automated content generation and publishing. Produce, review, approve and schedule videos and Shorts for The Data Lens and Oddly Loop, automatically, from your phone. Open the app with the menu button to see metrics, the best-hour calendar, and approve each video before it goes live." >/dev/null

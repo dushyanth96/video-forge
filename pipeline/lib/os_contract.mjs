@@ -79,12 +79,12 @@ export function normMetric(m = {}) {
   };
 }
 
-// Construye a pulse valid (lanza if the sistema or the estado not existen: the contrato not admite inventos).
+// Builds a valid pulse (throws if the system or status don't exist: the contract doesn't admit inventions).
 export function makePulse(p = {}, nowMs = Date.now()) {
-  if (!SYSTEMS[p.system]) throw new Error(`sistema desconocido: ${p.system}`);
+  if (!SYSTEMS[p.system]) throw new Error(`unknown system: ${p.system}`);
   const nowIso = new Date(nowMs).toISOString();
   const status = p.status == null ? "normal" : p.status;
-  if (!PULSE_STATUS.includes(status)) throw new Error(`estado de pulse inválido: ${status}`);
+  if (!PULSE_STATUS.includes(status)) throw new Error(`invalid pulse status: ${status}`);
   return {
     v: 1, system: p.system, name: SYSTEMS[p.system].name, role: SYSTEMS[p.system].role,
     at: iso(p.at, nowIso), status, headline: str(p.headline, 90), sub: str(p.sub, 160),
