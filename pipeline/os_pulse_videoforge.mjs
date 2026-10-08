@@ -33,10 +33,17 @@ const subsReq = full ? (full.reqs || []).find((r) => r.key === "subs") : null;
 
 // ---- Agents (status from real runs) ----
 const brain = lastRun("Brain live (tomorrow's plan + continuous production)");
-const produce = runsOf("Producir compilacion (Oddly Loop / canal auto)");
+const produce = runsOf("Produce compilation (Oddly Loop / auto channel)");
 const producing = produce.filter((r) => r.status !== "completed");
 const analytics = lastRun("Monetization Dashboard + Brain Report -> R2");
-const trends = lastRun("Growth Radar (inteligencia de crecimiento YouTube)");
+const trends = lastRun("Growth Radar (YouTube growth intelligence)");
+// Friendly labels for workflow names that may still be Spanish in the GitHub run list (used
+// for the Activity failure line only; lookup keys above must match the YAML workflow names).
+var FLOW_LABEL = {
+  "Cerebro en vivo (plan de mañana + producci\u00f3n continua)": "Brain live (tomorrow's plan + continuous production)",
+  "Producir compilaci\u00f3n (Oddly Loop / canal auto)": "Produce compilation (Oddly Loop / auto channel)",
+  "Growth Radar (inteligencia de crecimiento YouTube)": "Growth Radar (YouTube growth intelligence)",
+};
 const agents = [
   { id: "content", name: "Content Agent", state: runState(brain, "thinking"), since: brain && brain.createdAt, detail: M.date ? `Plan for ${M.date}: ${(M.items || []).length} pieces` : "No plan yet" },
   { id: "publishing", name: "Publishing Agent", state: producing.length ? "executing" : ((M.summary || {}).programado ? "completed" : "idle"), since: producing[0] && producing[0].createdAt, detail: producing.length ? `${producing.length} production(s) in progress` : `${M.summary?.programado || 0} ready to go out on their own` },
@@ -51,7 +58,7 @@ const seenText = new Set();
 const journalRecent = (Array.isArray(journal) ? journal : []).slice(-60).reverse().filter((j) => { const k = String(j.text || ""); if (seenText.has(k)) return false; seenText.add(k); return true; }).slice(0, 20).reverse();
 const activity = journalRecent.map((j) => ({ at: j.at, agent: AGENT_BY_KIND[j.kind] || "Content Agent", text: j.text, kind: j.kind, trust: "executed" }));
 for (const r of (Array.isArray(runs) ? runs : []).filter((x) => x.conclusion === "failure" && now - Date.parse(x.createdAt) < 24 * 3600e3)) {
-  activity.push({ at: r.updatedAt || r.createdAt, agent: "Orchestrator", text: `Failed: ${r.workflowName}`, kind: "error", trust: "executed", result: "review the run" });
+  activity.push({ at: r.updatedAt || r.createdAt, agent: "Orchestrator", text: `Failed: ${FLOW_LABEL[r.workflowName] || r.workflowName}`, kind: "error", trust: "executed", result: "review the run" });
 }
 
 // ---- Tasks: real productions ----
