@@ -1,4 +1,5 @@
 node_modules/
+*.bak
 renders/
 _artifact*/
 _cmp_*.mp3

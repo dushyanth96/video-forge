@@ -123,7 +123,7 @@ export const OS_APP_JS = `
     h+='<div class="os-sec"><span>Needs you</span>'+(nd.length>3?'<button data-tab="needs">See all '+nd.length+'</button>':"")+'</div>';
     h+=nd.length?nd.slice(0,3).map(needHtml).join(""):OS.empty("Nothing pending","No system is waiting for a decision of yours right now.");
     if(p&&(p.agents||[]).length){
-      h+='<div class="os-sec"><span>Agentes de '+E(C.name)+'</span></div><div class="os-list">'+p.agents.map(function(a){
+      h+='<div class="os-sec"><span>Agents of '+E(C.name)+'</span></div><div class="os-list">'+p.agents.map(function(a){
         return '<div class="os-row">'+OS.dot(a.state)+'<div class="main"><div class="title">'+E(a.name)+'</div><div class="meta">'+E(a.detail||"")+'</div></div><div class="end">'+E(STATE_TXT[a.state]||a.state)+'</div></div>';
       }).join("")+'</div>';
     }
@@ -143,7 +143,7 @@ export const OS_APP_JS = `
     var run=tasks.filter(function(t){return t.status==="RUNNING"||t.status==="THINKING";}).length;
     h+='<section class="os-pulse"><div class="os-greet">Work · '+E(C.name)+'</div><div class="os-headline">'+E(run?plural(run,"task in progress","tasks in progress"):"Nothing running now")+'</div>';
     h+='<div class="os-sub">'+E(tasks.length?"The latest the agents did, with their result.":"This system does not report tasks yet.")+'</div></section>';
-    if(tasks.length)h+='<div class="os-sec"><span>Tareas</span></div><div class="os-list">'+tasks.map(taskHtml).join("")+'</div>';
+    if(tasks.length)h+='<div class="os-sec"><span>Tasks</span></div><div class="os-list">'+tasks.map(taskHtml).join("")+'</div>';
     var acts=p?(p.activity||[]):[];
     h+='<div class="os-sec"><span>Log</span></div>';
     h+=acts.length?'<div>'+acts.map(function(a){return actHtml(a,false);}).join("")+'</div>':OS.empty("Empty log","No events reported in this system.");
@@ -225,7 +225,7 @@ export const OS_APP_JS = `
 // Full HTML of the OS app for a system. build: deploy version (shown and used for the cache).
 export function osShellHtml(system, opts = {}) {
   const s = OS_SYSTEMS_UI[system];
-  if (!s) throw new Error(`sistema desconocido: ${system}`);
+  if (!s) throw new Error(`unknown system: ${system}`);
   const cfg = {
     system, name: s.name, role: s.role, icon: s.icon, panel: opts.panel || s.panel, panelLabel: s.panelLabel,
     api: opts.api || "/api/os", method: opts.method || s.method, build: String(opts.build || "dev").slice(0, 12), ui: OS_UI_VERSION, shell: OS_SHELL_VERSION,

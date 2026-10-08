@@ -1,6 +1,6 @@
 // os-unified.mjs — AI OS in ONE BOT (Video Forge hosts everything). The first thing Juan sees is THE BRAIN: what
 // it decided, why, what it will do tomorrow, what it is thinking and what awaits him. Navigation with order:
-//   Cerebro · Decisiones · Sistemas · Actividad   (barra inferior fija)
+//   Brain · Decisions · Systems · Activity   (fixed bottom bar)
 //   Breadcrumb header ("Systems › Radar") + its own back button + Telegram's back button in sync.
 //   Systems › <system> shows its status and opens its full panel (/p/<system>), which returns to the brain.
 // Data: POST /API/os from the Video Forge bot -> { global, pulses{3}, brain{live, ledger, journal, decision}, clock }.
@@ -104,7 +104,7 @@ export const OS_UNIFIED_JS = `
     var title=V.sys?SYSN[V.sys]:(V.tab==="cerebro"?"The brain":TABS[V.tab]);
     return '<div class="os-crumb">'+(canBack()?'<button class="os-back" data-act="back" aria-label="Back">'+OS.icon("chev")+'</button>':'<div class="os-mark">'+OS.icon("ask")+'</div>')+
       '<div class="os-here"><div class="os-path">'+path+'</div><div class="os-name">'+E(title)+'</div><div class="os-ai">'+E(line)+'</div></div></div>'+
-      '<button class="os-iconbtn" data-act="refresh" aria-label="Actualizar">'+OS.icon("refresh")+'</button>';
+      '<button class="os-iconbtn" data-act="refresh" aria-label="Refresh">'+OS.icon("refresh")+'</button>';
   }
 
   // ---------- Piezas ----------
@@ -281,7 +281,7 @@ export const OS_UNIFIED_JS = `
     OS.api(C.api,{method:C.method}).then(function(j){
       LOADING=false;
       if(!j||j.error||!j.global){ERR=(j&&j.error)||"Empty response";if(manual)OS.haptic("err");}
-      else{ST=j;ERR=null;LAST=Date.now();if(manual){OS.haptic("ok");OS.toast("Updated");}}
+      else{ST=j;ERR=null;LAST=Date.now();      if(manual){OS.haptic("ok");OS.toast("Updated");}}
       render();
     })["catch"](function(){LOADING=false;ERR="No connection";if(manual)OS.haptic("err");render();});
   }
