@@ -126,7 +126,7 @@ export const APP_HTML = `<!doctype html>
     <button class="icon" id="btnRefresh" aria-label="Refresh">⟳</button>
   </div>
   <div class="chsel" id="chSel">
-    <button data-ch="resumen" class="on">🏠 Summary</button>
+    <button data-ch="home" class="on">🏠 Summary</button>
     <button data-ch="data-lens">The Data Lens</button>
     <button data-ch="auto2">Auto #2</button>
     <button data-ch="bilibili">🅱️ Bilibili</button>
@@ -135,21 +135,21 @@ export const APP_HTML = `<!doctype html>
 <div class="wrap">
   <div id="tabHelp" class="muted" style="font-size:12px;margin:2px 2px 8px"></div>
   <div id="globalStatus"></div>
-  <div id="s-inicio"></div>
-  <div id="s-producir" class="hide"></div>
+  <div id="s-home"></div>
+  <div id="s-produce" class="hide"></div>
   <div id="s-agenda" class="hide"></div>
-  <div id="s-analitica" class="hide"></div>
-  <div id="s-cerebro" class="hide"></div>
-  <div id="s-mas" class="hide"></div>
+  <div id="s-analytics" class="hide"></div>
+  <div id="s-brain" class="hide"></div>
+  <div id="s-more" class="hide"></div>
 </div>
 <div id="toast"></div>
 <div class="nav">
-  <button data-t="inicio" class="on"><span class="ic">🏠</span>Home</button>
-  <button id="navProducir" data-t="producir"><span class="ic">🎬</span>Videos</button>
+  <button data-t="home" class="on"><span class="ic">🏠</span>Home</button>
+  <button id="navProducir" data-t="produce"><span class="ic">🎬</span>Videos</button>
   <button data-t="agenda"><span class="ic">📅</span>Calendar</button>
-  <button data-t="analitica"><span class="ic">📈</span>Analytics</button>
-  <button data-t="cerebro"><span class="ic">🧠</span>Brain</button>
-  <button data-t="mas"><span class="ic">⚙️</span>More</button>
+  <button data-t="analytics"><span class="ic">📈</span>Analytics</button>
+  <button data-t="brain"><span class="ic">🧠</span>Brain</button>
+  <button data-t="more"><span class="ic">⚙️</span>More</button>
 </div>
 <script>
   var tg = window.Telegram && window.Telegram.WebApp;
@@ -158,13 +158,13 @@ export const APP_HTML = `<!doctype html>
   var LOGOS = {
     "auto2":'<svg viewBox="0 0 44 44" fill="none"><path d="M22 22 C22 11 10 11 10 22 C10 33 22 33 22 22 C22 11 34 11 34 22 C34 33 22 33 22 22Z" stroke="#04140d" stroke-width="4.5" stroke-linecap="round"/></svg>',
     "data-lens":'<svg viewBox="0 0 44 44" fill="none"><circle cx="22" cy="22" r="15" stroke="#0f1a00" stroke-width="3.5"/><rect x="16" y="21" width="3.4" height="7" rx="1.4" fill="#0f1a00"/><rect x="20.4" y="17" width="3.4" height="11" rx="1.4" fill="#0f1a00"/><rect x="24.8" y="13.5" width="3.4" height="14.5" rx="1.4" fill="#0f1a00"/></svg>',
-    "resumen":'<svg viewBox="0 0 44 44" fill="none"><rect x="10" y="20" width="8" height="14" rx="2" fill="#04140d"/><rect x="18" y="13" width="8" height="21" rx="2" fill="#04140d"/><rect x="26" y="16" width="8" height="18" rx="2" fill="#04140d"/></svg>',
+    "home":'<svg viewBox="0 0 44 44" fill="none"><rect x="10" y="20" width="8" height="14" rx="2" fill="#04140d"/><rect x="18" y="13" width="8" height="21" rx="2" fill="#04140d"/><rect x="26" y="16" width="8" height="18" rx="2" fill="#04140d"/></svg>',
     "bilibili":'<svg viewBox="0 0 44 44" fill="none"><rect x="9" y="14" width="26" height="18" rx="5" stroke="#04140d" stroke-width="3"/><path d="M15 10 L19 14 M29 10 L25 14" stroke="#04140d" stroke-width="3" stroke-linecap="round"/></svg>',
   };
   // Applies the channel's BRAND ACCENT (color + logo). Data Lens is auto mode; the base follows the Telegram theme.
   function applyChannelTheme(ch){
-    try{ document.body.setAttribute("data-ch", ch||"resumen"); }catch(e){}
-    var lb=document.getElementById("logoBox"); if(lb) lb.innerHTML = LOGOS[ch] || LOGOS.resumen;
+    try{ document.body.setAttribute("data-ch", ch||"home"); }catch(e){}
+    var lb=document.getElementById("logoBox"); if(lb) lb.innerHTML = LOGOS[ch] || LOGOS.home;
   }
   var INIT = tg ? tg.initData : "";
   var ST = {};
@@ -175,11 +175,11 @@ export const APP_HTML = `<!doctype html>
   function h(t){ try{ var H=tg&&tg.HapticFeedback; if(!H)return; if(t==="sel")H.selectionChanged(); else if(t==="ok")H.notificationOccurred("success"); else if(t==="err")H.notificationOccurred("error"); else H.impactOccurred(t||"light"); }catch(e){} }
   try{ tg&&tg.setHeaderColor&&tg.setHeaderColor("bg_color"); }catch(e){}
   // Shows Back when NOT in the root view (The Data Lens home and no short in focus).
-  function backBtnSync(){ try{ if(!tg||!tg.BackButton)return; if(curChannel!=="resumen"||curTab!=="inicio"||shortsTargetVid) tg.BackButton.show(); else tg.BackButton.hide(); }catch(e){} }
+  function backBtnSync(){ try{ if(!tg||!tg.BackButton)return; if(curChannel!=="home"||curTab!=="home"||shortsTargetVid) tg.BackButton.show(); else tg.BackButton.hide(); }catch(e){} }
   try{ tg&&tg.BackButton&&tg.BackButton.onClick(function(){ h("light");
     if(shortsTargetVid){ shortsTargetVid=""; render(); backBtnSync(); return; }
-    if(curTab!=="inicio"){ tab("inicio"); return; }
-    if(curChannel!=="resumen"){ setChannel("resumen"); }
+    if(curTab!=="home"){ tab("home"); return; }
+    if(curChannel!=="home"){ setChannel("home"); }
   }); }catch(e){}
   function el(id){return document.getElementById(id);}
   function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
@@ -188,19 +188,19 @@ export const APP_HTML = `<!doctype html>
   function num(n){n=+n||0;return n>=1000?(n/1000).toFixed(n>=100000?0:1)+"k":String(n);}
   function durTxt(sec){ if(sec==null) return "—"; sec=+sec; if(sec>=60){var m=Math.floor(sec/60),s=sec%60;return m+":"+("0"+s).slice(-2);} return sec+"s"; }
 
-  var curTab="inicio", curChannel="resumen";
+  var curTab="home", curChannel="home";
   var vSort="views";
   var lastInsights="";
   var localSched={}; // video_id -> "schedule"|"public": optimistic marker when scheduling/publishing (immediate feedback even if the channel report is slow to refresh)
   var shortsTargetVid=""; // video the user wants to generate shorts from (the one they tapped ＋Do), not always "the last one"
   var WATCH={}; // wf(.yml) -> watching a long process launched from the app (G-V1). See startWatch().
   var TABHELP={
-    inicio:"🏠 What needs your attention now + the channel pulse.",
-    producir:"🎬 Videos in progress: what the brain is producing and scheduling, and their status. All automatic.",
+    home:"🏠 What needs your attention now + the channel pulse.",
+    produce:"🎬 Videos in progress: what the brain is producing and scheduling, and their status. All automatic.",
     agenda:"📅 Your publishing calendar (best US hours) and what's scheduled.",
-    analitica:"📈 Channel analysis: how promising, claims, metrics, capacity and your videos.",
-    cerebro:"🧠 The brain inside: how it distributes effort (decision engine) and how close each channel is to monetizing (60-day War Room).",
-    mas:"⚙️ Create (photo/recipe/voice), channel voice, tools health and storage."
+    analytics:"📈 Channel analysis: how promising, claims, metrics, capacity and your videos.",
+    brain:"🧠 The brain inside: how it distributes effort (decision engine) and how close each channel is to monetizing (60-day War Room).",
+    more:"⚙️ Create (photo/recipe/voice), channel voice, tools health and storage."
   };
     // Shows the requested tab button's help text (short hint) on the panel.
   function setVSort(s){ vSort=s; render(); }
@@ -213,15 +213,15 @@ export const APP_HTML = `<!doctype html>
   }
   function tab(name){
     curTab=name;
-    ["inicio","producir","agenda","analitica","cerebro","mas"].forEach(function(t){el("s-"+t).classList.toggle("hide",t!==name);});
-    if(name==="cerebro") loadBrain(false);
+    ["home","produce","agenda","analytics","brain","more"].forEach(function(t){el("s-"+t).classList.toggle("hide",t!==name);});
+    if(name==="brain") loadBrain(false);
     document.querySelectorAll(".nav button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-t")===name);});
     setHelp(name);
     var sec=el("s-"+name); if(sec){ sec.classList.remove("fadein"); void sec.offsetWidth; sec.classList.add("fadein"); }
-    if(name==="analitica") scrollWkEnd();
+    if(name==="analytics") scrollWkEnd();
     h("sel"); backBtnSync();
   }
-  function setChannel(ch){ curChannel=ch; applyChannelTheme(ch); document.querySelectorAll(".chsel button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-ch")===ch);}); h("sel"); render(); if(curTab==="analitica") scrollWkEnd(); backBtnSync(); }
+  function setChannel(ch){ curChannel=ch; applyChannelTheme(ch); document.querySelectorAll(".chsel button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-ch")===ch);}); h("sel"); render(); if(curTab==="analytics") scrollWkEnd(); backBtnSync(); }
   document.querySelectorAll(".nav button").forEach(function(b){b.onclick=function(){tab(b.getAttribute("data-t"));};});
   document.querySelectorAll(".chsel button").forEach(function(b){b.onclick=function(){setChannel(b.getAttribute("data-ch"));};});
   (function(){ var rb=el("btnRefresh"); if(rb) rb.onclick=function(){ h("light"); toast("Updating…"); load(); }; })();
@@ -465,7 +465,7 @@ export const APP_HTML = `<!doctype html>
         +shortsCell
         +'</tr>';
     }).join("");
-    return '<h2>📋 Control por video</h2>'
+    return '<h2>📋 Video control</h2>'
       +'<div class="muted" style="font-size:12px;margin:0 2px 6px">What each video is missing. <b>＋ Do</b> to complete it. You <b>see the thumbnail here</b> and give it ✅ Approve (or 🔁 redo) before putting it on. It doesn't change what's already published.</div>'
       +'<div class="card" style="padding:8px"><table style="font-size:13px">'+head+rows+'</table></div>';
   }
@@ -609,8 +609,8 @@ export const APP_HTML = `<!doctype html>
   function fmtSlot(iso){
     try{
       var d=new Date(iso);
-      var et=d.toLocaleString("es-CO",{timeZone:"America/New_York",weekday:"short",day:"numeric",month:"short",hour:"numeric",minute:"2-digit",hour12:true});
-      var lo=d.toLocaleString("es-CO",{timeZone:"America/Bogota",hour:"numeric",minute:"2-digit",hour12:true});
+      var et=d.toLocaleString("en-US",{timeZone:"America/New_York",weekday:"short",day:"numeric",month:"short",hour:"numeric",minute:"2-digit",hour12:true});
+      var lo=d.toLocaleString("en-US",{timeZone:"America/Bogota",hour:"numeric",minute:"2-digit",hour12:true});
       return et+" ET · tu "+lo;
     }catch(e){return iso;}
   }
@@ -1127,20 +1127,19 @@ export const APP_HTML = `<!doctype html>
     el("chTitle").textContent = curChannel==="auto2" ? "Auto #2" : "The Data Lens";
     // Data Lens is automatic: the "Produce" tab is called "Review" (you review/publish what comes out on its own).
     var _np=el("navProducir"); if(_np) _np.innerHTML = '<span class="ic">🎬</span>Videos';
-    el("hd").textContent = (curChannel==="auto2"?"auto channel":"@TheDataLensHQ")+" · updated "+ (ST.updated_at? String(ST.updated_at).slice(5,16).replace("T"," "):"—") + liveTag;
-    setHelp(curTab);
+    el("hd").textContent = (curChannel==="auto2"?"auto channel":"@TheDataLensHQ")+" · updated "+ (ST.updated_at? String(ST.updated_at).slice(5,16).replace("T"," "):"—") + liveTag;      setHelp(curTab);
     // "I'll notify when done" banner (G-V1): visible on ALL tabs while there's a watched process.
     var wb=watchBannerHtml();
     el("globalStatus").innerHTML = wb + ((activeFor("data-lens").length) ? ('<h2>⚡ In progress now</h2>'+statusHtml("data-lens")) : "");
 
     // MAIN WINDOW: summary of BOTH channels. From here you enter each one.
-    if(curChannel==="resumen"){
+    if(curChannel==="home"){
       el("chTitle").textContent="Summary";
       el("hd").textContent="Both channels · upd. "+(ST.updated_at?String(ST.updated_at).slice(5,16).replace("T"," "):"—")+liveTag;
       el("globalStatus").innerHTML=wb;
-      el("s-inicio").innerHTML=resumenHtml();
-      var _hint='<div class="card muted" style="font-size:13px">👆 Choose <b>Oddly Loop</b> or <b>The Data Lens</b> above to see this section's detail.</div>';
-      el("s-producir").innerHTML=_hint; el("s-agenda").innerHTML=_hint; el("s-analitica").innerHTML=_hint; el("s-mas").innerHTML=_hint;
+      el("s-home").innerHTML=resumenHtml();
+      var _hint='<div class="card muted" style="font-size:13px">👆 Choose <b>Oddly Loop</b> or <b>The Data Lens</b> above to see this section\'s detail.</div>';
+      el("s-produce").innerHTML=_hint; el("s-agenda").innerHTML=_hint; el("s-analytics").innerHTML=_hint; el("s-more").innerHTML=_hint;
       return;
     }
 
@@ -1152,8 +1151,8 @@ export const APP_HTML = `<!doctype html>
       var _bcard = bilibiliCardHtml() || '<div class="card muted" style="font-size:13px">No Bilibili data yet. When a Short is produced, it reposts itself at noon and will appear here.</div>';
       el("s-inicio").innerHTML='<h2>🅱️ Bilibili</h2><div class="card muted" style="font-size:12px">Auto repost of Oddly Shorts to Bilibili (channel <b>Oddly_Loop</b>). Independent from YouTube — it runs on its own.</div>'+_bcard;
       var _bh='<div class="card muted" style="font-size:13px">Bilibili reposts itself at noon. The detail is in <b>Home</b>.</div>';
-      el("s-producir").innerHTML=_bh; el("s-agenda").innerHTML=_bh; el("s-analitica").innerHTML=_bh;
-      el("s-mas").innerHTML='<div class="card"><div style="font-weight:700;font-size:13px;margin-bottom:4px">🔑 Bilibili cookie</div><div class="muted" style="font-size:12px">The watchdog checks daily that the session is still alive. If it warns that it <b>expired</b>, pull a new cookie from the browser (SESSDATA, bili_jct, DedeUserID, DedeUserID__ckMd5) and update the <b>BILIBILI_COOKIE</b> secret in GitHub.</div></div>';
+      el("s-produce").innerHTML=_bh; el("s-agenda").innerHTML=_bh; el("s-analytics").innerHTML=_bh;
+      el("s-more").innerHTML='<div class="card"><div style="font-weight:700;font-size:13px;margin-bottom:4px">🔑 Bilibili cookie</div><div class="muted" style="font-size:12px">The watchdog checks daily that the session is still alive. If it warns that it <b>expired</b>, pull a new cookie from the browser (SESSDATA, bili_jct, DedeUserID, DedeUserID__ckMd5) and update the <b>BILIBILI_COOKIE</b> secret in GitHub.</div></div>';
       return;
     }
 
@@ -1445,19 +1444,19 @@ export const APP_HTML = `<!doctype html>
   // ===== Brain (Brain OS Phases 5-6): decision engine + monetization War Room =====
   var BRAIN=null, brainLoading=false;
   function loadBrain(force){
-    var host=el("s-cerebro"); if(!host) return;
+    var host=el("s-brain"); if(!host) return;
     if(BRAIN && !force){ host.innerHTML=brainHtml(BRAIN); return; }
     if(brainLoading) return; brainLoading=true;
     if(!BRAIN){ var sk=''; for(var i=0;i<3;i++){ sk+='<div class="card"><div class="sk-l" style="width:'+(52+i*14)+'%"></div><div class="sk-l s"></div></div>'; } host.innerHTML=sk; }
     api("/api/brain").then(function(r){return r.json();}).then(function(j){ BRAIN=j; brainLoading=false; host.innerHTML=brainHtml(j); })
-      .catch(function(){ brainLoading=false; host.innerHTML='<div class="card muted">Could not load the brain.</div>'; });
+      .catch(function(){ brainLoading=false; host.innerHTML='<div class="card muted">Unable to load Brain data.</div>'; });
   }
   function bPill(txt,cvar){ return '<span style="display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px;background:var(--soft);color:var('+cvar+')">'+esc(txt)+'</span>'; }
-  function bRisk(r){ return r==="alto"?"--rd":(r==="medio"?"--am":"--gr"); }
-  function bNum(n){ return Number(n||0).toLocaleString("es"); }
+  function bRisk(r){ return r==="high"?"--rd":(r==="medium"?"--am":"--gr"); }
+  function bNum(n){ return Number(n||0).toLocaleString("en"); }
   function bTargetRow(r){
     var col = r.done?"--gr":(r.on_track===false?"--rd":(r.on_track?"--gr":"--am"));
-    var proj = r.proj_date?'<span class="muted" style="font-size:10px"> · proy '+esc(r.proj_date)+'</span>':'';
+    var proj = r.proj_date?'<span class="muted" style="font-size:10px"> · est. '+esc(r.proj_date)+'</span>':'';
     return '<div style="margin:6px 0">'
       +'<div style="display:flex;justify-content:space-between;font-size:12px;gap:8px"><span><span style="color:var('+col+')">●</span> '+esc(r.label)+'</span>'
       +'<span class="num" style="text-align:right">'+bNum(r.cur)+' / '+bNum(r.target)+' ('+(r.pct||0)+'%)'+proj+'</span></div>'
@@ -1468,9 +1467,9 @@ export const APP_HTML = `<!doctype html>
     var rd=ch.readiness, wr=ch.war_room||{};
     var sc = rd.status==="behind"?"--rd":(rd.status==="measuring"?"--am":"--gr");
     var rows = (rd.reqs||[]).map(bTargetRow).join("");
-    var focus = (wr.active&&wr.focus_label)?'<div class="card" style="background:var(--bg);padding:8px;margin-top:8px;font-size:12px"><b>🎯 Foco:</b> '+esc(wr.focus_label)+' — '+esc(wr.next_action||"")+'</div>':"";
+    var focus = (wr.active&&wr.focus_label)?'<div class="card" style="background:var(--bg);padding:8px;margin-top:8px;font-size:12px"><b>🎯 Focus:</b> '+esc(wr.focus_label)+' — '+esc(wr.next_action||"")+'</div>':"";
     return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap"><b>'+esc(name)+'</b>'
-      +'<span>'+bPill(String(rd.status).toUpperCase(),sc)+' '+bPill(rd.days_left+"d",(rd.days_left<=30?"--rd":"--am"))+' '+bPill("riesgo "+(wr.risk||"?"),bRisk(wr.risk))+'</span></div>'
+      +'<span>'+bPill(String(rd.status).toUpperCase(),sc)+' '+bPill(rd.days_left+"d",(rd.days_left<=30?"--rd":"--am"))+' '+bPill("risk "+(wr.risk||"?"),bRisk(wr.risk))+'</span></div>'
       +rows+focus+'</div>';
   }
   function bDecisionCard(d){
@@ -1499,16 +1498,15 @@ export const APP_HTML = `<!doctype html>
   function brainHtml(j){
     j=j||{};
     var mon=j.monetization||{}; var chs=mon.channels||{};
-    var when = mon.at?'<div class="muted" style="font-size:11px;margin:-2px 2px 8px">Actualizado '+esc(String(mon.at).slice(5,16).replace("T"," "))+'</div>':"";
-    var empty = (!mon.channels && !j.decision && !j.queue);
-    return '<h2>🧠 Cerebro <span class="live"></span></h2>'+when
+    var when = mon.at?'<div class="muted" style="font-size:11px;margin:-2px 2px 8px">Updated '+esc(String(mon.at).slice(5,16).replace("T"," "))+'</div>':"";
+    var empty = (!mon.channels && !j.decision && !j.queue);      return '<h2>🧠 Brain <span class="live"></span></h2>'+when
       +(empty?'<div class="card muted" style="font-size:12px">The brain hasn't left R2 records yet. They generate daily (dashboard) and on Mondays (decision engine).</div>':"")
       +bQueueCard(j.queue)
-      +'<div class="muted" style="font-size:12px;margin:0 2px 8px">📊 War Room 60 days — how much is left to monetize?</div>'
+      +'<div class="muted" style="font-size:12px;margin:0 2px 8px">📊 60-day War Room — how much is left to monetize?</div>'
       +bMonetCard("The Data Lens", chs["data-lens"])
       +bMonetCard("Oddly Loop", chs["auto2"])
       +bDecisionCard(j.decision)
-      +'<button class="btn" style="margin-top:6px" onclick="loadBrain(true)">↻ Actualizar</button>';
+      +'<button class="btn" style="margin-top:6px" onclick="loadBrain(true)">↻ Refresh</button>';
   }
   function regenSeo(){
     var notes=(el("seoNotes")&&el("seoNotes").value)||"";
@@ -1549,16 +1547,16 @@ export const APP_HTML = `<!doctype html>
       .then(function(r){return r.json();}).then(function(j){
         if(j.ok){ toast("📅 Scheduled for "+fmtSlot(j.publish_at)); setTimeout(load,1800); }
         else toast("❌ "+(j.error||"could not schedule"));
-      }).catch(function(){toast("❌ Error de red");});
+      }).catch(function(){toast("❌ Network error");});
   }
   function scheduleShort(id){
-    if(!id){toast("Sin short");return;}
+    if(!id){toast("No short");return;}
     if(tg&&tg.HapticFeedback)tg.HapticFeedback.impactOccurred("medium");
     api("/api/schedule",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({video_id:id})})
       .then(function(r){return r.json();}).then(function(j){
         if(j.ok){ toast("📅 Short scheduled for "+fmtSlot(j.publish_at)); setTimeout(load,1800); }
         else toast("❌ "+(j.error||"could not schedule"));
-      }).catch(function(){toast("❌ Error de red");});
+      }).catch(function(){toast("❌ Network error");});
   }
   function shortApprove(n, ok){
     if(tg&&tg.HapticFeedback)tg.HapticFeedback.impactOccurred("light");
@@ -1590,7 +1588,7 @@ export const APP_HTML = `<!doctype html>
           var clearMark=function(){ delete localSched[vid]; api("/api/oddly-publish",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({video_id:vid,clear:true})}).then(function(){setTimeout(load,600);}); };
           startWatch("publish_oddly.yml",(mode==="public"?"Publish":"Schedule")+" in Oddly Loop",(mode==="public"?"The Oddly Loop video is now public.":"The Oddly Loop video is scheduled — watch it in 📅 Agenda."),(mode==="public"?"The publish":"The schedule")+" in Oddly Loop failed. Go back to «to review».",clearMark); }
         else toast("❌ "+(j.error||"could not"));
-      }).catch(function(){toast("❌ Error de red");}); };
+      }).catch(function(){toast("❌ Network error");}); };
     if(mode==="public"&&tg&&tg.showConfirm){ tg.showConfirm("Publish this Oddly Loop video NOW (public)?",function(ok){if(ok)go();}); } else go();
   }
   function oddlyManual(vid){

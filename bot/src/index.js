@@ -1711,7 +1711,7 @@ const KB = {
 };
 
 const TXT = {
-  home: "*video-forge* — control center\n\nPick a section:",
+  home: "*Video Forge* — SkillGroX control center for automated content generation and publishing.\n\nPick a section:",
   channel: "*📊 Channel — direction*\n\n📋 Panel — schedule of upcoming videos + monetization (live).\n🔄 Report — pulls fresh YouTube metrics (subs, views, likes).",
   video: "*🎬 Video*\n\n🎙️ Generate voice — channel narration, in your voice.\n🎬 Render — builds the video BY PHASES (each ~3 min segment passes the 7.5 test and they're joined at the end).\n📊 Status — what's being done now.",
   photo: "*🖼️ Photo*\n\nSend me a photo: I clean the skin and raise the texture, without changing your face (~5-7 min).\nFor the background, write *background ...* when you send it (e.g.: background white).",
@@ -1728,7 +1728,7 @@ async function sendMenu(env, chatId) {
   });
   await tg(env, "setMyCommands", {
     commands: [
-      { command: "start", description: "🏠 Menu    "},
+      { command: "start", description: "🏠 Main menu    "},
       { command: "cerebro", description: "🧠 Open the Brain (AI OS)    "},
       { command: "tienda", description: "🛍️ Store status    "},
       { command: "pedidos", description: "🧾 Latest orders    "},
